@@ -839,7 +839,7 @@ const styles = StyleSheet.create({
   quickItem: { flex: 1 },
   quickCard: {
     borderRadius: 24,
-    padding: 18,
+    padding: 20,
     height: 180,
     flexDirection: 'column',
     alignItems: 'flex-start',
@@ -850,7 +850,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
   },
-  quickLabel: { fontSize: 15, fontWeight: '700', color: COLORS.text, letterSpacing: -0.2 },
+  quickLabel: { fontSize: 18, fontWeight: '800', color: '#1A1A1A', letterSpacing: -0.4, lineHeight: 22 },
 
   // Today's check-in summary card
   summaryCard: {
