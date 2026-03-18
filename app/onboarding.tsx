@@ -4,6 +4,7 @@ import {
   StyleSheet, Animated, Dimensions, Platform, Image,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
 import { saveProfile, saveMedication, generateId } from '@/lib/storage';
 import { scheduleAllReminders } from '@/lib/notifications';
@@ -90,6 +91,7 @@ function ScrollPickerSimple({
 }
 
 export default function OnboardingScreen() {
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -564,39 +566,42 @@ export default function OnboardingScreen() {
 
         {/* STEP 5: Care Needs */}
         {step === 5 && (
-          <View style={styles.stepContainer}>
-            <Text style={styles.title}>🌿 主要护理需求</Text>
-            <Text style={styles.subtitle}>{`选择与${elderNickname || elderName || '宝贝'}相关的护理需求\n可多选，AI 将根据这些给出更准确的建议`}</Text>
-            <View style={styles.careNeedsGrid}>
-              {CARE_NEED_OPTIONS.map(opt => {
-                const selected = selectedCareNeeds.includes(opt.id);
-                return (
-                  <TouchableOpacity
-                    key={opt.id}
-                    style={[styles.careNeedCard, selected && styles.careNeedCardSelected]}
-                    onPress={() => toggleCareNeed(opt.id)}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={styles.careNeedEmoji}>{opt.emoji}</Text>
-                    <Text style={[styles.careNeedLabel, selected && styles.careNeedLabelSelected]}>{opt.label}</Text>
-                    <Text style={styles.careNeedDesc}>{opt.desc}</Text>
-                    {selected && (
-                      <View style={styles.careNeedCheck}>
-                        <Text style={{ fontSize: 10, color: '#fff', fontWeight: '700' }}>✓</Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+            <View style={styles.stepContainer}>
+              <Text style={styles.title}>🌿 主要护理需求</Text>
+              <Text style={styles.subtitle}>{`选择与${elderNickname || elderName || '宝贝'}相关的护理需求\n可多选，AI 将根据这些给出更准确的建议`}</Text>
+              <View style={styles.careNeedsGrid}>
+                {CARE_NEED_OPTIONS.map(opt => {
+                  const selected = selectedCareNeeds.includes(opt.id);
+                  return (
+                    <TouchableOpacity
+                      key={opt.id}
+                      style={[styles.careNeedCard, selected && styles.careNeedCardSelected]}
+                      onPress={() => toggleCareNeed(opt.id)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.careNeedEmoji}>{opt.emoji}</Text>
+                      <Text style={[styles.careNeedLabel, selected && styles.careNeedLabelSelected]}>{opt.label}</Text>
+                      <Text style={styles.careNeedDesc}>{opt.desc}</Text>
+                      {selected && (
+                        <View style={styles.careNeedCheck}>
+                          <Text style={{ fontSize: 10, color: '#fff', fontWeight: '700' }}>✓</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              {selectedCareNeeds.length === 0 && (
+                <Text style={styles.careNeedsSkipHint}>不确定可以跳过，后续在设置中添加</Text>
+              )}
             </View>
-            {selectedCareNeeds.length === 0 && (
-              <Text style={styles.careNeedsSkipHint}>不确定可以跳过，后续在设置中添加</Text>
-            )}
-          </View>
+          </ScrollView>
         )}
 
         {/* STEP 6: Done */}
         {step === 6 && (
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           <View style={styles.stepContainer}>
             <Image source={require('../assets/images/icon.png')} style={styles.mascotImgSm} />
             <Text style={styles.title}>一切准备就绪！</Text>
@@ -671,12 +676,13 @@ export default function OnboardingScreen() {
               </View>
             </View>
           </View>
+          </ScrollView>
         )}
       </Animated.View>
 
       {/* Navigation buttons */}
-      <View style={styles.navButtons}>
-        {step > 0 && step < 6 && (
+      <View style={[styles.navButtons, { paddingBottom: insets.bottom + 8 }]}>
+        {step > 0 && (
           <TouchableOpacity style={styles.backBtn} onPress={prevStep}>
             <Text style={styles.backBtnText}>← 上一步</Text>
           </TouchableOpacity>

@@ -6,7 +6,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getRandomTip, getEncouragement } from '@/lib/care-knowledge';
 import { getWeatherByGPS, buildGreetingWithWeather, GpsWeatherInfo } from '@/lib/weather';
@@ -172,11 +171,10 @@ function AnimatedCard({ children, style, onPress, delay = 0 }: {
   );
 }// ─── Quick Action Card ──────────────────────────────────────────────────────────────────────────────
 function QuickAction({
-  iconName, label, decorEmoji, gradientStart, gradientEnd, bgColor, onPress, delay,
+  iconName, label, gradientStart, gradientEnd, bgColor, onPress, delay,
 }: {
-  iconName: string;
+  iconName: keyof typeof Ionicons.glyphMap;
   label: string;
-  decorEmoji: string;
   gradientStart: string;
   gradientEnd: string;
   bgColor: string;
@@ -198,20 +196,15 @@ function QuickAction({
         onPress={() => pressAnimation(scaleAnim, onPress)}
         activeOpacity={0.85}
       >
-        {/* Rounded-square gradient icon — top-left */}
         <LinearGradient
           colors={[gradientStart, gradientEnd]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={styles.quickIconBox}
         >
-          <MaterialCommunityIcons name={iconName as any} size={30} color="#fff" />
+          <Ionicons name={iconName} size={26} color="#fff" />
         </LinearGradient>
-        {/* Spacer pushes label to bottom */}
         <View style={{ flex: 1 }} />
-        {/* Label */}
         <Text style={styles.quickLabel}>{label}</Text>
-        {/* Decorative emoji bottom-left */}
-        <Text style={styles.quickDecorEmoji}>{decorEmoji}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -327,11 +320,18 @@ export default function HomeScreen() {
     ? getPersonalizedAISuggestion(todayCheckIn!)
     : '先完成今天的早间打卡，我再为你生成更贴合今天情况的建议 🌸';
 
-  const quickActions = [
-    { iconName: 'pill', label: '用药提醒', decorEmoji: '💊', route: '/medication', gradientStart: '#F472B6', gradientEnd: '#EC4899', bgColor: '#FFF0F6' },
-    { iconName: 'book-heart', label: '护理日记', decorEmoji: '📖', route: '/diary', gradientStart: '#60A5FA', gradientEnd: '#3B82F6', bgColor: '#EFF6FF' },
-    { iconName: 'account-group', label: '家庭共享', decorEmoji: '👨‍👩‍👧', route: '/family', gradientStart: '#C084FC', gradientEnd: '#A855F7', bgColor: '#F5F0FF' },
-    { iconName: 'brain', label: 'AI 助手', decorEmoji: '🤖', route: '/assistant', gradientStart: '#34D399', gradientEnd: '#10B981', bgColor: '#EFFDF5' },
+  const quickActions: {
+    iconName: keyof typeof Ionicons.glyphMap;
+    label: string;
+    route: string;
+    gradientStart: string;
+    gradientEnd: string;
+    bgColor: string;
+  }[] = [
+    { iconName: 'alarm-outline', label: '用药提醒', route: '/medication', gradientStart: '#FF7B6B', gradientEnd: '#EF4444', bgColor: '#FFF5F5' },
+    { iconName: 'book-outline', label: '护理日记', route: '/diary', gradientStart: '#818CF8', gradientEnd: '#6366F1', bgColor: '#F5F3FF' },
+    { iconName: 'people-outline', label: '家庭共享', route: '/family', gradientStart: '#2DD4BF', gradientEnd: '#0D9488', bgColor: '#F0FDFA' },
+    { iconName: 'sparkles', label: 'AI 助手', route: '/assistant', gradientStart: '#FBBF24', gradientEnd: '#F59E0B', bgColor: '#FFFBEB' },
   ];
 
   return (
@@ -571,7 +571,6 @@ export default function HomeScreen() {
               key={item.route}
               iconName={item.iconName}
               label={item.label}
-              decorEmoji={item.decorEmoji}
               gradientStart={item.gradientStart}
               gradientEnd={item.gradientEnd}
               bgColor={item.bgColor}
@@ -586,7 +585,6 @@ export default function HomeScreen() {
               key={item.route}
               iconName={item.iconName}
               label={item.label}
-              decorEmoji={item.decorEmoji}
               gradientStart={item.gradientStart}
               gradientEnd={item.gradientEnd}
               bgColor={item.bgColor}
@@ -852,8 +850,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
   },
-  quickLabel: { fontSize: 16, fontWeight: '800', color: COLORS.text, letterSpacing: -0.3 },
-  quickDecorEmoji: { fontSize: 28, marginTop: 4, opacity: 0.7 },
+  quickLabel: { fontSize: 15, fontWeight: '700', color: COLORS.text, letterSpacing: -0.2 },
 
   // Today's check-in summary card
   summaryCard: {
