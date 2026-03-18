@@ -274,10 +274,10 @@ export default function OnboardingScreen() {
             </Text>
             <View style={styles.featureList}>
               {[
-                { icon: '🌅', text: 'AI 每日护理建议' },
-                { icon: '💊', text: '用药提醒管理' },
-                { icon: '📖', text: '护理日记 & AI 陪伴' },
-                { icon: '🤝', text: '家庭共享 & 简报' },
+                { icon: '🌅', text: 'AI 每日\n护理建议' },
+                { icon: '💊', text: '用药\n提醒管理' },
+                { icon: '📖', text: '护理日记\nAI 陪伴' },
+                { icon: '🤝', text: '家庭共享\n简报' },
               ].map(f => (
                 <View key={f.icon} style={styles.featureItem}>
                   <Text style={styles.featureIcon}>{f.icon}</Text>
@@ -713,10 +713,10 @@ const styles = StyleSheet.create({
   zodiacBig: { fontSize: 72, marginBottom: 12, marginTop: 8 },
   title: { fontSize: 26, fontWeight: '700', color: '#11181C', textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 15, color: '#687076', textAlign: 'center', lineHeight: 24, marginBottom: 24 },
-  featureList: { width: '100%', gap: 12, marginTop: 8 },
-  featureItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8F9FA', borderRadius: 16, padding: 16, gap: 12 },
-  featureIcon: { fontSize: 28 },
-  featureText: { fontSize: 16, fontWeight: '600', color: '#11181C' },
+  featureList: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 16, width: '100%' },
+  featureItem: { width: '47%', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8F9FA', borderRadius: 20, paddingVertical: 20, paddingHorizontal: 12, gap: 10 },
+  featureIcon: { fontSize: 38 },
+  featureText: { fontSize: 16, fontWeight: '700', color: '#11181C', textAlign: 'center', lineHeight: 22 },
   inputGroup: { width: '100%', marginBottom: 20 },
   label: { fontSize: 14, fontWeight: '600', color: '#687076', marginBottom: 8 },
   zodiacHint: { fontSize: 16, fontWeight: '700', color: '#FF6B6B', marginBottom: 8, textAlign: 'center' },
