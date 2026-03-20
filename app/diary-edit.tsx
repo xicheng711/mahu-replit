@@ -548,7 +548,7 @@ export default function DiaryEditScreen() {
                       {followUpLoading ? (
                         <ActivityIndicator size="small" color="#fff" />
                       ) : (
-                        <Ionicons name="send" size={18} color="#fff" />
+                        <Text style={{ fontSize: 16, color: '#fff', fontWeight: '700' }}>➤</Text>
                       )}
                     </TouchableOpacity>
                   </View>

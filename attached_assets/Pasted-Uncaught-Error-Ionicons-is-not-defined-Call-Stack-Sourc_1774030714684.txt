@@ -1,0 +1,31 @@
+Uncaught Error
+Ionicons is not defined
+Call Stack
+
+Source Map
+This call stack is not symbolicated. Some features are unavailable such as viewing the function name or tapping to open files.
+DiaryEditScreen
+http://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/app/diary-edit.bundle//&platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app&transform.reactCompiler=true&minify=false&modulesOnly=true&runModule=false&shallow=true:775:66
+react-stack-bottom-frame
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:204073:20
+renderWithHooks
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:194283:22
+updateFunctionComponent
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:195976:19
+beginWork
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:196562:18
+runWithFiberInDEV
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:192055:70
+performUnitOfWork
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:198635:95
+workLoopSync
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:198528:40
+renderRootSync
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:198512:9
+performWorkOnRoot
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:198276:44
+performSyncWorkOnRoot
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:199240:7
+flushSyncWorkAcrossRoots_impl
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:199159:308
+processRootScheduleInMicrotask
