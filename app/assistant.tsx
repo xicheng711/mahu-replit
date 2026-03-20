@@ -582,8 +582,10 @@ export default function AssistantScreen() {
 
       {/* ── Bottom bar ── */}
       <View style={styles.chatBottomBar}>
-        <TouchableOpacity style={styles.chatEndBtn} onPress={() => router.replace('/(tabs)' as any)}>
-          <Text style={styles.chatEndBtnText}>返回首页 →</Text>
+        <TouchableOpacity onPress={() => router.replace('/(tabs)' as any)} activeOpacity={0.88} style={styles.chatEndBtn}>
+          <LinearGradient colors={['#F9A8D4', '#F472B6', '#EC4899']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.chatEndGradient}>
+            <Text style={styles.chatEndBtnText}>返回首页 →</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </ScreenContainer>
@@ -639,9 +641,11 @@ const styles = StyleSheet.create({
   chatSendBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   chatSendBtnText: { fontSize: 18, color: '#fff', fontWeight: '700' },
   chatEndBtn: {
-    backgroundColor: '#1A1A2E', borderRadius: 24, paddingVertical: 15, alignItems: 'center', justifyContent: 'center',
+    borderRadius: 24, overflow: 'hidden',
+    shadowColor: '#EC4899', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 6,
   },
-  chatEndBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  chatEndGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center', borderRadius: 24 },
+  chatEndBtnText: { fontSize: 15, fontWeight: '800', color: '#fff', letterSpacing: 0.3 },
   // ── Legacy / shared ───────────────────────────────────────────────────────
   container: { padding: 20, paddingBottom: 48 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
