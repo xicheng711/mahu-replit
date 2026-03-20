@@ -596,21 +596,6 @@ ${checkIn.moodEmoji} 心情：${checkIn.moodScore}/10
               </Text>
             </TouchableOpacity>
 
-            {/* ── Action Row ── */}
-            <View style={styles.actionRow}>
-              <TouchableOpacity style={[styles.copyBtn, copied && styles.copiedBtn]} onPress={handleCopy}>
-                <Text style={styles.copyBtnText}>{copied ? '✅ 已复制' : '📋 复制文字'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.regenerateBtn}
-                onPress={async () => {
-                  if (checkIn) await doGenerate(elderNickname, caregiverName, checkIn, careScore);
-                }}
-              >
-                <Text style={styles.regenerateBtnText}>✨ 重新生成</Text>
-              </TouchableOpacity>
-            </View>
-
             {/* ── Tips ── */}
             <View style={styles.tipsCard}>
               <Text style={styles.tipsTitle}>💡 家庭协作建议</Text>
