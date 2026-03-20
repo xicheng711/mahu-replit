@@ -1,15 +1,13 @@
 /**
- * 小马虎 AI Router — Gemini-powered dementia care advice
- * Uses gemini-2.5-flash for dynamic professional care advice generation
+ * 小马虎 AI Router — Qwen-Plus powered dementia care companion
+ * Uses DashScope Qwen-Plus for dynamic professional care advice generation
  */
 
 import { z } from "zod";
 import { publicProcedure, router } from "./_core/trpc";
+import { invokeLLM } from "./_core/llm";
 
-const GEMINI_MODEL = "gemini-2.5-flash";
-const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-
-/** Try to extract valid JSON from a potentially truncated Gemini response */
+/** Try to extract valid JSON from a potentially truncated LLM response */
 function extractJSON(raw: string): string {
   // Strip markdown code fences if present
   let s = raw.trim();
@@ -50,39 +48,22 @@ function extractJSON(raw: string): string {
     }
     try { JSON.parse(sub); return sub; } catch {}
   }
-  throw new Error('Failed to parse Gemini JSON response');
+  throw new Error('Failed to parse LLM JSON response');
 }
 
-async function callGemini(prompt: string, systemPrompt: string, retries = 1): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
-
+async function callQwen(prompt: string, systemPrompt: string, retries = 1): Promise<string> {
   for (let attempt = 0; attempt <= retries; attempt++) {
-    const res = await fetch(`${GEMINI_BASE}/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 4096,
-          responseMimeType: "application/json",
-        },
-      }),
+    const result = await invokeLLM({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt },
+      ],
     });
-
-    if (!res.ok) {
-      const err = await res.json() as any;
-      throw new Error(`Gemini API error: ${err.error?.message ?? res.status}`);
-    }
-
-    const data = await res.json() as any;
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+    const raw = (result.choices?.[0]?.message?.content as string) ?? "{}";
     try {
       return extractJSON(raw);
     } catch (e) {
-      console.warn(`Gemini JSON parse attempt ${attempt + 1} failed, raw length: ${raw.length}`);
+      console.warn(`Qwen JSON parse attempt ${attempt + 1} failed, raw length: ${raw.length}`);
       if (attempt === retries) throw e;
     }
   }
@@ -275,11 +256,11 @@ ${JSON.stringify(structuredInput, null, 2)}
 adviceCards必须包含3-5张，第一张必须关于睡眠（直接引用sleep_analysis.problems）。`;
 
       try {
-        const raw = await callGemini(prompt, SYSTEM_PROMPT);
+        const raw = await callQwen(prompt, SYSTEM_PROMPT);
         const advice = JSON.parse(raw);
         return { success: true, advice, weather: weatherData };
       } catch (e) {
-        console.error("Gemini parse error:", e);
+        console.error("Qwen parse error:", e);
         // Return fallback
         return {
           success: false,
@@ -338,7 +319,7 @@ ${checkIn.notes ? `- 备注：${checkIn.notes}` : ""}
 }`;
 
       try {
-        const raw = await callGemini(prompt, SYSTEM_PROMPT);
+        const raw = await callQwen(prompt, SYSTEM_PROMPT);
         const briefing = JSON.parse(raw);
         return { success: true, briefing };
       } catch (e) {
@@ -390,7 +371,7 @@ ${checkIn.notes ? `- 备注：${checkIn.notes}` : ""}
 }`;
 
       try {
-        const raw = await callGemini(prompt, SYSTEM_PROMPT);
+        const raw = await callQwen(prompt, SYSTEM_PROMPT);
         const result = JSON.parse(raw);
         return { success: true, ...result };
       } catch (e) {
@@ -438,7 +419,7 @@ ${historyText ? `\n对话历史：\n${historyText}\n` : ''}
   "reply": "<你的回复文字>"
 }`;
       try {
-        const raw = await callGemini(prompt, SYSTEM_PROMPT);
+        const raw = await callQwen(prompt, SYSTEM_PROMPT);
         const parsed = JSON.parse(raw);
         // Extract reply from various possible JSON shapes
         const replyText = parsed.reply ?? parsed.message ?? parsed.text ?? raw;
@@ -504,7 +485,7 @@ ${diaryText}
   "title": "<一句话标题，如：这一周，你做得很棒>"
 }`;
       try {
-        const raw = await callGemini(prompt, SYSTEM_PROMPT);
+        const raw = await callQwen(prompt, SYSTEM_PROMPT);
         const parsed = JSON.parse(raw);
         return {
           success: true,

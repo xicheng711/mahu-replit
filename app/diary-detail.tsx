@@ -231,7 +231,7 @@ export default function DiaryDetailScreen() {
                   <View style={styles.aiAvatarCircle}>
                     <Text style={styles.aiAvatarEmoji}>🩺</Text>
                   </View>
-                  <Text style={styles.aiName}>小马虎护理顾问</Text>
+                  <Text style={styles.aiName}>小马虎陪伴你</Text>
                   <Text style={styles.aiBadge}>小马虎</Text>
                 </View>
                 {/* AI blue bubble */}
@@ -276,7 +276,7 @@ export default function DiaryDetailScreen() {
                         <View style={styles.aiAvatarCircle}>
                           <Text style={styles.aiAvatarEmoji}>🩺</Text>
                         </View>
-                        <Text style={styles.aiName}>小马虎护理顾问</Text>
+                        <Text style={styles.aiName}>小马虎陪伴你</Text>
                       </View>
                       <View style={styles.bubbleRowLeft}>
                         <View style={styles.bubbleBlue}>

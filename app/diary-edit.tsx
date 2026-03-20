@@ -98,7 +98,7 @@ function AIBubble({ text, animate = false }: { text: string; animate?: boolean }
         <View style={styles.aiAvatarCircle}>
           <Text style={styles.aiAvatarEmoji}>🩺</Text>
         </View>
-        <Text style={styles.aiName}>小马虎护理顾问</Text>
+        <Text style={styles.aiName}>小马虎陪伴你</Text>
         <Text style={styles.aiBadge}>小马虎</Text>
       </View>
       <View style={styles.bubbleRowLeft}>
@@ -516,7 +516,7 @@ export default function DiaryEditScreen() {
                       <View style={styles.aiAvatarCircle}>
                         <Text style={styles.aiAvatarEmoji}>🩺</Text>
                       </View>
-                      <Text style={styles.aiName}>小马虎护理顾问</Text>
+                      <Text style={styles.aiName}>小马虎陪伴你</Text>
                     </View>
                     <View style={styles.bubbleRowLeft}>
                       <View style={[styles.bubbleBlue, { paddingVertical: 14 }]}>
