@@ -233,33 +233,32 @@ export default function DiaryScreen() {
           <PageHeader
             theme={PAGE_THEMES.diary}
             subtitle={new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}
-            right={
-              <View style={styles.headerBtns}>
-                {entries.length > 0 && (
-                  <TouchableOpacity
-                    style={[styles.manageBtn, editMode && styles.manageBtnActive]}
-                    onPress={() => setEditMode(v => !v)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.manageBtnText, editMode && styles.manageBtnTextActive]}>
-                      {editMode ? '✓ 完成' : '管理'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                {!editMode && (
-                  <Animated.View style={{ transform: [{ scale: fabScale }] }}>
-                    <TouchableOpacity
-                      style={styles.writeBtn}
-                      onPress={() => pressAnimation(fabScale, openNewEntry)}
-                      activeOpacity={0.85}
-                    >
-                      <Text style={styles.writeBtnText}>✏️ 写日记</Text>
-                    </TouchableOpacity>
-                  </Animated.View>
-                )}
-              </View>
-            }
+            style={{ marginBottom: 12 }}
           />
+          <View style={styles.headerBtns}>
+            {entries.length > 0 && (
+              <TouchableOpacity
+                style={[styles.manageBtn, editMode && styles.manageBtnActive]}
+                onPress={() => setEditMode(v => !v)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.manageBtnText, editMode && styles.manageBtnTextActive]}>
+                  {editMode ? '✓ 完成' : '管理'}
+                </Text>
+              </TouchableOpacity>
+            )}
+            {!editMode && (
+              <Animated.View style={{ transform: [{ scale: fabScale }] }}>
+                <TouchableOpacity
+                  style={styles.writeBtn}
+                  onPress={() => pressAnimation(fabScale, openNewEntry)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.writeBtnText}>✏️ 写日记</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            )}
+          </View>
         </Animated.View>
 
         {/* Edit mode hint */}
@@ -351,7 +350,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 22, fontWeight: '800', color: COLORS.text, letterSpacing: -0.3 },
   subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-  headerBtns: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerBtns: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginBottom: 16 },
   manageBtn: {
     borderRadius: RADIUS.pill, paddingHorizontal: 14, paddingVertical: 8,
     borderWidth: 1.5, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB',
