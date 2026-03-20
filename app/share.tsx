@@ -508,9 +508,7 @@ ${checkIn.moodEmoji} 心情：${checkIn.moodScore}/10
         <View style={styles.header}>
           <BackButton />
           <Text style={styles.title}>📋 今日简报</Text>
-          <TouchableOpacity onPress={() => loadAndGenerate(true)} style={styles.refreshBtn}>
-            <Text style={styles.refreshBtnText}>🔄</Text>
-          </TouchableOpacity>
+          <View style={{ width: 36 }} />
         </View>
 
         {error ? (
