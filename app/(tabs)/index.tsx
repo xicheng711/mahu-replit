@@ -428,6 +428,7 @@ export default function HomeScreen() {
   const [caregiverName, setCaregiverName] = useState('');
   const [memberPhotoUri, setMemberPhotoUri] = useState<string | null>(null);
   const [zodiacColor, setZodiacColor] = useState('#FF6B6B');
+  const [zodiacEmoji, setZodiacEmoji] = useState('🐎');
 
   const headerFade = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-15)).current;
@@ -455,6 +456,7 @@ export default function HomeScreen() {
       const { getZodiacFromDate } = require('@/lib/zodiac');
       const zodiac = getZodiacFromDate(profile.birthDate);
       setZodiacColor(zodiac.color);
+      setZodiacEmoji(zodiac.emoji);
     }
     const today = await getTodayCheckIn();
     setTodayCheckIn(today);
@@ -532,7 +534,7 @@ export default function HomeScreen() {
                 <Image source={{ uri: memberPhotoUri }} style={styles.profilePhoto} />
               ) : (
                 <LinearGradient colors={['#FFAB9B', '#FF8C7A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.profileGradient}>
-                  <Text style={{ fontSize: 22 }}>👤</Text>
+                  <Text style={{ fontSize: 24 }}>{zodiacEmoji}</Text>
                 </LinearGradient>
               )}
             </TouchableOpacity>
