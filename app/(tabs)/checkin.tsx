@@ -803,15 +803,15 @@ export default function CheckinScreen() {
           </Text>
           <Text style={styles.doneSub}>
             {isMorning
-              ? `今天也辛苦了！\nAI 已根据${elderNickname}的状态和你的心情\n生成了今日个性化护理建议 🌿`
+              ? `今天也辛苦了！\nAI 已根据${elderNickname}的状态和你的心情\n整理好了今日个性化分析摘要 🌿`
               : `今天的记录都完成了！\n小马虎已安全保存了今天的记录 🌿`}
           </Text>
           {isMorning ? (
-            <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/(tabs)/index' as any)}>
-              <Text style={styles.doneBtnText}>查看今日 AI 护理建议 ✨</Text>
+            <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/assistant' as any)}>
+              <Text style={styles.doneBtnText}>查看今日 AI 分析 ✨</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/(tabs)/index' as any)}>
+            <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/(tabs)' as any)}>
               <Text style={styles.doneBtnText}>回到首页 🏠</Text>
             </TouchableOpacity>
           )}
