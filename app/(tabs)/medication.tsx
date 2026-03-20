@@ -17,7 +17,7 @@ const FREQ_ICONS = ['1️⃣', '2️⃣', '3️⃣', '📅', '📆', '⚡'];
 const MED_ICONS = ['💊', '💉', '🩺', '🌡️', '🧴', '🫁', '🧠', '❤️', '🦴', '👁️'];
 
 // ─── Animated Med Card ───────────────────────────────────────────────────────
-function MedCard({ med, onToggle, onDelete, index }: { med: Medication; onToggle: () => void; onDelete: () => void; index: number }) {
+function MedCard({ med, onToggle, onDelete, onEdit, index }: { med: Medication; onToggle: () => void; onDelete: () => void; onEdit: () => void; index: number }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -56,7 +56,16 @@ function MedCard({ med, onToggle, onDelete, index }: { med: Medication; onToggle
 
         {med.notes ? <Text style={styles.medNotes}>📝 {med.notes}</Text> : null}
 
+        {med.reminderEnabled && (
+          <View style={styles.reminderBadge}>
+            <Text style={styles.reminderBadgeText}>🔔 每日提醒已开启</Text>
+          </View>
+        )}
+
         <View style={styles.medCardActions}>
+          <TouchableOpacity style={styles.editBtn} onPress={onEdit}>
+            <Text style={styles.editBtnText}>✏️ 修改</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: med.active ? '#FEE2E2' : '#DCFCE7' }]}
             onPress={() => pressAnimation(scaleAnim, onToggle)}
@@ -79,12 +88,14 @@ export default function MedicationScreen() {
   const [meds, setMeds] = useState<Medication[]>([]);
   const [elderNickname, setElderNickname] = useState('家人');
   const [adding, setAdding] = useState(false);
+  const [editingMed, setEditingMed] = useState<Medication | null>(null);
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
   const [freqIdx, setFreqIdx] = useState(0);
   const [selectedTimes, setSelectedTimes] = useState<string[]>(['08:00']);
   const [notes, setNotes] = useState('');
   const [icon, setIcon] = useState('💊');
+  const [reminderEnabled, setReminderEnabled] = useState(false);
 
   const headerFade = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-20)).current;
@@ -110,31 +121,82 @@ export default function MedicationScreen() {
     });
   }, []));
 
-  async function handleAdd() {
+  function resetForm() {
+    setAdding(false);
+    setEditingMed(null);
+    setName(''); setDosage(''); setFreqIdx(0); setSelectedTimes(['08:00']); setNotes(''); setIcon('💊'); setReminderEnabled(false);
+  }
+
+  function openEdit(med: Medication) {
+    setEditingMed(med);
+    setName(med.name);
+    setDosage(med.dosage);
+    setFreqIdx(FREQUENCIES.indexOf(med.frequency) >= 0 ? FREQUENCIES.indexOf(med.frequency) : 0);
+    setSelectedTimes(med.times || ['08:00']);
+    setNotes(med.notes || '');
+    setIcon(med.icon || '💊');
+    setReminderEnabled(!!med.reminderEnabled);
+    setAdding(true);
+    fadeInUp(formFade, formSlide, { duration: 400 });
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }
+
+  async function handleSave() {
     if (!name.trim()) {
       Alert.alert('请输入药物名称');
       return;
     }
-    const newMed: Medication = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      dosage: dosage.trim() || '按医嘱',
-      frequency: FREQUENCIES[freqIdx],
-      times: selectedTimes,
-      notes: notes.trim(),
-      icon,
-      active: true,
-    };
-    const updated = [...meds, newMed];
-    await saveMedications(updated);
-    setMeds(updated);
-    setAdding(false);
-    setName(''); setDosage(''); setFreqIdx(0); setSelectedTimes(['08:00']); setNotes(''); setIcon('💊');
-    if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // Schedule medication reminders
     const profile = await getProfile();
-    const elderNickname = profile?.nickname || profile?.name || '家人';
-    scheduleMedicationMorningEvening(newMed.id, newMed.name, newMed.icon || '💊', elderNickname).catch(() => {});
+    const nickname = profile?.nickname || profile?.name || '家人';
+
+    if (editingMed) {
+      // ── Edit existing ──
+      const updated = meds.map(m => m.id === editingMed.id ? {
+        ...m, name: name.trim(), dosage: dosage.trim() || '按医嘱',
+        frequency: FREQUENCIES[freqIdx], times: selectedTimes,
+        notes: notes.trim(), icon, reminderEnabled,
+      } : m);
+      await saveMedications(updated);
+      setMeds(updated);
+      // handle reminders
+      if (reminderEnabled) {
+        for (const t of selectedTimes) {
+          const [h, min] = t.split(':').map(Number);
+          scheduleMedicationReminder(editingMed.id + '_' + t.replace(':', ''), editingMed.name, icon, nickname, h, min).catch(() => {});
+        }
+      } else {
+        for (const t of (editingMed.times || [])) {
+          cancelMedicationReminder(editingMed.id + '_' + t.replace(':', '')).catch(() => {});
+        }
+        cancelMedicationReminder(editingMed.id + '_morning').catch(() => {});
+        cancelMedicationReminder(editingMed.id + '_evening').catch(() => {});
+      }
+    } else {
+      // ── Add new ──
+      const newMed: Medication = {
+        id: Date.now().toString(),
+        name: name.trim(),
+        dosage: dosage.trim() || '按医嘱',
+        frequency: FREQUENCIES[freqIdx],
+        times: selectedTimes,
+        notes: notes.trim(),
+        icon,
+        active: true,
+        reminderEnabled,
+      };
+      const updated = [...meds, newMed];
+      await saveMedications(updated);
+      setMeds(updated);
+      if (reminderEnabled) {
+        for (const t of selectedTimes) {
+          const [h, min] = t.split(':').map(Number);
+          scheduleMedicationReminder(newMed.id + '_' + t.replace(':', ''), newMed.name, newMed.icon, nickname, h, min).catch(() => {});
+        }
+      }
+    }
+
+    resetForm();
+    if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
 
   async function handleToggle(id: string) {
@@ -190,8 +252,8 @@ export default function MedicationScreen() {
         {adding && (
           <Animated.View style={[styles.addForm, { opacity: formFade, transform: [{ translateY: formSlide }] }]}>
             <View style={styles.formTitleRow}>
-              <Text style={styles.formEmoji}>💊</Text>
-              <Text style={styles.formTitle}>添加新药物</Text>
+              <Text style={styles.formEmoji}>{editingMed ? '✏️' : '💊'}</Text>
+              <Text style={styles.formTitle}>{editingMed ? '修改药物信息' : '添加新药物'}</Text>
             </View>
 
             {/* Icon Picker */}
@@ -244,17 +306,42 @@ export default function MedicationScreen() {
             <Text style={styles.label}>备注（可选）</Text>
             <TextInput style={styles.input} placeholder="例如：饭后服用、需要大量喝水..." value={notes} onChangeText={setNotes} placeholderTextColor="#B8BCC0" />
 
+            {/* Reminder Toggle */}
+            <TouchableOpacity
+              style={[styles.reminderToggleRow, reminderEnabled && styles.reminderToggleRowActive]}
+              onPress={() => {
+                setReminderEnabled(v => !v);
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+              activeOpacity={0.85}
+            >
+              <View style={styles.reminderToggleLeft}>
+                <Text style={styles.reminderToggleEmoji}>{reminderEnabled ? '🔔' : '🔕'}</Text>
+                <View>
+                  <Text style={[styles.reminderToggleTitle, reminderEnabled && { color: '#D97706' }]}>
+                    每日 App 提醒
+                  </Text>
+                  <Text style={styles.reminderToggleSub}>
+                    {reminderEnabled ? `将在 ${selectedTimes.join('、')} 发送可爱提醒 ✨` : '点击开启用药时间提醒'}
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.toggleTrack, reminderEnabled && styles.toggleTrackActive]}>
+                <View style={[styles.toggleThumb, reminderEnabled && styles.toggleThumbActive]} />
+              </View>
+            </TouchableOpacity>
+
             <View style={styles.formBtns}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setAdding(false)} activeOpacity={0.8}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={resetForm} activeOpacity={0.8}>
                 <Text style={styles.cancelBtnText}>取消</Text>
               </TouchableOpacity>
               <Animated.View style={{ flex: 2, transform: [{ scale: saveBtnScale }] }}>
                 <TouchableOpacity
                   style={styles.saveBtn}
-                  onPress={() => pressAnimation(saveBtnScale, handleAdd)}
+                  onPress={() => pressAnimation(saveBtnScale, handleSave)}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.saveBtnText}>保存药物 ✓</Text>
+                  <Text style={styles.saveBtnText}>{editingMed ? '保存修改 ✓' : '保存药物 ✓'}</Text>
                 </TouchableOpacity>
               </Animated.View>
             </View>
@@ -273,7 +360,7 @@ export default function MedicationScreen() {
               </View>
             </View>
             {meds.map((med, i) => (
-              <MedCard key={med.id} med={med} onToggle={() => handleToggle(med.id)} onDelete={() => handleDelete(med.id)} index={i} />
+              <MedCard key={med.id} med={med} onToggle={() => handleToggle(med.id)} onDelete={() => handleDelete(med.id)} onEdit={() => openEdit(med)} index={i} />
             ))}
           </View>
         ) : null}
@@ -448,11 +535,44 @@ const styles = StyleSheet.create({
   timeBadge: { backgroundColor: COLORS.primaryBg, borderRadius: RADIUS.sm, paddingHorizontal: 10, paddingVertical: 5 },
   timeBadgeText: { fontSize: 12, color: COLORS.primary, fontWeight: '600' },
   medNotes: { fontSize: 12, color: COLORS.textMuted, marginBottom: 8 },
-  medCardActions: { flexDirection: 'row', gap: 8, justifyContent: 'flex-end', marginTop: 4 },
+  reminderBadge: {
+    backgroundColor: '#FEF3C7', borderRadius: RADIUS.sm,
+    paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 8,
+  },
+  reminderBadgeText: { fontSize: 11, color: '#92400E', fontWeight: '600' },
+  medCardActions: { flexDirection: 'row', gap: 8, justifyContent: 'flex-end', marginTop: 4, alignItems: 'center' },
+  editBtn: {
+    borderRadius: RADIUS.sm, paddingHorizontal: 12, paddingVertical: 8,
+    backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE',
+  },
+  editBtnText: { fontSize: 13, fontWeight: '600', color: '#1D4ED8' },
   actionBtn: { borderRadius: RADIUS.sm, paddingHorizontal: 14, paddingVertical: 8 },
   actionBtnText: { fontSize: 13, fontWeight: '600' },
   deleteBtn: { padding: 8 },
   deleteBtnText: { fontSize: 18 },
+
+  // Reminder toggle (form)
+  reminderToggleRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#F8F9FA', borderRadius: RADIUS.xl, padding: 16, marginTop: 18,
+    borderWidth: 1.5, borderColor: '#EBEBEB',
+  },
+  reminderToggleRowActive: { backgroundColor: '#FFFBEB', borderColor: '#FCD34D' },
+  reminderToggleLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  reminderToggleEmoji: { fontSize: 24 },
+  reminderToggleTitle: { fontSize: 14, fontWeight: '700', color: COLORS.text, marginBottom: 2 },
+  reminderToggleSub: { fontSize: 12, color: COLORS.textSecondary },
+  toggleTrack: {
+    width: 48, height: 28, borderRadius: 14,
+    backgroundColor: '#D1D5DB', justifyContent: 'center', paddingHorizontal: 3,
+  },
+  toggleTrackActive: { backgroundColor: '#F59E0B' },
+  toggleThumb: {
+    width: 22, height: 22, borderRadius: 11, backgroundColor: '#fff',
+    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
+  },
+  toggleThumbActive: { transform: [{ translateX: 20 }] },
 
   // Empty
   emptyState: { alignItems: 'center', padding: 40 },
