@@ -204,11 +204,16 @@ const normalizeToolChoice = (
 const resolveApiUrl = () =>
   ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
     ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
-    : "https://forge.manus.im/v1/chat/completions";
+    : "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+
+const resolveApiKey = () =>
+  ENV.dashscopeApiKey && ENV.dashscopeApiKey.trim().length > 0
+    ? ENV.dashscopeApiKey
+    : ENV.forgeApiKey;
 
 const assertApiKey = () => {
-  if (!ENV.forgeApiKey) {
-    throw new Error("OPENAI_API_KEY is not configured");
+  if (!resolveApiKey()) {
+    throw new Error("DASHSCOPE_API_KEY is not configured");
   }
 };
 
@@ -267,7 +272,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   } = params;
 
   const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
+    model: "qwen-plus",
     messages: messages.map(normalizeMessage),
   };
 
@@ -280,10 +285,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.tool_choice = normalizedToolChoice;
   }
 
-  payload.max_tokens = 32768;
-  payload.thinking = {
-    budget_tokens: 128,
-  };
+  payload.max_tokens = 2000;
 
   const normalizedResponseFormat = normalizeResponseFormat({
     responseFormat,
@@ -300,7 +302,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${ENV.forgeApiKey}`,
+      authorization: `Bearer ${resolveApiKey()}`,
     },
     body: JSON.stringify(payload),
   });
