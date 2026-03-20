@@ -143,7 +143,7 @@ function AILoadingScreen() {
         {/* ── 文字区 ── */}
         <Animated.View style={[ldStyles.textBlock, { opacity: titleOpacity, transform: [{ translateY: titleY }] }]}>
           <Text style={ldStyles.title}>小马虎正在分析记录...</Text>
-          <Text style={ldStyles.subtitle}>正在整理近期数据，生成个性化摘要</Text>
+          <Text style={ldStyles.subtitle}>正在整理今日数据...</Text>
         </Animated.View>
 
         {/* ── 进度条 ── */}
