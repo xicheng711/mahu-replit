@@ -493,8 +493,8 @@ export default function AssistantScreen() {
 
         {/* Action buttons */}
         <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.checkinBtn} onPress={() => router.push('/(tabs)/checkin' as any)}>
-            <Text style={styles.checkinBtnText}>📋 去打卡</Text>
+          <TouchableOpacity style={styles.checkinBtn} onPress={() => router.replace('/(tabs)' as any)}>
+            <Text style={styles.checkinBtnText}>🏠 回到首页</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.shareBtn} onPress={() => router.push('/share' as any)}>
             <Text style={styles.shareBtnText}>📤 分享</Text>
