@@ -277,11 +277,26 @@ function AdviceCard({ card, index }: { card: any; index: number }) {
 }
 
 // ─── 当日分析缓存（模块级，避免重复生成）────────────────────────────────────
-let _adviceCache: { date: string; advice: any; weather: any } | null = null;
+let _adviceCache: { date: string; checkInKey: string; advice: any; weather: any } | null = null;
 
 function getTodayKey(): string {
   const d = new Date();
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+/** 根据打卡关键字段生成指纹，任意字段变化即失效缓存 */
+function buildCheckInKey(today: any, yesterday: any): string {
+  const ci = today ?? yesterday;
+  if (!ci) return 'empty';
+  return [
+    ci.moodScore ?? '',
+    ci.sleepHours ?? '',
+    ci.medicationTaken ?? '',
+    ci.morningNotes ?? '',
+    ci.mealOption ?? '',
+    ci.caregiverMoodScore ?? '',
+    ci.sleepInput ? JSON.stringify(ci.sleepInput) : '',
+  ].join('|');
 }
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
@@ -313,9 +328,14 @@ export default function AssistantScreen() {
       setCaregiverName(caregiver);
       setCity(cityName);
 
-      // ── 命中当日缓存，直接使用 ──
+      // ── 先获取打卡数据，构造指纹 ──
+      const yesterday = await getYesterdayCheckIn();
+      const today = await getTodayCheckIn();
       const todayKey = getTodayKey();
-      if (_adviceCache && _adviceCache.date === todayKey) {
+      const checkInKey = buildCheckInKey(today, yesterday);
+
+      // ── 命中当日缓存且打卡数据未变，直接使用 ──
+      if (_adviceCache && _adviceCache.date === todayKey && _adviceCache.checkInKey === checkInKey) {
         setAiAdvice(_adviceCache.advice);
         setWeatherData(_adviceCache.weather);
         setLoading(false);
@@ -323,8 +343,6 @@ export default function AssistantScreen() {
         return;
       }
 
-      const yesterday = await getYesterdayCheckIn();
-      const today = await getTodayCheckIn();
       const extraNotes = today?.morningNotes || '';
 
       // 规则引擎计算睡眠评分（昨日数据 or 今日早间）
@@ -362,8 +380,8 @@ export default function AssistantScreen() {
       if (result.success && result.advice) {
         setAiAdvice(result.advice);
         setWeatherData(result.weather);
-        // 写入当日缓存
-        _adviceCache = { date: getTodayKey(), advice: result.advice, weather: result.weather };
+        // 写入当日缓存（含打卡指纹，打卡数据变化会自动失效）
+        _adviceCache = { date: todayKey, checkInKey, advice: result.advice, weather: result.weather };
       } else {
         setError(result.error ?? '小马虎分析失败，请稍后重试');
       }
