@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Easing, Platform, Dimensions, TextInput,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Animated, Easing, Platform, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -580,24 +580,10 @@ export default function AssistantScreen() {
         <View style={{ height: 8 }} />
       </ScrollView>
 
-      {/* ── Bottom input bar ── */}
+      {/* ── Bottom bar ── */}
       <View style={styles.chatBottomBar}>
-        <View style={styles.chatInputRow}>
-          <View style={styles.chatInputWrap}>
-            <TextInput
-              style={styles.chatInput}
-              placeholder="继续询问小马虎...💭"
-              placeholderTextColor="#D1A5B8"
-            />
-          </View>
-          <TouchableOpacity>
-            <LinearGradient colors={['#F472B6', '#FB7185']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.chatSendBtn}>
-              <Text style={styles.chatSendBtnText}>➤</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
         <TouchableOpacity style={styles.chatEndBtn} onPress={() => router.replace('/(tabs)' as any)}>
-          <Text style={styles.chatEndBtnText}>结束并返回首页 →</Text>
+          <Text style={styles.chatEndBtnText}>返回首页 →</Text>
         </TouchableOpacity>
       </View>
     </ScreenContainer>
@@ -641,7 +627,7 @@ const styles = StyleSheet.create({
   chatDecoDot: { width: 6, height: 6, borderRadius: 3 },
   chatBottomBar: {
     backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 20,
-    borderTopWidth: 2, borderTopColor: '#FECDD3', gap: 10,
+    borderTopWidth: 2, borderTopColor: '#FECDD3',
   },
   chatInputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   chatInputWrap: {
