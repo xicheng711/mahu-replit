@@ -5,47 +5,54 @@ import { Platform, View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
-const INACTIVE_COLOR = "#B0B7C3";
+const INACTIVE_ICON_COLOR = "#6B7280";
+const INACTIVE_BG = "#F3F4F6";
+const INACTIVE_LABEL = "#6B7280";
 
+// 每个 tab 的激活渐变色（参考 Figma）
 const TAB_CONFIG: Record<string, {
   outline: keyof typeof Ionicons.glyphMap;
   filled: keyof typeof Ionicons.glyphMap;
-  gradientColors: [string, string];
-  activeTextColor: string;
+  gradient: [string, string, string];
   label: string;
 }> = {
-  index:      { outline: "home-outline",    filled: "home",    gradientColors: ["#FFB199", "#FF6A88"], activeTextColor: "#FF6A88", label: "首页" },
-  checkin:    { outline: "sparkles-outline",filled: "sparkles",gradientColors: ["#6EE7B7", "#10B981"], activeTextColor: "#10B981", label: "每日打卡" },
-  medication: { outline: "medical-outline", filled: "medical", gradientColors: ["#FDA4AF", "#F43F5E"], activeTextColor: "#F43F5E", label: "用药记录" },
-  diary:      { outline: "book-outline",    filled: "book",    gradientColors: ["#7DD3FC", "#3B82F6"], activeTextColor: "#3B82F6", label: "日记" },
-  family:     { outline: "people-outline",  filled: "people",  gradientColors: ["#D8B4FE", "#A855F7"], activeTextColor: "#A855F7", label: "家人共享" },
+  index:      { outline: "home-outline",    filled: "home",    gradient: ["#FF8904", "#FF637E", "#F6339A"], label: "首页" },
+  checkin:    { outline: "sparkles-outline",filled: "sparkles",gradient: ["#34D399", "#10B981", "#059669"], label: "每日打卡" },
+  medication: { outline: "medical-outline", filled: "medical", gradient: ["#FDA4AF", "#F43F5E", "#E11D48"], label: "用药记录" },
+  diary:      { outline: "book-outline",    filled: "book",    gradient: ["#7DD3FC", "#38BDF8", "#0EA5E9"], label: "日记" },
+  family:     { outline: "people-outline",  filled: "people",  gradient: ["#D8B4FE", "#A855F7", "#9333EA"], label: "家人共享" },
 };
 
 function TabIcon({ route, focused }: { route: string; focused: boolean }) {
   const cfg = TAB_CONFIG[route] ?? {
     outline: "ellipse-outline", filled: "ellipse",
-    gradientColors: ["#ccc", "#aaa"] as [string, string],
-    activeTextColor: "#6B7280", label: "",
+    gradient: ["#ccc", "#aaa", "#888"] as [string, string, string],
+    label: "",
   };
 
   return (
     <View style={styles.tabItem}>
-      <View style={styles.iconWrapper}>
-        {focused && (
-          <LinearGradient
-            colors={cfg.gradientColors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-        )}
-        <Ionicons
-          name={focused ? cfg.filled : cfg.outline}
-          size={22}
-          color={focused ? "#fff" : INACTIVE_COLOR}
-        />
-      </View>
-      <Text style={[styles.tabLabel, focused && { color: cfg.activeTextColor, fontWeight: "700" }]}>
+      {/* 图标圆形 */}
+      {focused ? (
+        <LinearGradient
+          colors={cfg.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.iconCircle}
+        >
+          <Ionicons name={cfg.filled} size={22} color="#fff" />
+        </LinearGradient>
+      ) : (
+        <View style={[styles.iconCircle, { backgroundColor: INACTIVE_BG }]}>
+          <Ionicons name={cfg.outline} size={22} color={INACTIVE_ICON_COLOR} />
+        </View>
+      )}
+
+      {/* 文字标签 */}
+      <Text style={[
+        styles.tabLabel,
+        focused && { color: cfg.gradient[1], fontWeight: "700" },
+      ]}>
         {cfg.label}
       </Text>
     </View>
@@ -55,7 +62,7 @@ function TabIcon({ route, focused }: { route: string; focused: boolean }) {
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const safeBottom = Platform.OS === "web" ? 0 : insets.bottom;
-  const tabBarHeight = 64 + safeBottom;
+  const tabBarHeight = 72 + safeBottom;
 
   return (
     <Tabs
@@ -66,15 +73,15 @@ export default function TabLayout() {
         tabBarStyle: {
           height: tabBarHeight,
           paddingBottom: safeBottom,
-          paddingTop: 4,
+          paddingTop: 6,
           backgroundColor: "#FFFFFF",
           borderTopWidth: 0,
-          borderTopLeftRadius: 22,
-          borderTopRightRadius: 22,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: -6 },
-          shadowOpacity: 0.08,
-          shadowRadius: 18,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.10,
+          shadowRadius: 20,
           elevation: 24,
           overflow: Platform.OS === "android" ? "hidden" : undefined,
         },
@@ -93,27 +100,26 @@ export default function TabLayout() {
   );
 }
 
-const CIRCLE = 46;
+const CIRCLE_SIZE = 48;
 
 const styles = StyleSheet.create({
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 3,
-    paddingTop: 2,
+    gap: 4,
+    paddingTop: 4,
   },
-  iconWrapper: {
-    width: CIRCLE,
-    height: CIRCLE,
-    borderRadius: CIRCLE / 2,
+  iconCircle: {
+    width: CIRCLE_SIZE,
+    height: CIRCLE_SIZE,
+    borderRadius: CIRCLE_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
   },
   tabLabel: {
     fontSize: 10,
     fontWeight: "500",
-    color: INACTIVE_COLOR,
+    color: INACTIVE_LABEL,
     letterSpacing: 0.2,
   },
 });
