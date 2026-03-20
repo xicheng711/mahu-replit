@@ -527,7 +527,7 @@ function CheckinLanding({
       {/* Tip */}
       <View style={styles.landingTip}>
         <Text style={styles.landingTipText}>
-          💡 每天两次打卡，帮助 AI 更准确地了解{elderNickname}的状态，生成更贴心的护理建议。
+          💡 每天两次打卡，帮助小马虎更准确地了解{elderNickname}的状态，生成更贴心的护理建议。
         </Text>
       </View>
 
@@ -903,10 +903,10 @@ export default function CheckinScreen() {
           </View>
           <Text style={styles.doneTitle}>早间打卡完成！</Text>
           <Text style={styles.doneSub}>
-            {`今天也辛苦了！\nAI 已根据${elderNickname}的状态和你的心情\n整理好了今日个性化分析摘要 🌿`}
+            {`今天也辛苦了！\n小马虎已根据${elderNickname}的状态和你的心情\n整理好了今日个性化护理摘要 🌿`}
           </Text>
           <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/assistant' as any)}>
-            <Text style={styles.doneBtnText}>查看今日 AI 分析 ✨</Text>
+            <Text style={styles.doneBtnText}>查看今日护理简报 ✨</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.doneBtnSecondary} onPress={() => {
             setDone(false);
@@ -1100,7 +1100,7 @@ export default function CheckinScreen() {
             placeholderTextColor="#B8BCC0"
             returnKeyType="done"
           />
-          <Text style={styles.noteHint}>💡 这里的信息会帮助 AI 给出更准确的护理建议</Text>
+          <Text style={styles.noteHint}>💡 这里的信息会帮助小马虎给出更准确的护理建议</Text>
         </View>
       ),
     },
