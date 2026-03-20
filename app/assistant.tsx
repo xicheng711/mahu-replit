@@ -386,9 +386,7 @@ export default function AssistantScreen() {
         <View style={styles.header}>
           <BackButton onPress={() => router.replace('/(tabs)' as any)} />
           <Text style={styles.title}>今日数据分析</Text>
-          <TouchableOpacity onPress={loadData} style={styles.refreshBtn} activeOpacity={0.7}>
-            <Text style={styles.refreshBtnText}>🔄</Text>
-          </TouchableOpacity>
+          <View style={{ width: 36 }} />
         </View>
 
         {/* Weather badge */}
