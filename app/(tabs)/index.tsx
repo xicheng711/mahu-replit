@@ -7,7 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getRandomTip } from '@/lib/care-knowledge';
-import { getWeatherByGPS, buildGreetingWithWeather, GpsWeatherInfo } from '@/lib/weather';
+import { getWeatherByGPS, buildGreetingWithWeather, fetchWeather, GpsWeatherInfo, WeatherData } from '@/lib/weather';
+import { getLunarDate, getFormattedDate } from '@/lib/lunar';
 import { getTodayCheckIn, getProfile, getAllCheckIns, DailyCheckIn } from '@/lib/storage';
 import { TrendChart } from '@/components/trend-chart';
 import { COLORS, SHADOWS, fadeInUp, pressAnimation } from '@/lib/animations';
@@ -429,6 +430,10 @@ export default function HomeScreen() {
   const [memberPhotoUri, setMemberPhotoUri] = useState<string | null>(null);
   const [zodiacColor, setZodiacColor] = useState('#FF6B6B');
   const [zodiacEmoji, setZodiacEmoji] = useState('🐎');
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [cityName, setCityName] = useState('');
+  const lunarDate = getLunarDate();
+  const todayLabel = getFormattedDate();
 
   const headerFade = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-15)).current;
@@ -449,8 +454,13 @@ export default function HomeScreen() {
       if (member?.photoUri) setMemberPhotoUri(member.photoUri);
     }
     setCaregiverName(cgName);
+    const profileCity = profile?.city || '';
+    setCityName(profileCity);
     getWeatherByGPS().then(weather => setGreeting(buildGreetingWithWeather(cgName || undefined, weather)));
     setGreeting(buildGreetingWithWeather(cgName || undefined, null));
+    if (profileCity) {
+      fetchWeather(profileCity).then(w => { if (w) setWeatherData(w); });
+    }
     setTip(getRandomTip());
     if (profile?.birthDate) {
       const { getZodiacFromDate } = require('@/lib/zodiac');
@@ -516,6 +526,29 @@ export default function HomeScreen() {
         {/* ── 顶部 Header ── */}
         <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
           <View style={{ flex: 1 }}>
+            {/* 日期 + 天气栏 */}
+            <View style={styles.dateWeatherRow}>
+              <View style={styles.dateBlock}>
+                <Text style={styles.dateText}>{todayLabel}</Text>
+                <Text style={styles.lunarText}>{lunarDate.full}</Text>
+              </View>
+              {weatherData ? (
+                <View style={styles.weatherChip}>
+                  <Text style={styles.weatherIcon}>{weatherData.icon}</Text>
+                  <View>
+                    <Text style={styles.weatherTemp}>{weatherData.temp}°</Text>
+                    <Text style={styles.weatherDesc}>{weatherData.description}</Text>
+                  </View>
+                </View>
+              ) : cityName ? (
+                <View style={styles.weatherChip}>
+                  <Text style={styles.weatherIcon}>⛅</Text>
+                  <Text style={styles.weatherDesc}>{cityName}</Text>
+                </View>
+              ) : null}
+            </View>
+
+            {/* 标题 + 问候 */}
             <View style={styles.appNameRow}>
               <Text style={styles.appName}>我们一起照顾好今天</Text>
               <Text style={styles.headerSparkle}>✨</Text>
@@ -652,7 +685,24 @@ const styles = StyleSheet.create({
   bgDecorLayer: { position: 'absolute', top: 0, left: 0, right: 0, height: 220, overflow: 'hidden' },
 
   // Header
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 20, paddingBottom: 16 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 14, paddingBottom: 12 },
+  // 日期天气行
+  dateWeatherRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingRight: 14 },
+  dateBlock: { flexDirection: 'column', gap: 1 },
+  dateText: { fontSize: 13, fontWeight: '700', color: '#555', letterSpacing: 0.2 },
+  lunarText: { fontSize: 11, color: '#A0855B', fontWeight: '500', marginTop: 1 },
+  weatherChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.82)',
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
+  },
+  weatherIcon: { fontSize: 18 },
+  weatherTemp: { fontSize: 13, fontWeight: '800', color: '#333', lineHeight: 16 },
+  weatherDesc: { fontSize: 10, color: '#888', lineHeight: 13 },
+  // 标题行
   appNameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   appName: { fontSize: 22, fontWeight: '900', color: '#FF4D4D', letterSpacing: -0.5 },
   headerSparkle: { fontSize: 18 },
