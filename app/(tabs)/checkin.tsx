@@ -7,6 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenContainer } from '@/components/screen-container';
+import { PageHeader, PAGE_THEMES } from '@/components/page-header';
 import { upsertCheckIn, getTodayCheckIn, getAllCheckIns, getProfile, DailyCheckIn, SleepInput, todayStr } from '@/lib/storage';
 import { scoreSleepInput } from '@/lib/sleep-scoring';
 import { COLORS, SHADOWS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
@@ -407,18 +408,17 @@ function CheckinLanding({
   return (
     <ScrollView contentContainerStyle={styles.landingContainer} showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View style={styles.landingHeader}>
-        <Text style={styles.landingTitle}>每日打卡</Text>
-        <Text style={styles.landingDate}>
-          {new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}
-        </Text>
-        {/* Progress indicator */}
-        <View style={styles.progressPill}>
-          <Text style={styles.progressPillText}>
-            今日记录 {(morningDone ? 1 : 0) + (eveningDone ? 1 : 0)}/2
-          </Text>
-        </View>
-      </View>
+      <PageHeader
+        theme={PAGE_THEMES.checkin}
+        subtitle={new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}
+        right={
+          <View style={styles.progressPill}>
+            <Text style={styles.progressPillText}>
+              {(morningDone ? 1 : 0) + (eveningDone ? 1 : 0)}/2 完成
+            </Text>
+          </View>
+        }
+      />
 
       {/* Morning block */}
       <View style={[styles.checkinBlock, morningDone && styles.checkinBlockDone]}>

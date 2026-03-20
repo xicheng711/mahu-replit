@@ -6,6 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenContainer } from '@/components/screen-container';
+import { PageHeader, PAGE_THEMES } from '@/components/page-header';
 import { getMedications, saveMedications, Medication, getProfile, CareNeedType, CareNeedsProfile } from '@/lib/storage';
 import { COLORS, SHADOWS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
 import * as Haptics from 'expo-haptics';
@@ -236,20 +237,22 @@ export default function MedicationScreen() {
     <ScreenContainer containerClassName="bg-[#FFF7ED]">
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Header */}
-        <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
-          <View>
-            <Text style={styles.title}>用药管理</Text>
-            <Text style={styles.subtitle}>{activeCount} 种药物启用中</Text>
-          </View>
-          <Animated.View style={{ transform: [{ scale: addBtnScale }] }}>
-            <TouchableOpacity
-              style={styles.addBtn}
-              onPress={() => pressAnimation(addBtnScale, () => setAdding(true))}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.addBtnText}>+ 添加药物</Text>
-            </TouchableOpacity>
-          </Animated.View>
+        <Animated.View style={{ opacity: headerFade, transform: [{ translateY: headerSlide }] }}>
+          <PageHeader
+            theme={PAGE_THEMES.medication}
+            subtitle={`${activeCount} 种药物启用中`}
+            right={
+              <Animated.View style={{ transform: [{ scale: addBtnScale }] }}>
+                <TouchableOpacity
+                  style={styles.addBtn}
+                  onPress={() => pressAnimation(addBtnScale, () => setAdding(true))}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.addBtnText}>+ 添加药物</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            }
+          />
         </Animated.View>
 
         {/* Add Form */}

@@ -17,6 +17,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
 import { COLORS } from '@/lib/animations';
+import { PageHeader, PAGE_THEMES } from '@/components/page-header';
 import { ScreenContainer } from '@/components/screen-container';
 import { sendFamilyAnnouncementNotification } from '@/lib/notifications';
 import { captureRef } from 'react-native-view-shot';
@@ -428,20 +429,19 @@ export default function FamilyScreen() {
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>🏡 家人共享</Text>
-          <Text style={styles.headerSub}>{room.elderName} 的家庭空间</Text>
-        </View>
-        <View style={styles.headerRight}>
-          {/* Room code badge */}
-          <TouchableOpacity
-            style={styles.roomCodeBadge}
-            onPress={() => Alert.alert('邀请家人', `邀请码：${room.roomCode}\n\n将此码分享给家人，让他们加入你的家庭空间！`)}
-          >
-            <Text style={styles.roomCodeText}>🔗 {room.roomCode}</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={[styles.pageHeaderWrap, { paddingTop: insets.top + 8 }]}>
+        <PageHeader
+          theme={PAGE_THEMES.family}
+          subtitle={`${room.elderName} 的家庭空间`}
+          right={
+            <TouchableOpacity
+              style={styles.roomCodeBadge}
+              onPress={() => Alert.alert('邀请家人', `邀请码：${room.roomCode}\n\n将此码分享给家人，让他们加入你的家庭空间！`)}
+            >
+              <Text style={styles.roomCodeText}>🔗 {room.roomCode}</Text>
+            </TouchableOpacity>
+          }
+        />
       </View>
 
       {/* Members row */}
@@ -945,6 +945,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFCF8' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { fontSize: 18, color: '#687076' },
+  pageHeaderWrap: {
+    paddingHorizontal: 20, paddingBottom: 4,
+    backgroundColor: '#FFFCF8',
+  },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
     paddingHorizontal: 20, paddingBottom: 12,
@@ -955,10 +959,10 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: 13, color: '#687076', marginTop: 2 },
   headerRight: { alignItems: 'flex-end' },
   roomCodeBadge: {
-    backgroundColor: '#F0FDF4', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6,
-    borderWidth: 1, borderColor: '#4ADE80',
+    backgroundColor: '#FAF5FF', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: '#C084FC',
   },
-  roomCodeText: { fontSize: 13, fontWeight: '700', color: '#16A34A' },
+  roomCodeText: { fontSize: 13, fontWeight: '700', color: '#9333EA' },
   membersScroll: { maxHeight: 90 },
   membersContent: { paddingHorizontal: 20, gap: 12, paddingVertical: 8 },
   memberChip: { alignItems: 'center', gap: 4, width: 56 },

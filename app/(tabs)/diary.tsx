@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { ScreenContainer } from '@/components/screen-container';
+import { PageHeader, PAGE_THEMES } from '@/components/page-header';
 import { getDiaryEntries, deleteDiaryEntry, DiaryEntry } from '@/lib/storage';
 import { COLORS, SHADOWS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
 import * as Haptics from 'expo-haptics';
@@ -228,37 +229,37 @@ export default function DiaryScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
-          <View>
-            <Text style={styles.title}>护理日记</Text>
-            <Text style={styles.subtitle}>
-              {new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}
-            </Text>
-          </View>
-          <View style={styles.headerBtns}>
-            {entries.length > 0 && (
-              <TouchableOpacity
-                style={[styles.manageBtn, editMode && styles.manageBtnActive]}
-                onPress={() => setEditMode(v => !v)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.manageBtnText, editMode && styles.manageBtnTextActive]}>
-                  {editMode ? '✓ 完成' : '管理'}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {!editMode && (
-              <Animated.View style={{ transform: [{ scale: fabScale }] }}>
-                <TouchableOpacity
-                  style={styles.writeBtn}
-                  onPress={() => pressAnimation(fabScale, openNewEntry)}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.writeBtnText}>✏️ 写日记</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            )}
-          </View>
+        <Animated.View style={{ opacity: headerFade, transform: [{ translateY: headerSlide }] }}>
+          <PageHeader
+            theme={PAGE_THEMES.diary}
+            subtitle={new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}
+            right={
+              <View style={styles.headerBtns}>
+                {entries.length > 0 && (
+                  <TouchableOpacity
+                    style={[styles.manageBtn, editMode && styles.manageBtnActive]}
+                    onPress={() => setEditMode(v => !v)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.manageBtnText, editMode && styles.manageBtnTextActive]}>
+                      {editMode ? '✓ 完成' : '管理'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                {!editMode && (
+                  <Animated.View style={{ transform: [{ scale: fabScale }] }}>
+                    <TouchableOpacity
+                      style={styles.writeBtn}
+                      onPress={() => pressAnimation(fabScale, openNewEntry)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.writeBtnText}>✏️ 写日记</Text>
+                    </TouchableOpacity>
+                  </Animated.View>
+                )}
+              </View>
+            }
+          />
         </Animated.View>
 
         {/* Edit mode hint */}
