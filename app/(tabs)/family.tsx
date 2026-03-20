@@ -16,6 +16,7 @@ import {
 } from '@/lib/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '@/lib/animations';
 import { PageHeader, PAGE_THEMES } from '@/components/page-header';
 import { ScreenContainer } from '@/components/screen-container';
@@ -502,18 +503,28 @@ export default function FamilyScreen() {
         <TouchableOpacity
           style={[styles.sectionTab, activeSection === 'broadcast' && styles.sectionTabActive]}
           onPress={() => setActiveSection('broadcast')}
+          activeOpacity={0.85}
         >
-          <Text style={[styles.sectionTabText, activeSection === 'broadcast' && styles.sectionTabTextActive]}>
-            📢 家庭公告
-          </Text>
+          {activeSection === 'broadcast' ? (
+            <LinearGradient colors={['#C084FC', '#A855F7', '#9333EA']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.sectionTabGradient}>
+              <Text style={styles.sectionTabTextActive}>📢 公告</Text>
+            </LinearGradient>
+          ) : (
+            <Text style={styles.sectionTabText}>📢 公告</Text>
+          )}
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.sectionTab, activeSection === 'briefing' && styles.sectionTabActive]}
           onPress={() => setActiveSection('briefing')}
+          activeOpacity={0.85}
         >
-          <Text style={[styles.sectionTabText, activeSection === 'briefing' && styles.sectionTabTextActive]}>
-            📋 简报分享
-          </Text>
+          {activeSection === 'briefing' ? (
+            <LinearGradient colors={['#C084FC', '#A855F7', '#9333EA']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.sectionTabGradient}>
+              <Text style={styles.sectionTabTextActive}>📋 简报</Text>
+            </LinearGradient>
+          ) : (
+            <Text style={styles.sectionTabText}>📋 简报</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -722,10 +733,13 @@ export default function FamilyScreen() {
       {/* Compose button (broadcast section only) */}
       {activeSection === 'broadcast' && (
         <TouchableOpacity
-          style={[styles.fab, { bottom: insets.bottom + 90 }]}
+          style={[styles.fabWrap, { bottom: insets.bottom + 90 }]}
           onPress={() => setShowCompose(true)}
+          activeOpacity={0.88}
         >
-          <Text style={styles.fabText}>📢 发布公告</Text>
+          <LinearGradient colors={['#C084FC', '#A855F7', '#7C3AED']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.fab}>
+            <Text style={styles.fabText}>📢 发布公告</Text>
+          </LinearGradient>
         </TouchableOpacity>
       )}
 
@@ -916,25 +930,28 @@ function AnnouncementCard({
 
   return (
     <View style={[card.container, isNew && card.containerNew]}>
-      <View style={[card.typeBadge, { backgroundColor: typeInfo.color + '20' }]}>
-        <Text style={card.typeEmoji}>{typeInfo.emoji}</Text>
-      </View>
-      <View style={card.body}>
-        <View style={card.authorRow}>
-          <Text style={card.authorEmoji}>{ann.authorEmoji}</Text>
-          <Text style={[card.authorName, { color: ann.authorColor }]}>{ann.authorName}</Text>
-          <Text style={card.roleLabel}>{typeInfo.label}</Text>
-          <Text style={card.time}>{date}{time}</Text>
+      <View style={[card.colorStrip, { backgroundColor: typeInfo.color }]} />
+      <View style={card.cardInner}>
+        <View style={[card.typeBadge, { backgroundColor: typeInfo.color + '22' }]}>
+          <Text style={card.typeEmoji}>{typeInfo.emoji}</Text>
         </View>
-        <Text style={card.content}>
-          {ann.emoji ? ann.emoji + ' ' : ''}{ann.content}
-        </Text>
+        <View style={card.body}>
+          <View style={card.authorRow}>
+            <Text style={card.authorEmoji}>{ann.authorEmoji}</Text>
+            <Text style={[card.authorName, { color: ann.authorColor }]}>{ann.authorName}</Text>
+            <Text style={card.roleLabel}>{typeInfo.label}</Text>
+            <Text style={card.time}>{date}{time}</Text>
+          </View>
+          <Text style={card.content}>
+            {ann.emoji ? ann.emoji + ' ' : ''}{ann.content}
+          </Text>
+        </View>
+        {isOwn && (
+          <TouchableOpacity onPress={onDelete} style={card.deleteBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={card.deleteText}>✕</Text>
+          </TouchableOpacity>
+        )}
       </View>
-      {isOwn && (
-        <TouchableOpacity onPress={onDelete} style={card.deleteBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={card.deleteText}>✕</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 }
@@ -963,35 +980,36 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#C084FC',
   },
   roomCodeText: { fontSize: 13, fontWeight: '700', color: '#9333EA' },
-  membersScroll: { maxHeight: 90 },
-  membersContent: { paddingHorizontal: 20, gap: 12, paddingVertical: 8 },
-  memberChip: { alignItems: 'center', gap: 4, width: 56 },
-  memberAvatar: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 2, overflow: 'hidden', position: 'relative' },
-  memberAvatarText: { fontSize: 26 },
-  memberAvatarImg: { width: 52, height: 52, borderRadius: 26 },
+  membersScroll: { maxHeight: 110 },
+  membersContent: { paddingHorizontal: 20, gap: 14, paddingVertical: 8 },
+  memberChip: { alignItems: 'center', gap: 5, width: 62 },
+  memberAvatar: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, overflow: 'hidden', position: 'relative' },
+  memberAvatarText: { fontSize: 28 },
+  memberAvatarImg: { width: 56, height: 56, borderRadius: 28 },
   memberAvatarEdit: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: 'rgba(0,0,0,0.45)', paddingVertical: 2, alignItems: 'center',
   },
-  memberName: { fontSize: 11, fontWeight: '600', color: '#11181C', textAlign: 'center' },
-  memberRole: { fontSize: 10, color: '#687076', textAlign: 'center' },
-  addMemberChip: { alignItems: 'center', gap: 4, width: 56 },
-  addMemberBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F8F9FA', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#E5E7EB', borderStyle: 'dashed' },
-  addMemberBtnText: { fontSize: 20, color: '#9BA1A6' },
-  sectionTabs: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 8, backgroundColor: '#F8F9FA', borderRadius: 16, padding: 4 },
-  sectionTab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 12 },
-  sectionTabActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
-  sectionTabText: { fontSize: 13, fontWeight: '600', color: '#9BA1A6' },
-  sectionTabTextActive: { color: '#11181C' },
+  memberName: { fontSize: 11, fontWeight: '700', color: '#11181C', textAlign: 'center' },
+  memberRole: { fontSize: 10, color: '#A78BFA', textAlign: 'center', fontWeight: '500' },
+  addMemberChip: { alignItems: 'center', gap: 5, width: 62 },
+  addMemberBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FAF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#D8B4FE', borderStyle: 'dashed' },
+  addMemberBtnText: { fontSize: 22, color: '#A855F7' },
+  sectionTabs: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 10, backgroundColor: '#F3F0FF', borderRadius: 18, padding: 5, gap: 4 },
+  sectionTab: { flex: 1, alignItems: 'center', borderRadius: 14, overflow: 'hidden' },
+  sectionTabActive: {},
+  sectionTabGradient: { width: '100%', paddingVertical: 11, alignItems: 'center', borderRadius: 14 },
+  sectionTabText: { fontSize: 14, fontWeight: '600', color: '#9B8EC4', paddingVertical: 11 },
+  sectionTabTextActive: { fontSize: 14, fontWeight: '700', color: '#fff' },
   content: { flex: 1 },
   section: { paddingHorizontal: 20, paddingTop: 8 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#11181C' },
   sectionCount: { fontSize: 13, color: '#687076', backgroundColor: '#F8F9FA', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  emptyCard: { alignItems: 'center', padding: 32, backgroundColor: '#F8F9FA', borderRadius: 20, gap: 8 },
-  emptyEmoji: { fontSize: 40 },
-  emptyText: { fontSize: 16, fontWeight: '700', color: '#11181C' },
-  emptySubText: { fontSize: 13, color: '#687076', textAlign: 'center' },
+  emptyCard: { alignItems: 'center', padding: 36, backgroundColor: '#FAF5FF', borderRadius: 24, gap: 8, borderWidth: 1.5, borderColor: '#E9D5FF' },
+  emptyEmoji: { fontSize: 44 },
+  emptyText: { fontSize: 16, fontWeight: '800', color: '#7C3AED' },
+  emptySubText: { fontSize: 13, color: '#A78BFA', textAlign: 'center', lineHeight: 20 },
   // Briefing
   briefingCard: {
     backgroundColor: '#fff', borderRadius: 24, padding: 20, marginBottom: 16,
@@ -1034,15 +1052,16 @@ const styles = StyleSheet.create({
   briefingDiaryText: { fontSize: 13, color: '#687076', lineHeight: 20 },
   briefingEmpty: { alignItems: 'center', padding: 24, gap: 8 },
   briefingActions: { flexDirection: 'row', gap: 12 },
-  shareBtn: { flex: 1, backgroundColor: '#07C160', borderRadius: 16, padding: 14, alignItems: 'center' },
+  shareBtn: { flex: 1, backgroundColor: '#A855F7', borderRadius: 16, padding: 14, alignItems: 'center', shadowColor: '#9333EA', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
   shareBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
-  exportBtn: { flex: 1, backgroundColor: '#F8F9FA', borderRadius: 16, padding: 14, alignItems: 'center', borderWidth: 1.5, borderColor: '#E5E7EB' },
-  exportBtnText: { fontSize: 14, fontWeight: '700', color: '#11181C' },
-  goCheckinBtn: { backgroundColor: '#FF6B6B', borderRadius: 14, paddingHorizontal: 20, paddingVertical: 10, marginTop: 4 },
+  exportBtn: { flex: 1, backgroundColor: '#F3F0FF', borderRadius: 16, padding: 14, alignItems: 'center', borderWidth: 1.5, borderColor: '#D8B4FE' },
+  exportBtnText: { fontSize: 14, fontWeight: '700', color: '#7C3AED' },
+  goCheckinBtn: { backgroundColor: '#A855F7', borderRadius: 14, paddingHorizontal: 20, paddingVertical: 10, marginTop: 4 },
   goCheckinBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   // FAB
-  fab: { position: 'absolute', left: 20, right: 20, backgroundColor: '#FF6B6B', borderRadius: 20, padding: 16, alignItems: 'center', shadowColor: '#FF6B6B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
-  fabText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  fabWrap: { position: 'absolute', left: 20, right: 20, borderRadius: 22, shadowColor: '#9333EA', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 14, elevation: 8 },
+  fab: { borderRadius: 22, padding: 17, alignItems: 'center' },
+  fabText: { fontSize: 16, fontWeight: '800', color: '#fff', letterSpacing: 0.3 },
   // Modal
   modal: { flex: 1, backgroundColor: '#FFFCF8', paddingHorizontal: 20, paddingTop: 16 },
   modalCancelBtn: { alignSelf: 'flex-start', paddingVertical: 4, paddingRight: 12, marginBottom: 8 },
@@ -1084,25 +1103,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
     backgroundColor: '#F8F9FA', borderWidth: 1.5, borderColor: '#E5E7EB',
   },
-  briefingDateTabActive: { backgroundColor: '#FF6B6B', borderColor: '#FF6B6B' },
+  briefingDateTabActive: { backgroundColor: '#A855F7', borderColor: '#A855F7' },
   briefingDateTabText: { fontSize: 13, fontWeight: '600', color: '#687076' },
   briefingDateTabTextActive: { color: '#fff' },
 });
 
 const card = StyleSheet.create({
-  container: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 20, padding: 14, marginBottom: 10, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
-  containerNew: { borderWidth: 2, borderColor: '#FF6B6B', backgroundColor: '#FFF8F8' },
-  typeBadge: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  container: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 20, marginBottom: 10, gap: 0, shadowColor: '#9333EA', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3, overflow: 'hidden' },
+  containerNew: { borderWidth: 2, borderColor: '#C084FC', backgroundColor: '#FAF5FF' },
+  colorStrip: { width: 5, flexShrink: 0, borderTopLeftRadius: 20, borderBottomLeftRadius: 20 },
+  cardInner: { flex: 1, flexDirection: 'row', padding: 14, gap: 12 },
+  typeBadge: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   typeEmoji: { fontSize: 20 },
   body: { flex: 1 },
-  authorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' },
-  authorEmoji: { fontSize: 16 },
+  authorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 5, flexWrap: 'wrap' },
+  authorEmoji: { fontSize: 15 },
   authorName: { fontSize: 13, fontWeight: '700' },
-  roleLabel: { fontSize: 11, color: '#9BA1A6', backgroundColor: '#F8F9FA', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  time: { fontSize: 11, color: '#9BA1A6', marginLeft: 'auto' },
-  content: { fontSize: 15, color: '#11181C', lineHeight: 22 },
-  deleteBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#FFF0F0', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  deleteText: { fontSize: 11, color: '#FF6B6B', fontWeight: '700' },
+  roleLabel: { fontSize: 10, color: '#A78BFA', backgroundColor: '#F3F0FF', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, fontWeight: '600' },
+  time: { fontSize: 10, color: '#9BA1A6', marginLeft: 'auto' },
+  content: { fontSize: 15, color: '#1A1A1A', lineHeight: 22 },
+  deleteBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#FFF0F0', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  deleteText: { fontSize: 12, color: '#F87171', fontWeight: '700' },
 });
 
 const setup = StyleSheet.create({
