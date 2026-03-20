@@ -6,7 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenContainer } from '@/components/screen-container';
-import { getMedications, saveMedications, Medication, getProfile } from '@/lib/storage';
+import { getMedications, saveMedications, Medication, getProfile, CareNeedType, CareNeedsProfile } from '@/lib/storage';
 import { COLORS, SHADOWS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
 import * as Haptics from 'expo-haptics';
 import { scheduleMedicationMorningEvening, scheduleMedicationReminder, cancelMedicationReminder } from '@/lib/notifications';
@@ -87,6 +87,7 @@ function MedCard({ med, onToggle, onDelete, onEdit, index }: { med: Medication; 
 export default function MedicationScreen() {
   const [meds, setMeds] = useState<Medication[]>([]);
   const [elderNickname, setElderNickname] = useState('家人');
+  const [careNeeds, setCareNeeds] = useState<CareNeedType[]>([]);
   const [adding, setAdding] = useState(false);
   const [editingMed, setEditingMed] = useState<Medication | null>(null);
   const [name, setName] = useState('');
@@ -117,7 +118,10 @@ export default function MedicationScreen() {
   useFocusEffect(useCallback(() => {
     getMedications().then(setMeds);
     getProfile().then(p => {
-      if (p) setElderNickname(p.nickname || p.name || '家人');
+      if (p) {
+        setElderNickname(p.nickname || p.name || '家人');
+        setCareNeeds(p.careNeeds?.selectedNeeds || []);
+      }
     });
   }, []));
 
@@ -366,7 +370,7 @@ export default function MedicationScreen() {
         ) : null}
 
         {/* Tips Card */}
-        <TipsCard />
+        <TipsCard careNeeds={careNeeds} elderNickname={elderNickname} />
       </ScrollView>
     </ScreenContainer>
   );
@@ -405,13 +409,101 @@ function EmptyMedState({ onAdd, elderNickname = '家人' }: { onAdd: () => void;
   );
 }
 
-// ─── Tips Card ───────────────────────────────────────────────────────────────
-function TipsCard() {
+// ─── Tips Data ────────────────────────────────────────────────────────────────
+const TIPS_BY_NEED: Record<CareNeedType, string[]> = {
+  memory: [
+    '认知类药物需长期规律服用，不可因状态好转而自行停药',
+    '如对方拒绝服药，可咨询医生调整剂型（如液体、贴片）',
+    '使用分药盒按早中晚分装，避免漏服或重复',
+    '定期复查，根据医生建议调整用药方案',
+  ],
+  hypertension: [
+    '降压药请每天固定时间服用，切勿因血压恢复正常而自行停药',
+    '漏服后不可加倍补服，按下次正常时间继续即可',
+    '记录每次用药时间，方便就诊时与医生沟通',
+    '服药期间定期监测血压，异常波动及时告知医生',
+  ],
+  diabetes: [
+    '降糖药应严格按饭前/饭后时间服用，时间影响效果',
+    '出现手抖、冒冷汗等低血糖症状，立即补充糖分并就医',
+    '记录血糖与用药的对应关系，帮助医生调整剂量',
+    '定期检查糖化血红蛋白（HbA1c），评估长期控制情况',
+  ],
+  cancer: [
+    '靶向药/化疗药的服用时间要精确，请严格按医嘱执行',
+    '漏服处理方式因药物而异，请直接咨询主治医生',
+    '记录用药后的副作用（恶心、疲乏等），就诊时一并告知',
+    '不可自行调整剂量，任何变化都应在医生指导下进行',
+  ],
+  mood: [
+    '情绪类药物需稳定服用，突然停药可能引发严重不适',
+    '建立固定的服药时间习惯，减少漏服风险',
+    '记录情绪变化与用药的关系，帮助医生评估效果',
+    '如感觉药物效果变化，告知医生，不要自行停药或换药',
+  ],
+  sleep: [
+    '助眠药物应在睡前固定时间服用，过早服用影响效果',
+    '不可自行增加剂量或频率，遵医嘱使用',
+    '记录每晚睡眠质量，评估药物是否有效',
+    '长期使用助眠药物请定期与医生复查，避免依赖',
+  ],
+  fall: [
+    '某些药物（如降压药）可能引起头晕，服药后起身请缓慢',
+    '告知医生所有正在服用的药物，避免药物相互作用增加跌倒风险',
+    '记录服药后出现的头晕、乏力等不适，及时反馈',
+    '定期复查用药清单，评估是否有可减少的药物',
+  ],
+  nutrition: [
+    '多数营养补充剂随餐服用吸收效果更好',
+    '记录进食情况与补充剂的关联，方便医生调整方案',
+    '定期复查相关营养指标（如维生素D、B12），避免过量',
+    '补充剂剂量请咨询医生，不宜自行增减',
+  ],
+  surgery: [
+    '术后恢复期请严格按处方执行，不可提前停药',
+    '止痛药应按时服用而非等到疼痛难忍再服，效果更佳',
+    '记录伤口状态与用药后的感受，复诊时一并汇报',
+    '定期复诊，由医生决定何时可以减量或停药',
+  ],
+};
+
+const GENERAL_TIPS = [
+  '使用分药盒按早中晚分装，避免漏服或重复服药',
+  '建立固定的服药时间习惯，可配合吃饭、刷牙等日常动作',
+  '所有在服药物（包括保健品）请告知医生，避免相互作用',
+  '定期复查，根据医生建议调整用药方案，不可自行停药',
+];
+
+// ─── Tips Card ────────────────────────────────────────────────────────────────
+function TipsCard({ careNeeds = [], elderNickname = '家人' }: { careNeeds?: CareNeedType[]; elderNickname?: string }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   useEffect(() => {
     fadeInUp(fadeAnim, slideAnim, { duration: 500, delay: 300 });
   }, []);
+
+  // Build tips: for each care need, show its specific tips; if none selected, show general tips
+  const tips: { label: string; items: string[] }[] = [];
+  if (careNeeds.length === 0) {
+    tips.push({ label: '用药小贴士', items: GENERAL_TIPS });
+  } else {
+    careNeeds.forEach(need => {
+      const needLabels: Record<CareNeedType, string> = {
+        memory: '认知/记忆用药',
+        hypertension: '血压用药',
+        diabetes: '血糖用药',
+        cancer: '抗癌用药',
+        mood: '情绪用药',
+        sleep: '睡眠用药',
+        fall: '跌倒风险用药',
+        nutrition: '营养补充',
+        surgery: '术后用药',
+      };
+      tips.push({ label: needLabels[need] || '用药小贴士', items: TIPS_BY_NEED[need] || GENERAL_TIPS });
+    });
+    // Always add a general tip at the end
+    tips.push({ label: '通用提醒', items: [GENERAL_TIPS[2], GENERAL_TIPS[3]] });
+  }
 
   return (
     <Animated.View style={[styles.tipsCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
@@ -419,12 +511,18 @@ function TipsCard() {
         <Text style={styles.tipsIcon}>💡</Text>
         <Text style={styles.tipsTitle}>用药小贴士</Text>
       </View>
-      <View style={styles.tipsList}>
-        <Text style={styles.tipItem}>阿尔茨海默症药物需要长期规律服用，不可随意停药</Text>
-        <Text style={styles.tipItem}>如对方拒绝服药，可尝试将药物混入食物中（请先咨询医生）</Text>
-        <Text style={styles.tipItem}>使用分药盒，按早中晚分装，避免漏服或重复服药</Text>
-        <Text style={styles.tipItem}>定期复查，根据医生建议调整用药方案</Text>
-      </View>
+      {tips.map((section, si) => (
+        <View key={si} style={{ marginBottom: si < tips.length - 1 ? 14 : 0 }}>
+          {tips.length > 1 && (
+            <Text style={styles.tipsSectionLabel}>📌 {section.label}</Text>
+          )}
+          <View style={styles.tipsList}>
+            {section.items.map((item, ii) => (
+              <Text key={ii} style={styles.tipItem}>{item}</Text>
+            ))}
+          </View>
+        </View>
+      ))}
     </Animated.View>
   );
 }
@@ -601,6 +699,7 @@ const styles = StyleSheet.create({
   tipsHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   tipsIcon: { fontSize: 20 },
   tipsTitle: { fontSize: 16, fontWeight: '700', color: '#92400E' },
+  tipsSectionLabel: { fontSize: 12, fontWeight: '700', color: '#B45309', marginBottom: 8, letterSpacing: 0.3 },
   tipsList: { gap: 10 },
   tipItem: { fontSize: 13, color: '#78350F', lineHeight: 21, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: '#FDE68A' },
 });
