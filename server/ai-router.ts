@@ -249,7 +249,7 @@ ${JSON.stringify(structuredInput, null, 2)}
     "dinner": ["<晚餐建议1>"],
     "hydration": "<饮水提醒>"
   },
-  "outdoorAdvice": "<结合天气的户外活动建议>",
+  "outdoorAdvice": ${weatherInfo ? '"<结合今日天气的户外活动建议，30字以内>"' : '"<简短通用的户外或室内活动建议，30字以内，不要提天气>"'},
   "encouragement": "<给照顾者加油打气，必须20字以内，只说一句温暖正能量的话，不加任何修饰>",
   "watchOut": "<今日最需要特别注意的一件事>"
 }
@@ -263,6 +263,14 @@ adviceCards必须包含3-5张，第一张必须关于睡眠（直接引用sleep_
         if (advice.encouragement && advice.encouragement.length > 20) {
           const first = advice.encouragement.split(/[。！？!?]/)[0];
           advice.encouragement = first.slice(0, 20);
+        }
+        // 过滤 outdoorAdvice：若含"缺失"/"无法"或超过60字，取第一句并截断
+        if (advice.outdoorAdvice) {
+          if (/缺失|无法获取|天气信息/.test(advice.outdoorAdvice)) {
+            advice.outdoorAdvice = "可陪老人在室内阳光充足处活动15分钟";
+          } else if (advice.outdoorAdvice.length > 60) {
+            advice.outdoorAdvice = advice.outdoorAdvice.split(/[。！？]/)[0].slice(0, 40);
+          }
         }
         return { success: true, advice, weather: weatherData };
       } catch (e) {
