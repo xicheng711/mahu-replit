@@ -46,11 +46,10 @@ const TAGS = [
 // ─── Typing Indicator ─────────────────────────────────────────────────────────
 
 function TypingIndicator() {
-  const dots = [
-    useRef(new Animated.Value(0)).current,
-    useRef(new Animated.Value(0)).current,
-    useRef(new Animated.Value(0)).current,
-  ];
+  const dot0 = useRef(new Animated.Value(0)).current;
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dots = [dot0, dot1, dot2];
   useEffect(() => {
     dots.forEach((dot, i) => {
       Animated.loop(
