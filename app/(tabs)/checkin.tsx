@@ -791,43 +791,88 @@ export default function CheckinScreen() {
   // ── Done State ──
   if (done) {
     const isMorning = mode === 'morning';
+
+    if (!isMorning) {
+      return (
+        <LinearGradient
+          colors={['#1A1040', '#2D1B69', '#4A2080', '#6B3FA0']}
+          style={{ flex: 1 }}
+        >
+          {showCelebration && <CelebrationEffect />}
+          {/* Stars decoration */}
+          <View style={styles.nightStars}>
+            {['✦','✧','✦','✧','✦','✧','✦','✧'].map((s, i) => (
+              <Text key={i} style={[styles.starDot, {
+                top: `${8 + (i * 11) % 35}%` as any,
+                left: `${5 + (i * 23) % 90}%` as any,
+                opacity: 0.4 + (i % 3) * 0.2,
+                fontSize: i % 3 === 0 ? 10 : 7,
+              }]}>{s}</Text>
+            ))}
+          </View>
+
+          <Animated.View style={[styles.doneContainer, { opacity: doneFade, transform: [{ scale: doneScale }] }]}>
+            {/* Moon circle */}
+            <View style={styles.nightMoonCircle}>
+              <Text style={{ fontSize: 64 }}>🌙</Text>
+            </View>
+
+            {/* White card */}
+            <View style={styles.nightCard}>
+              <Text style={styles.nightTitle}>晚间记录完成！</Text>
+              <Text style={styles.nightSub}>
+                {'今天辛苦啦 💛\n晚上是记录美好时光的好时机\n把今天的点滴写进日记吧'}
+              </Text>
+
+              {/* Big diary button */}
+              <TouchableOpacity
+                style={styles.nightDiaryBtn}
+                onPress={() => router.push('/(tabs)/diary' as any)}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={['#7C3AED', '#A855F7', '#C084FC']}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={styles.nightDiaryBtnInner}
+                >
+                  <Text style={styles.nightDiaryIcon}>📔</Text>
+                  <View>
+                    <Text style={styles.nightDiaryBtnText}>去写今天的日记</Text>
+                    <Text style={styles.nightDiaryBtnSub}>记录今天的温暖瞬间</Text>
+                  </View>
+                  <Text style={styles.nightDiaryArrow}>›</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.nightHomeBtn} onPress={() => router.replace('/(tabs)' as any)}>
+                <Text style={styles.nightHomeBtnText}>回到首页 🏠</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </LinearGradient>
+      );
+    }
+
     return (
       <ScreenContainer>
         <Animated.View style={[styles.doneContainer, { opacity: doneFade, transform: [{ scale: doneScale }] }]}>
           {showCelebration && <CelebrationEffect />}
           <View style={styles.doneEmojiCircle}>
-            <Text style={styles.doneEmoji}>{isMorning ? '🌅' : '🌙'}</Text>
+            <Text style={styles.doneEmoji}>🌅</Text>
           </View>
-          <Text style={styles.doneTitle}>
-            {isMorning ? '早间打卡完成！' : '晚间记录完成！'}
-          </Text>
+          <Text style={styles.doneTitle}>早间打卡完成！</Text>
           <Text style={styles.doneSub}>
-            {isMorning
-              ? `今天也辛苦了！\nAI 已根据${elderNickname}的状态和你的心情\n整理好了今日个性化分析摘要 🌿`
-              : `今天辛苦啦 💛\n晚上是记录美好时光的好时机\n把今天的点滴写进日记吧 📔`}
+            {`今天也辛苦了！\nAI 已根据${elderNickname}的状态和你的心情\n整理好了今日个性化分析摘要 🌿`}
           </Text>
-          {isMorning ? (
-            <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/assistant' as any)}>
-              <Text style={styles.doneBtnText}>查看今日 AI 分析 ✨</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.doneBtn} onPress={() => router.push('/(tabs)/diary' as any)}>
-              <Text style={styles.doneBtnText}>去写今天的日记 📔</Text>
-            </TouchableOpacity>
-          )}
-          {!isMorning && (
-            <TouchableOpacity style={styles.doneBtnSecondary} onPress={() => router.replace('/(tabs)' as any)}>
-              <Text style={styles.doneBtnSecondaryText}>回到首页 🏠</Text>
-            </TouchableOpacity>
-          )}
-          {isMorning && (
-            <TouchableOpacity style={styles.doneBtnSecondary} onPress={() => {
-              setDone(false);
-              setMode('landing');
-            }}>
-              <Text style={styles.doneBtnSecondaryText}>查看今日打卡状态</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/assistant' as any)}>
+            <Text style={styles.doneBtnText}>查看今日 AI 分析 ✨</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.doneBtnSecondary} onPress={() => {
+            setDone(false);
+            setMode('landing');
+          }}>
+            <Text style={styles.doneBtnSecondaryText}>查看今日打卡状态</Text>
+          </TouchableOpacity>
         </Animated.View>
       </ScreenContainer>
     );
@@ -1425,6 +1470,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingVertical: 10,
   },
   doneBtnSecondaryText: { fontSize: 14, color: COLORS.textMuted, fontWeight: '600' },
+
+  // ── Night / Evening done screen ──
+  nightStars: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  starDot: { position: 'absolute', color: '#fff' },
+  nightMoonCircle: {
+    width: 140, height: 140, borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 28,
+    shadowColor: '#C084FC', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 30, elevation: 20,
+  },
+  nightCard: {
+    width: '100%', backgroundColor: '#FFFFFF',
+    borderRadius: 32, padding: 28,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 24, elevation: 16,
+  },
+  nightTitle: { fontSize: 26, fontWeight: '800', color: '#1A1040', textAlign: 'center', marginBottom: 10 },
+  nightSub: { fontSize: 15, color: '#6B7280', textAlign: 'center', lineHeight: 24, marginBottom: 24 },
+  nightDiaryBtn: { borderRadius: 20, overflow: 'hidden', marginBottom: 14 },
+  nightDiaryBtnInner: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 20, paddingHorizontal: 22, gap: 14,
+  },
+  nightDiaryIcon: { fontSize: 32 },
+  nightDiaryBtnText: { fontSize: 18, fontWeight: '800', color: '#fff' },
+  nightDiaryBtnSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  nightDiaryArrow: { fontSize: 28, color: 'rgba(255,255,255,0.7)', marginLeft: 'auto' as any, fontWeight: '300' },
+  nightHomeBtn: { alignItems: 'center', paddingVertical: 12 },
+  nightHomeBtnText: { fontSize: 15, color: '#9CA3AF', fontWeight: '600' },
 });
 
 // ─── Calendar Styles ──────────────────────────────────────────────────────────
