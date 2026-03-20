@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, Alert, Platform, Animated, Easing,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenContainer } from '@/components/screen-container';
 import { getMedications, saveMedications, Medication, getProfile } from '@/lib/storage';
@@ -166,7 +167,9 @@ export default function MedicationScreen() {
   const activeCount = meds.filter(m => m.active).length;
 
   return (
-    <ScreenContainer>
+    <View style={{ flex: 1 }}>
+      <LinearGradient colors={['#FFF7ED', '#FDF2F8', '#FAF5FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      <ScreenContainer containerClassName="bg-transparent">
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
@@ -280,7 +283,8 @@ export default function MedicationScreen() {
         {/* Tips Card */}
         <TipsCard />
       </ScrollView>
-    </ScreenContainer>
+      </ScreenContainer>
+    </View>
   );
 }
 

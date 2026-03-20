@@ -898,7 +898,7 @@ export default function CheckinScreen() {
     }
 
     return (
-      <ScreenContainer>
+      <ScreenContainer containerClassName="bg-[#FFF7ED]">
         <Animated.View style={[styles.doneContainer, { opacity: doneFade, transform: [{ scale: doneScale }] }]}>
           {showCelebration && <CelebrationEffect />}
           <View style={styles.doneEmojiCircle}>
@@ -925,7 +925,7 @@ export default function CheckinScreen() {
   // ── Landing ──
   if (mode === 'landing') {
     return (
-      <ScreenContainer>
+      <ScreenContainer containerClassName="bg-[#FFF7ED]">
         <CheckinLanding
           checkIn={checkIn}
           elderNickname={elderNickname}
@@ -1213,7 +1213,7 @@ export default function CheckinScreen() {
     : { label: currentStep.roleLabel, color: '#059669', bgColor: '#ECFDF5' };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer containerClassName="bg-[#FFF7ED]">
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
