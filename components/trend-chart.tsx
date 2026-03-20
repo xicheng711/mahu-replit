@@ -594,7 +594,7 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
               onPress={() => { setPeriod(p); setOffset(0); }}
             >
               <Text style={[styles.periodBtnText, period === p && styles.periodBtnTextActive]}>
-                {p === '7d' ? '周' : '年'}
+                {p === '7d' ? '周' : '月'}
               </Text>
             </TouchableOpacity>
           ))}
