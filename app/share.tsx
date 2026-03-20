@@ -14,6 +14,17 @@ import * as Haptics from 'expo-haptics';
 
 const { width: SW } = Dimensions.get('window');
 
+// ─── 当日简报缓存（避免返回后重新生成）────────────────────────────────────────
+let _briefingCache: { date: string; briefing: any; shareText: string } | null = null;
+function getTodayKey() { return new Date().toISOString().slice(0, 10); }
+function getCachedBriefing() {
+  if (_briefingCache && _briefingCache.date === getTodayKey()) return _briefingCache;
+  return null;
+}
+function setCachedBriefing(briefing: any, shareText: string) {
+  _briefingCache = { date: getTodayKey(), briefing, shareText };
+}
+
 // ─── 简报生成加载屏 ──────────────────────────────────────────────────────────
 function ShareLoadingScreen() {
   const bar1 = useRef(new Animated.Value(0)).current;
@@ -353,9 +364,9 @@ export default function ShareScreen() {
 
   const generateBriefingMutation = trpc.ai.generateBriefing.useMutation();
 
-  useFocusEffect(useCallback(() => { loadAndGenerate(); }, []));
+  useFocusEffect(useCallback(() => { loadAndGenerate(false); }, []));
 
-  async function loadAndGenerate() {
+  async function loadAndGenerate(forceRefresh = false) {
     setLoading(true);
     setError(null);
     try {
@@ -380,6 +391,18 @@ export default function ShareScreen() {
       setCheckIn(ci);
       const score = ci.careScore || 70;
       setCareScore(score);
+
+      // ── 命中缓存直接展示，无需重新调用 AI ──
+      if (!forceRefresh) {
+        const cached = getCachedBriefing();
+        if (cached) {
+          setBriefing(cached.briefing);
+          setShareText(cached.shareText);
+          setLoading(false);
+          return;
+        }
+      }
+
       await doGenerate(nickname, caregiver, ci, score);
     } catch (e) {
       setError(e instanceof Error ? e.message : '加载失败');
@@ -409,14 +432,36 @@ export default function ShareScreen() {
       if (result.success && result.briefing) {
         setBriefing(result.briefing);
         setShareText(result.briefing.shareText ?? '');
+        setCachedBriefing(result.briefing, result.briefing.shareText ?? '');
       } else {
-        setError('简报生成失败，请重试');
+        // 生成失败时构建本地 fallback 并缓存
+        const fallback = buildLocalBriefing(nickname, caregiver, ci, score);
+        setBriefing(fallback);
+        setCachedBriefing(fallback, fallback.shareText);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : '生成失败，请检查网络');
+      const fallback = buildLocalBriefing(nickname, caregiver, ci, score);
+      setBriefing(fallback);
+      setCachedBriefing(fallback, fallback.shareText);
     } finally {
       setGenerating(false);
     }
+  }
+
+  function buildLocalBriefing(nickname: string, caregiver: string, ci: DailyCheckIn, score: number) {
+    const sleepLabel = ci.sleepQuality === 'good' ? '良好' : ci.sleepQuality === 'fair' ? '一般' : '较差';
+    const scoreLabel = score >= 80 ? '很好' : score >= 60 ? '良好' : score >= 40 ? '一般，需多关注' : '欠佳，需重点照护';
+    const dateStr = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
+    return {
+      summary: `${dateStr}，${nickname}今日整体状态${scoreLabel}。睡眠${ci.sleepHours ?? '--'}小时（${sleepLabel}），心情${ci.moodScore ?? '--'}/10，用药${ci.medicationTaken ? '按时完成' : '有漏服'}。`,
+      highlights: [
+        ci.medicationTaken ? '今日按时服药 💊' : '注意：今日未按时服药 ⚠️',
+        `睡眠${ci.sleepHours ?? '--'}小时，质量${sleepLabel}`,
+        ci.eveningNotes || ci.morningNotes ? `备注：${(ci.eveningNotes || ci.morningNotes || '').slice(0, 30)}` : null,
+      ].filter(Boolean) as string[],
+      caregiverNote: `${caregiver}，每一天的坚持都是对${nickname}最深的爱，记得好好休息！`,
+      shareText: `🐴🐯【小马虎 · 每日护理简报】\n📅 ${dateStr}\n👴 ${nickname} 今日护理指数：${score}/100\n😴 睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）\n💊 用药：${ci.medicationTaken ? '已按时服药 ✅' : '未按时服药 ❌'}\n由 ${caregiver} 用心记录 💕`,
+    };
   }
 
   async function handleShare() {
@@ -463,7 +508,7 @@ ${checkIn.moodEmoji} 心情：${checkIn.moodScore}/10
         <View style={styles.header}>
           <BackButton />
           <Text style={styles.title}>📋 今日简报</Text>
-          <TouchableOpacity onPress={loadAndGenerate} style={styles.refreshBtn}>
+          <TouchableOpacity onPress={() => loadAndGenerate(true)} style={styles.refreshBtn}>
             <Text style={styles.refreshBtnText}>🔄</Text>
           </TouchableOpacity>
         </View>

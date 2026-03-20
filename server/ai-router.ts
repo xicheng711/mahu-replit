@@ -297,26 +297,29 @@ adviceCards必须包含3-5张，第一张必须关于睡眠（直接引用sleep_
       const medEmoji = checkIn.medicationTaken ? "💊✅" : "💊❌";
 
       const prompt = `
-为阿兹海默患者${nickname}生成一份温馨的家庭日报，供家庭成员在微信上查看。
+为阿兹海默患者${nickname}生成今日护理简报，供家庭成员查看。
 照顾者：${caregiverName}，日期：${date}
 
-今日数据：
+今日实际数据：
 - 护理指数：${careScore}/100
-- 睡眠：${checkIn.sleepHours}小时 ${sleepEmoji}，质量${checkIn.sleepQuality === "good" ? "良好" : checkIn.sleepQuality === "fair" ? "一般" : "较差"}
-- 心情：${checkIn.moodScore}/10 ${moodEmoji}
-- 用药：${medEmoji}
+- 睡眠：${checkIn.sleepHours}小时，质量${checkIn.sleepQuality === "good" ? "良好" : checkIn.sleepQuality === "fair" ? "一般" : "较差"}
+- 心情评分：${checkIn.moodScore}/10
+- 用药：${checkIn.medicationTaken ? "已按时服药" : "未按时服药"}
 - 饮食：${checkIn.mealSituation === "good" ? "进食良好" : checkIn.mealSituation === "fair" ? "进食一般" : "进食较差"}
-${checkIn.notes ? `- 备注：${checkIn.notes}` : ""}
+${checkIn.notes ? `- 照顾者备注：${checkIn.notes}` : ""}
 
-请生成一份简短温馨的家庭日报，返回JSON格式（不要包含任何代码块标记）：
+要求：
+- summary：基于以上数据，用1-2句客观描述今日状态，直接说数据，不要过度渲染情感，不超过60字
+- highlights：2-3条今日关键事项，每条15字以内，直接描述事实
+- caregiverNote：简短鼓励照顾者的话，20字以内，真诚不浮夸
+- shareText：适合发微信的简报全文，包含主要数据，150字以内
+
+返回JSON格式（不要包含任何代码块标记）：
 {
-  "title": "<日报标题，包含日期和老人昵称>",
-  "summary": "<2-3句温馨的今日状态总结，像家人写给家人的>",
-  "highlights": ["<今日亮点1>", "<今日亮点2>"],
-  "caregiverNote": "<照顾者${caregiverName}今日辛苦了的温馨话语>",
-  "emoji_status": "<用3-5个emoji表达今日状态>",
-  "shareText": "<适合发微信的完整分享文字，包含所有关键信息，温馨自然，200字以内>",
-  "encouragement": "<每天不同的加油鼓气的话，给照顾者力量和温暖，30字以内，充满正能量>"
+  "summary": "<基于数据的客观简洁描述>",
+  "highlights": ["<关键事项1>", "<关键事项2>"],
+  "caregiverNote": "<简短真诚鼓励>",
+  "shareText": "<微信分享文字>"
 }`;
 
       try {
