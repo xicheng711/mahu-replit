@@ -1528,7 +1528,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   nightCheckBadge: {
-    position: 'absolute', bottom: 8, right: 8,
+    position: 'absolute', bottom: -8, right: -12,
     width: 44, height: 44, borderRadius: 22,
     backgroundColor: '#22C55E',
     alignItems: 'center', justifyContent: 'center',
