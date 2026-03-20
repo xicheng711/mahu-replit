@@ -574,12 +574,6 @@ ${checkIn.moodEmoji} 心情：${checkIn.moodScore}/10
               />
             </View>
 
-            {/* ── Family Sync Notice ── */}
-            <View style={styles.familySyncNotice}>
-              <Text style={styles.familySyncIcon}>🏠</Text>
-              <Text style={styles.familySyncText}>今日简报已自动同步到家庭共享，家人可在「家人共享」页面查看</Text>
-            </View>
-
             {/* ── WeChat Share Button ── */}
             <TouchableOpacity
               style={[styles.shareWechatBtn, sharingImage && { opacity: 0.7 }]}
@@ -595,6 +589,9 @@ ${checkIn.moodEmoji} 心情：${checkIn.moodScore}/10
                 {sharingImage ? '生成图片中...' : '一键分享到微信'}
               </Text>
             </TouchableOpacity>
+
+            {/* ── Family Sync Notice ── */}
+            <Text style={styles.familySyncNotice}>🏠 今日简报已自动同步到家庭共享</Text>
 
             {/* ── Tips ── */}
             <View style={styles.tipsCard}>
@@ -645,12 +642,8 @@ const styles = StyleSheet.create({
   regenerateBtn: { flex: 1, backgroundColor: '#F0F7EE', borderRadius: 16, padding: 14, alignItems: 'center' },
   regenerateBtnText: { fontSize: 14, fontWeight: '600', color: '#3D7A3D' },
   familySyncNotice: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#F0FDF4', borderRadius: 16, padding: 14, marginTop: 14,
-    borderWidth: 1, borderColor: '#BBF7D0',
+    fontSize: 12, color: '#6C9E6C', textAlign: 'center', marginTop: 8, marginBottom: 4,
   },
-  familySyncIcon: { fontSize: 20 },
-  familySyncText: { flex: 1, fontSize: 13, color: '#15803D', lineHeight: 20, fontWeight: '500' },
   tipsCard: {
     backgroundColor: '#FAFAF8', borderRadius: 20, padding: 18,
     borderWidth: 1, borderColor: '#EBEBEB', marginBottom: 16, gap: 8,
