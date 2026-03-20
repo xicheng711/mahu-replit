@@ -384,8 +384,8 @@ export default function AssistantScreen() {
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <BackButton />
-          <Text style={styles.title}>今日护理预测</Text>
+          <BackButton onPress={() => router.replace('/(tabs)' as any)} />
+          <Text style={styles.title}>今日数据分析</Text>
           <TouchableOpacity onPress={loadData} style={styles.refreshBtn} activeOpacity={0.7}>
             <Text style={styles.refreshBtnText}>🔄</Text>
           </TouchableOpacity>
