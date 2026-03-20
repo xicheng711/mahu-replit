@@ -184,7 +184,7 @@ export const CHECKIN_QUESTIONS = [
   {
     id: 'sleep',
     step: 1,
-    question: '老宝昨晚睡得怎么样？',
+    question: '长辈昨晚睡得怎么样？',
     subtitle: '好的睡眠对老人非常重要',
     options: [
       { label: '睡得很好', emoji: '😴', value: 'good', score: 3 },
@@ -199,7 +199,7 @@ export const CHECKIN_QUESTIONS = [
   {
     id: 'mood',
     step: 2,
-    question: '老宝今天心情怎么样？',
+    question: '长辈今天心情怎么样？',
     subtitle: '情绪状态帮助我们了解老人的感受',
     options: [
       { label: '开心愉快', emoji: '😊', value: 'happy', score: 10 },

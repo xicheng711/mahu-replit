@@ -129,7 +129,7 @@ export function generateDailyAdvice(
   weather: WeatherData | null,
   extraNotes?: string
 ): DailyAdviceReport {
-  const nickname = elderNickname || '老宝';
+  const nickname = elderNickname || '家人';
   const careScore = calculateCareScore(yesterday, weather);
   const scoreDisplay = getScoreDisplay(careScore);
   const cards: CareAdvice[] = [];

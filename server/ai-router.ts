@@ -174,7 +174,7 @@ export const aiRouter = router({
     }))
     .mutation(async ({ input }) => {
       const { elderNickname, caregiverName, city, baseline, sleep_analysis, today_input, yesterday, extraNotes, careNeeds } = input;
-      const nickname = elderNickname || "老宝";
+      const nickname = elderNickname || "家人";
 
       // Get weather if city provided
       let weatherInfo = "";
@@ -311,7 +311,7 @@ adviceCards必须包含3-5张，第一张必须关于睡眠（直接引用sleep_
     }))
     .mutation(async ({ input }) => {
       const { elderNickname, caregiverName, date, checkIn, careScore } = input;
-      const nickname = elderNickname || "老宝";
+      const nickname = elderNickname || "家人";
 
       const moodEmoji = checkIn.moodScore >= 8 ? "😊" : checkIn.moodScore >= 6 ? "😌" : checkIn.moodScore >= 4 ? "😐" : "😟";
       const sleepEmoji = checkIn.sleepHours >= 7 ? "🌙✨" : checkIn.sleepHours >= 5 ? "🌙" : "😴";
@@ -374,7 +374,7 @@ ${checkIn.notes ? `- 照顾者备注：${checkIn.notes}` : ""}
     }))
     .mutation(async ({ input }) => {
       const { elderNickname, caregiverName, moodEmoji, moodLabel, tags, content } = input;
-      const nickname = elderNickname || "老宝";
+      const nickname = elderNickname || "家人";
 
       const prompt = `
 照顾者${caregiverName}刚刚写了一篇关于照顾阿兹海默患者${nickname}的护理日记。
@@ -430,7 +430,7 @@ ${checkIn.notes ? `- 照顾者备注：${checkIn.notes}` : ""}
     }))
     .mutation(async ({ input }) => {
       const { elderNickname, caregiverName, originalContent, originalMood, originalAiReply, history, question } = input;
-      const nickname = elderNickname || '老宝';
+      const nickname = elderNickname || '家人';
       const historyText = history.length > 0
         ? history.map(m => m.role === 'user' ? `照顾者问：${m.text}` : `AI回复：${m.text}`).join('\n')
         : '';

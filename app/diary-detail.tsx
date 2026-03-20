@@ -25,7 +25,7 @@ export default function DiaryDetailScreen() {
   const router = useRouter();
   const [entry, setEntry] = useState<DiaryEntry | null>(null);
   const [loading, setLoading] = useState(true);
-  const [elderNickname, setElderNickname] = useState('老宝');
+  const [elderNickname, setElderNickname] = useState('家人');
   const [caregiverName, setCaregiverName] = useState('照顾者');
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
@@ -44,7 +44,7 @@ export default function DiaryDetailScreen() {
     setLoading(true);
     const profile = await getProfile();
     if (profile) {
-      setElderNickname(profile.nickname || profile.name || '老宝');
+      setElderNickname(profile.nickname || profile.name || '家人');
       setCaregiverName(profile.caregiverName || '照顾者');
     }
     if (id) {

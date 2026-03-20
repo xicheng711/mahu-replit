@@ -304,7 +304,7 @@ export default function AssistantScreen() {
   const [aiAdvice, setAiAdvice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [elderNickname, setElderNickname] = useState('老宝');
+  const [elderNickname, setElderNickname] = useState('家人');
   const [caregiverName, setCaregiverName] = useState('照顾者');
   const [city, setCity] = useState('');
   const [weatherData, setWeatherData] = useState<any>(null);
@@ -321,7 +321,7 @@ export default function AssistantScreen() {
     setError(null);
     try {
       const profile = await getProfile();
-      const nickname = profile?.nickname || profile?.name || '老宝';
+      const nickname = profile?.nickname || profile?.name || '家人';
       const caregiver = profile?.caregiverName || '照顾者';
       const cityName = profile?.city || '';
       setElderNickname(nickname);

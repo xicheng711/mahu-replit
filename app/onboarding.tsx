@@ -615,7 +615,7 @@ export default function OnboardingScreen() {
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>被照顾者</Text>
                 <Text style={styles.summaryValue}>
-                  {elderZodiac.emoji} {elderName || '老宝'} {elderNickname ? `(${elderNickname})` : ''}
+                  {elderZodiac.emoji} {elderName || '家人'} {elderNickname ? `(${elderNickname})` : ''}
                 </Text>
               </View>
               <View style={styles.summaryRow}>

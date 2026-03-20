@@ -32,7 +32,7 @@ function LongImageCard({
   const today = new Date();
   const dateStr = today.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
   const timeStr = today.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-  const elderName = profile.nickname || profile.name || '老宝';
+  const elderName = profile.nickname || profile.name || '家人';
   const caregiverName = profile.caregiverName || '照顾者';
   const zodiacEmoji = profile.zodiacEmoji || '🐯';
   const sleepLabel = checkIn.sleepQuality === 'good' ? '良好 😴' : checkIn.sleepQuality === 'fair' ? '一般 😐' : '较差 😟';
@@ -328,7 +328,7 @@ export default function ExportImageScreen() {
       setDiaryEntries(diaries);
 
       // Generate briefing with encouragement
-      const nickname = p?.nickname || p?.name || '老宝';
+      const nickname = p?.nickname || p?.name || '家人';
       const caregiver = p?.caregiverName || '照顾者';
       const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
 

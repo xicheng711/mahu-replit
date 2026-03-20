@@ -425,7 +425,7 @@ export default function HomeScreen() {
   const [tip, setTip] = useState<{ category: string; icon: string; tip: string } | null>(null);
   const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
   const [allCheckIns, setAllCheckIns] = useState<DailyCheckIn[]>([]);
-  const [elderNickname, setElderNickname] = useState('老宝');
+  const [elderNickname, setElderNickname] = useState('家人');
   const [caregiverName, setCaregiverName] = useState('');
   const [memberPhotoUri, setMemberPhotoUri] = useState<string | null>(null);
   const [zodiacColor, setZodiacColor] = useState('#FF6B6B');
@@ -445,7 +445,7 @@ export default function HomeScreen() {
   const loadData = useCallback(async () => {
     const profile = await getProfile();
     if (!profile || !profile.setupComplete) { router.replace('/onboarding' as any); return; }
-    setElderNickname(profile?.nickname || profile?.name || '老宝');
+    setElderNickname(profile?.nickname || profile?.name || '家人');
     const cgName = profile?.caregiverName || '';
     if (profile?.caregiverAvatarType === 'photo' && profile?.caregiverPhotoUri) {
       setMemberPhotoUri(profile.caregiverPhotoUri);

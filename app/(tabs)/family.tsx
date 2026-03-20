@@ -65,7 +65,7 @@ function FamilySetupScreen({ onSetupComplete }: { onSetupComplete: () => void })
     setLoading(true);
     try {
       const profile = await getProfile();
-      await createFamilyRoom(profile?.name || '老宝', {
+      await createFamilyRoom(profile?.name || '家人', {
         name: memberName.trim(),
         role: memberRole,
         roleLabel: memberRoleLabel,

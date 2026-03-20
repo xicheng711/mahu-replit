@@ -209,7 +209,7 @@ export default function DiaryEditScreen() {
   const [aiLoading, setAiLoading] = useState(false);
   const [followUpInput, setFollowUpInput] = useState('');
   const [followUpLoading, setFollowUpLoading] = useState(false);
-  const [elderNickname, setElderNickname] = useState('老宝');
+  const [elderNickname, setElderNickname] = useState('家人');
   const [caregiverName, setCaregiverName] = useState('照顾者');
   const [loadingEntry, setLoadingEntry] = useState(!!existingId);
 
@@ -233,7 +233,7 @@ export default function DiaryEditScreen() {
   async function loadProfile() {
     const profile = await getProfile();
     if (profile) {
-      setElderNickname(profile.nickname || profile.name || '老宝');
+      setElderNickname(profile.nickname || profile.name || '家人');
       setCaregiverName(profile.caregiverName || '照顾者');
     }
   }
