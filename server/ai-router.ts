@@ -73,29 +73,37 @@ async function callQwen(prompt: string, systemPrompt: string, retries = 1, maxTo
 
 async function getWeatherForCity(city: string): Promise<{ temp: number; description: string; icon: string; isHot: boolean; isCold: boolean; isRainy: boolean } | null> {
   try {
-    const braveKey = process.env.BRAVE_SEARCH_API_KEY;
-    if (!braveKey) return null;
-
+    // wttr.in: 完全免费，无需 API Key，支持中文城市名
     const res = await fetch(
-      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(`${city}今日天气温度`)}&count=3`,
-      { headers: { "Accept": "application/json", "X-Subscription-Token": braveKey } }
+      `https://wttr.in/${encodeURIComponent(city)}?format=j1`,
+      { headers: { "User-Agent": "XiaoMaHuApp/1.0" }, signal: AbortSignal.timeout(6000) }
     );
     if (!res.ok) return null;
     const data = await res.json() as any;
-    const snippet = data.web?.results?.[0]?.description ?? "";
 
-    // Parse temperature from snippet
-    const tempMatch = snippet.match(/(\d+)[°℃]/);
-    const temp = tempMatch ? parseInt(tempMatch[1]) : 20;
-    const isRainy = /雨|阴|雷/.test(snippet);
+    const cur = data.current_condition?.[0];
+    if (!cur) return null;
+
+    const temp = parseInt(cur.temp_C ?? "20");
+    const code = parseInt(cur.weatherCode ?? "113");
+
+    // 天气码分类
+    const rainy = [176,180,182,185,200,263,266,281,284,293,296,299,302,305,308,353,356,359,386,389].includes(code)
+      || (code >= 260 && code <= 320);
+    const snowy = [179,227,230,317,320,323,326,329,332,335,338,368,371,374,377,392,395].includes(code);
+    const cloudy = [116,119,122,143,248,260].includes(code);
+
+    const isRainy = rainy || snowy;
     const isHot = temp >= 30;
     const isCold = temp <= 10;
 
-    let icon = "🌤️";
-    let description = "晴间多云";
-    if (isRainy) { icon = "🌧️"; description = "有雨"; }
-    else if (isHot) { icon = "☀️"; description = "晴热"; }
-    else if (isCold) { icon = "🥶"; description = "寒冷"; }
+    let icon = "☀️";
+    let description = "晴朗";
+    if (snowy)       { icon = "🌨️"; description = "有雪"; }
+    else if (rainy)  { icon = "🌧️"; description = "有雨"; }
+    else if (cloudy) { icon = "⛅"; description = "多云"; }
+    else if (isHot)  { icon = "☀️"; description = "晴热"; }
+    else if (isCold) { icon = "🥶"; description = "寒冷晴朗"; }
 
     return { temp, description, icon, isHot, isCold, isRainy };
   } catch {
