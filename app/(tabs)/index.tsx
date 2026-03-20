@@ -1,32 +1,31 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   ScrollView, View, Text, TouchableOpacity,
-  StyleSheet, Dimensions, Animated, Easing, Platform, ViewStyle, Image,
+  StyleSheet, Dimensions, Animated, Easing, Platform, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getRandomTip, getEncouragement } from '@/lib/care-knowledge';
+import { getRandomTip } from '@/lib/care-knowledge';
 import { getWeatherByGPS, buildGreetingWithWeather, GpsWeatherInfo } from '@/lib/weather';
-import { getTodayCheckIn, getRecentCheckIns, getProfile, getAllCheckIns, DailyCheckIn } from '@/lib/storage';
+import { getTodayCheckIn, getProfile, getAllCheckIns, DailyCheckIn } from '@/lib/storage';
 import { TrendChart } from '@/components/trend-chart';
-import { COLORS, SHADOWS, RADIUS, fadeInUp, pulseLoop, pressAnimation } from '@/lib/animations';
+import { COLORS, SHADOWS, fadeInUp, pressAnimation } from '@/lib/animations';
 import * as Haptics from 'expo-haptics';
 import { WeeklyEcho } from '@/components/weekly-echo';
 
 const { width } = Dimensions.get('window');
 
-// 每日打气语库
 const DAILY_MOTIVATIONS = [
   '今天也是充满爱的一天，你的用心大家都看得到 🌸',
-  '照顾家人是一件了不起的事，谢谢你每天的堅持 ✨',
+  '照顾家人是一件了不起的事，谢谢你每天的坚持 ✨',
   '小进步也是进步，今天的你已经很棒了 🌟',
-  '爱是最好的药，你每天的陨伴就是最大的治愈 💜',
+  '爱是最好的药，你每天的陪伴就是最大的治愈 💜',
   '不必完美，只需在场。你的存在就是最大的安慰 🌼',
   '每一天的记录，都是对家人最深的爱 📝',
   '你的笑容是家人最大的力量，记得也照顾好自己 😊',
-  '今天的天气适合出门散步，带着家人多晒晓太阳 ☀️',
+  '今天的天气适合出门散步，带着家人多晒晒太阳 ☀️',
   '你不是一个人在战斗，我们都在这里 🤝',
   '每一天都是新的开始，加油！ 🚀',
 ];
@@ -36,17 +35,14 @@ function getDailyMotivation(): string {
   return DAILY_MOTIVATIONS[dayOfYear % DAILY_MOTIVATIONS.length];
 }
 
-// ─── Floating Heart Decoration ────────────────────────────────────────────────
+// ─── 背景装饰：浮动爱心 ─────────────────────────────────────────────
 function FloatingHeart({ delay = 0, x = 0 }: { delay?: number; x?: number }) {
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const translateX = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
     const run = () => {
-      translateY.setValue(0);
-      opacity.setValue(0);
-      translateX.setValue(0);
+      translateY.setValue(0); opacity.setValue(0); translateX.setValue(0);
       Animated.parallel([
         Animated.sequence([
           Animated.timing(opacity, { toValue: 0.45, duration: 600, useNativeDriver: true }),
@@ -62,155 +58,459 @@ function FloatingHeart({ delay = 0, x = 0 }: { delay?: number; x?: number }) {
     };
     setTimeout(run, delay);
   }, []);
-
   return (
-    <Animated.Text
-      style={{
-        position: 'absolute',
-        bottom: 0,
-        left: x,
-        fontSize: 16,
-        transform: [{ translateY }, { translateX }],
-        opacity,
-      }}
-    >
+    <Animated.Text style={{ position: 'absolute', bottom: 0, left: x, fontSize: 16, transform: [{ translateY }, { translateX }], opacity }}>
       🩷
     </Animated.Text>
   );
 }
 
-// ─── Cloud Decoration ─────────────────────────────────────────────────────────
-function CloudDecoration({ top = 0, left = 0, size = 1, delay = 0 }: { top?: number; left?: number; size?: number; delay?: number }) {
+// ─── 背景装饰：浮动云朵 ─────────────────────────────────────────────
+function FloatingCloud({ top = 0, left = 0, delay = 0 }: { top?: number; left?: number; delay?: number }) {
   const floatY = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
+  const fadeIn = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     setTimeout(() => {
-      Animated.timing(opacity, { toValue: 0.6, duration: 1000, useNativeDriver: true }).start();
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(floatY, { toValue: -8, duration: 4000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-          Animated.timing(floatY, { toValue: 0, duration: 4000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        ])
-      ).start();
+      Animated.timing(fadeIn, { toValue: 0.55, duration: 1000, useNativeDriver: true }).start();
+      Animated.loop(Animated.sequence([
+        Animated.timing(floatY, { toValue: -8, duration: 5000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(floatY, { toValue: 0, duration: 5000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])).start();
     }, delay);
   }, []);
-
   return (
-    <Animated.Text
-      style={{
-        position: 'absolute',
-        top,
-        left,
-        fontSize: 28 * size,
-        opacity,
-        transform: [{ translateY: floatY }],
-      }}
-    >
+    <Animated.Text style={{ position: 'absolute', top, left, fontSize: 28, opacity: fadeIn, transform: [{ translateY: floatY }] }}>
       ☁️
     </Animated.Text>
   );
 }
 
-// ─── Mini Sun Decoration ──────────────────────────────────────────────────────
-function MiniSun({ top = 0, right = 0, color = '🌟' }: { top?: number; right?: number; color?: string }) {
+// ─── 背景装饰：飘落小花 ─────────────────────────────────────────────
+function FallingFlower({ delay = 0, x = 0 }: { delay?: number; x?: number }) {
+  const translateY = useRef(new Animated.Value(-20)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
   const rotate = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.spring(scale, { toValue: 1, speed: 4, bounciness: 8, useNativeDriver: true }).start();
-    Animated.loop(
-      Animated.timing(rotate, { toValue: 1, duration: 30000, easing: Easing.linear, useNativeDriver: true })
-    ).start();
-  }, []);
-
   const spin = rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-
+  useEffect(() => {
+    const run = () => {
+      translateY.setValue(-20); opacity.setValue(0); rotate.setValue(0);
+      Animated.sequence([
+        Animated.delay(delay + Math.random() * 1000),
+        Animated.parallel([
+          Animated.sequence([
+            Animated.timing(opacity, { toValue: 0.7, duration: 500, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0.7, duration: 4000, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 1500, useNativeDriver: true }),
+          ]),
+          Animated.timing(translateY, { toValue: 200, duration: 6000, easing: Easing.linear, useNativeDriver: true }),
+          Animated.timing(rotate, { toValue: 1, duration: 6000, easing: Easing.linear, useNativeDriver: true }),
+        ]),
+      ]).start(() => setTimeout(run, 3000 + Math.random() * 4000));
+    };
+    setTimeout(run, delay);
+  }, []);
   return (
-    <Animated.Text
-      style={{
-        position: 'absolute',
-        top,
-        right,
-        fontSize: 22,
-        opacity: 0.7,
-        transform: [{ scale }, { rotate: spin }],
-      }}
-    >
-      {color}
+    <Animated.Text style={{ position: 'absolute', top: 0, left: x, fontSize: 18, transform: [{ translateY }, { rotate: spin }], opacity }}>
+      🌸
     </Animated.Text>
   );
 }
 
-// ─── Animated Card ────────────────────────────────────────────────────────────
-function AnimatedCard({ children, style, onPress, delay = 0 }: {
-  children: React.ReactNode; style?: ViewStyle; onPress?: () => void; delay?: number;
+// ─── 背景装饰：闪烁星星 ─────────────────────────────────────────────
+function TwinkleStar({ delay = 0, top = 0, left = 0 }: { delay?: number; top?: number; left?: number }) {
+  const scale = useRef(new Animated.Value(0.5)).current;
+  const opacity = useRef(new Animated.Value(0.3)).current;
+  const rotate = useRef(new Animated.Value(0)).current;
+  const spin = rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  useEffect(() => {
+    setTimeout(() => {
+      Animated.loop(Animated.sequence([
+        Animated.parallel([
+          Animated.timing(scale, { toValue: 1.3, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.9, duration: 1500, useNativeDriver: true }),
+          Animated.timing(rotate, { toValue: 1, duration: 3000, easing: Easing.linear, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(scale, { toValue: 0.5, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.3, duration: 1500, useNativeDriver: true }),
+        ]),
+      ])).start();
+    }, delay);
+  }, []);
+  return (
+    <Animated.Text style={{ position: 'absolute', top, left, fontSize: 14, transform: [{ scale }, { rotate: spin }], opacity }}>
+      ✨
+    </Animated.Text>
+  );
+}
+
+// ─── 背景装饰：上升气球 ─────────────────────────────────────────────
+function RisingBalloon({ delay = 0, x = 0 }: { delay?: number; x?: number }) {
+  const translateY = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+  const sway = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const run = () => {
+      translateY.setValue(0); opacity.setValue(0); sway.setValue(0);
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.parallel([
+          Animated.sequence([
+            Animated.timing(opacity, { toValue: 0.8, duration: 800, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0.8, duration: 7400, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 1800, useNativeDriver: true }),
+          ]),
+          Animated.timing(translateY, { toValue: -280, duration: 10000, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.loop(Animated.sequence([
+            Animated.timing(sway, { toValue: 12, duration: 2500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+            Animated.timing(sway, { toValue: -12, duration: 2500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          ])),
+        ]),
+      ]).start(() => setTimeout(run, 5000 + Math.random() * 5000));
+    };
+    setTimeout(run, delay);
+  }, []);
+  return (
+    <Animated.Text style={{ position: 'absolute', bottom: 20, left: x, fontSize: 22, transform: [{ translateY }, { translateX: sway }], opacity }}>
+      🎈
+    </Animated.Text>
+  );
+}
+
+// ─── 打卡横幅：增强版 ─────────────────────────────────────────────────
+function EnhancedCheckinBanner({
+  morningDone, eveningDone, todayCheckIn, elderNickname, caregiverName, onPress,
+}: {
+  morningDone: boolean; eveningDone: boolean; todayCheckIn: DailyCheckIn | null;
+  elderNickname: string; caregiverName: string; onPress: () => void;
 }) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(24)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const wave1Scale = useRef(new Animated.Value(1)).current;
+  const wave1Rotate = useRef(new Animated.Value(0)).current;
+  const wave2Scale = useRef(new Animated.Value(1)).current;
+  const wave2Rotate = useRef(new Animated.Value(0)).current;
+
+  const starAnimations = useRef(
+    Array.from({ length: 6 }, () => ({
+      scale: new Animated.Value(0),
+      opacity: new Animated.Value(0),
+      rotate: new Animated.Value(0),
+    }))
+  ).current;
+
+  // 星星位置固定（不在渲染时用 Math.random）
+  const starPositions = useMemo(() => [
+    { top: '25%', left: '15%' }, { top: '55%', left: '60%' },
+    { top: '30%', left: '80%' }, { top: '70%', left: '30%' },
+    { top: '20%', left: '45%' }, { top: '65%', left: '75%' },
+  ], []);
+
+  useEffect(() => {
+    if (!morningDone) {
+      Animated.loop(Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.02, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])).start();
+
+      Animated.loop(Animated.parallel([
+        Animated.sequence([
+          Animated.timing(wave1Scale, { toValue: 1.4, duration: 6000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(wave1Scale, { toValue: 1, duration: 6000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        ]),
+        Animated.timing(wave1Rotate, { toValue: 1, duration: 12000, easing: Easing.linear, useNativeDriver: true }),
+      ])).start();
+
+      Animated.loop(Animated.parallel([
+        Animated.sequence([
+          Animated.timing(wave2Scale, { toValue: 1.5, duration: 5000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(wave2Scale, { toValue: 1, duration: 5000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        ]),
+        Animated.timing(wave2Rotate, { toValue: 1, duration: 10000, easing: Easing.linear, useNativeDriver: true }),
+      ])).start();
+
+      starAnimations.forEach((star, i) => {
+        const runStar = () => {
+          star.scale.setValue(0); star.opacity.setValue(0); star.rotate.setValue(0);
+          Animated.sequence([
+            Animated.delay(i * 500),
+            Animated.parallel([
+              Animated.sequence([
+                Animated.timing(star.scale, { toValue: 1.2, duration: 400, useNativeDriver: true }),
+                Animated.timing(star.scale, { toValue: 0, duration: 400, useNativeDriver: true }),
+              ]),
+              Animated.sequence([
+                Animated.timing(star.opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+                Animated.timing(star.opacity, { toValue: 0, duration: 400, useNativeDriver: true }),
+              ]),
+              Animated.timing(star.rotate, { toValue: 1, duration: 800, useNativeDriver: true }),
+            ]),
+            Animated.delay(2000),
+          ]).start(() => runStar());
+        };
+        runStar();
+      });
+    }
+  }, [morningDone]);
+
+  const wave1Rot = wave1Rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '120deg'] });
+  const wave2Rot = wave2Rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-120deg'] });
+  const checkinProgress = (morningDone ? 1 : 0) + (eveningDone ? 1 : 0);
+
+  const handlePress = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    pressAnimation(scaleAnim, onPress);
+  };
+
+  if (!morningDone) {
+    return (
+      <Animated.View style={{ transform: [{ scale: pulseAnim }], marginBottom: 16 }}>
+        <TouchableOpacity onPress={handlePress} activeOpacity={0.88}>
+          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+            <LinearGradient
+              colors={['#4ADE80', '#22C55E', '#10B981']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={styles.checkinBanner}
+            >
+              <Animated.View style={[styles.bannerDecor1, { transform: [{ scale: wave1Scale }, { rotate: wave1Rot }] }]} />
+              <Animated.View style={[styles.bannerDecor2, { transform: [{ scale: wave2Scale }, { rotate: wave2Rot }] }]} />
+
+              {starAnimations.map((star, i) => {
+                const starRot = star.rotate.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
+                return (
+                  <Animated.View key={i} style={[styles.starDecor, starPositions[i], { opacity: star.opacity, transform: [{ scale: star.scale }, { rotate: starRot }] }]}>
+                    <Ionicons name="sparkles" size={14} color="white" />
+                  </Animated.View>
+                );
+              })}
+
+              <View style={styles.checkinLeft}>
+                <View style={styles.checkinIconBox}>
+                  <Ionicons name="clipboard-outline" size={28} color="#fff" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.checkinTitle}>开始今日打卡</Text>
+                  <Text style={styles.checkinSub}>记录{elderNickname}的状态，解锁今日 AI 建议 ✨</Text>
+                </View>
+              </View>
+              <View style={styles.chevronCircle}>
+                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.9)" />
+              </View>
+            </LinearGradient>
+          </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  }
+
+  return (
+    <TouchableOpacity style={styles.checkinDone} onPress={handlePress} activeOpacity={0.88}>
+      <View style={styles.checkinLeft}>
+        <View style={styles.checkinIconBoxDone}>
+          <Ionicons name="checkmark-circle" size={28} color="#16A34A" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.checkinTitleDone}>今日记录 {checkinProgress}/2 ✅</Text>
+          <Text style={styles.checkinSubDone}>早间已完成{eveningDone ? ' · 晚间已完成' : ' · 晚间待完成'}</Text>
+          {todayCheckIn?.sleepHours != null && (
+            <View style={styles.careScoreBadge}>
+              <Text style={{ fontSize: 11 }}>💤 {elderNickname}睡了 {todayCheckIn.sleepHours}h</Text>
+              {todayCheckIn.caregiverMoodEmoji && (
+                <Text style={{ fontSize: 11, marginLeft: 6 }}>{todayCheckIn.caregiverMoodEmoji} {caregiverName}的心情已记录</Text>
+              )}
+            </View>
+          )}
+        </View>
+      </View>
+      <View style={styles.chevronCircleDone}>
+        <Ionicons name="chevron-forward" size={16} color={COLORS.textMuted} />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── AI 卡片：增强版 ────────────────────────────────────────────────
+function EnhancedAICard({
+  morningDone, encouragement, motivation, onPress, onCheckinPress,
+}: {
+  morningDone: boolean; encouragement: string; motivation: string;
+  onPress: () => void; onCheckinPress: () => void;
+}) {
+  const iconScale = useRef(new Animated.Value(1)).current;
+  const iconRotate = useRef(new Animated.Value(0)).current;
+  const glowAnim1 = useRef(new Animated.Value(1)).current;
+  const glowAnim2 = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    fadeInUp(fadeAnim, slideAnim, { delay, duration: 500 });
+    Animated.loop(Animated.sequence([
+      Animated.timing(iconScale, { toValue: 1.15, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(iconScale, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ])).start();
+
+    Animated.loop(Animated.timing(iconRotate, { toValue: 1, duration: 4000, easing: Easing.inOut(Easing.ease), useNativeDriver: true })).start();
+
+    Animated.loop(Animated.sequence([
+      Animated.timing(glowAnim1, { toValue: 1.3, duration: 10000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(glowAnim1, { toValue: 1, duration: 10000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ])).start();
+
+    Animated.loop(Animated.sequence([
+      Animated.timing(glowAnim2, { toValue: 1.4, duration: 8000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(glowAnim2, { toValue: 1, duration: 8000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ])).start();
   }, []);
 
+  const iconRotation = iconRotate.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: ['0deg', '8deg', '0deg', '-8deg', '0deg'],
+  });
+
   const handlePress = () => {
-    if (!onPress) return;
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (morningDone) pressAnimation(scaleAnim, onPress);
+    else pressAnimation(scaleAnim, onCheckinPress);
+  };
+
+  return (
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.88}>
+      <Animated.View style={[styles.aiCard, { transform: [{ scale: scaleAnim }] }]}>
+        <Animated.View style={[styles.aiGlow1, { transform: [{ scale: glowAnim1 }] }]} />
+        <Animated.View style={[styles.aiGlow2, { transform: [{ scale: glowAnim2 }] }]} />
+
+        <Text style={styles.aiDecorFigure}>🩺</Text>
+
+        <View style={styles.aiHeader}>
+          <Animated.View style={{ transform: [{ scale: iconScale }, { rotate: iconRotation }] }}>
+            <LinearGradient
+              colors={['#A78BFA', '#8B5CF6', '#7C3AED']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={styles.aiIconBox}
+            >
+              <Ionicons name="sparkles" size={22} color="#FFFFFF" />
+            </LinearGradient>
+          </Animated.View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.aiLabel}>AI 今日护理建议</Text>
+            <Text style={styles.aiSubLabel}>{motivation}</Text>
+          </View>
+        </View>
+
+        <View style={styles.aiContentBox}>
+          {!morningDone ? (
+            <View style={styles.aiSkeletonWrap}>
+              <View style={styles.aiSkeletonLine} />
+              <View style={[styles.aiSkeletonLine, { width: '78%' }]} />
+              <View style={[styles.aiSkeletonLine, { width: '90%', marginTop: 8 }]} />
+              <View style={[styles.aiSkeletonLine, { width: '65%' }]} />
+              <View style={styles.aiSkeletonBadgeRow}>
+                <View style={styles.aiSkeletonBadge} />
+                <View style={[styles.aiSkeletonBadge, { width: 72 }]} />
+                <View style={[styles.aiSkeletonBadge, { width: 64 }]} />
+              </View>
+              <View style={styles.aiSkeletonOverlay}>
+                <View style={styles.aiSkeletonLockBox}>
+                  <Ionicons name="lock-closed" size={20} color="#7C3AED" />
+                  <Text style={styles.aiSkeletonLockText}>完成早间打卡后解锁</Text>
+                  <Text style={styles.aiSkeletonLockSub}>打卡后即可查看今日护理建议 ✨</Text>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <Text style={styles.aiMessage}>{encouragement}</Text>
+          )}
+        </View>
+
+        {morningDone && (
+          <View style={styles.aiBadgeRow}>
+            {[{ emoji: '🧠', text: '护理指数' }, { emoji: '💬', text: '营养建议' }, { emoji: '☀️', text: '天气组合' }].map((b, i) => (
+              <View key={i} style={styles.aiBadge}>
+                <Text style={styles.aiBadgeEmoji}>{b.emoji}</Text>
+                <Text style={styles.aiBadgeText}>{b.text}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {morningDone ? (
+          <TouchableOpacity onPress={onPress} style={styles.aiDetailLink}>
+            <Text style={styles.aiDetailLinkText}>查看详细建议</Text>
+            <Ionicons name="chevron-forward" size={14} color="#7C3AED" />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={onCheckinPress} style={styles.aiDetailLink}>
+            <Text style={[styles.aiDetailLinkText, { color: '#10B981' }]}>开始早间打卡 →</Text>
+          </TouchableOpacity>
+        )}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── 快捷入口卡片 ────────────────────────────────────────────────────
+function QuickActionCard({
+  emoji, decorEmoji, label, gradientStart, gradientEnd, bgColor, onPress, delay,
+}: {
+  emoji: string; decorEmoji: string; label: string;
+  gradientStart: string; gradientEnd: string; bgColor: string;
+  onPress: () => void; delay: number;
+}) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const emojiRotate = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 400, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+
+    setTimeout(() => {
+      Animated.loop(Animated.timing(emojiRotate, {
+        toValue: 1, duration: 3000, easing: Easing.inOut(Easing.ease), useNativeDriver: true,
+      })).start();
+    }, delay + 600);
+  }, []);
+
+  const emojiRot = emojiRotate.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: ['0deg', '10deg', '0deg', '-10deg', '0deg'],
+  });
+
+  const handlePress = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     pressAnimation(scaleAnim, onPress);
   };
 
   return (
-    <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }, style]}>
-      {onPress ? (
-        <TouchableOpacity onPress={handlePress} activeOpacity={0.92}>
-          {children}
-        </TouchableOpacity>
-      ) : children}
-    </Animated.View>
-  );
-}// ─── Quick Action Card ──────────────────────────────────────────────────────────────────────────────
-function QuickAction({
-  emoji, label, gradientStart, gradientEnd, bgColor, onPress, delay,
-}: {
-  emoji: string;
-  label: string;
-  gradientStart: string;
-  gradientEnd: string;
-  bgColor: string;
-  onPress: () => void;
-  delay: number;
-}) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    fadeInUp(fadeAnim, slideAnim, { delay, duration: 400 });
-  }, []);
-
-  return (
     <Animated.View style={[styles.quickItem, { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}>
-      <TouchableOpacity
-        style={[styles.quickCard, { backgroundColor: bgColor }]}
-        onPress={() => pressAnimation(scaleAnim, onPress)}
-        activeOpacity={0.85}
-      >
-        <LinearGradient
-          colors={[gradientStart, gradientEnd]}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-          style={styles.quickIconBox}
-        >
+      <TouchableOpacity style={[styles.quickCard, { backgroundColor: bgColor }]} onPress={handlePress} activeOpacity={0.85}>
+        <LinearGradient colors={[gradientStart, gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.quickIconBox}>
           <Text style={styles.quickEmoji}>{emoji}</Text>
         </LinearGradient>
         <View style={{ flex: 1 }} />
         <Text style={styles.quickLabel}>{label}</Text>
+        <Animated.Text style={[styles.quickDecorEmoji, { transform: [{ rotate: emojiRot }] }]}>
+          {decorEmoji}
+        </Animated.Text>
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
-// ─── Helper functions ────────────────────────────────────────────────────────
+// ─── 标题 🚀 摇摆 Hook ───────────────────────────────────────────────
+function useShakeAnim() {
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(Animated.timing(shakeAnim, {
+      toValue: 1, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true,
+    })).start();
+  }, []);
+  return shakeAnim.interpolate({ inputRange: [0, 0.25, 0.5, 0.75, 1], outputRange: ['0deg', '10deg', '0deg', '-10deg', '0deg'] });
+}
+
+// ─── Helper ────────────────────────────────────────────────────────────────
 function getMoodLabel(score: number): string {
   if (score >= 9) return '非常好';
   if (score >= 7) return '心情不错';
@@ -221,52 +521,41 @@ function getMoodLabel(score: number): string {
 
 function getPersonalizedAISuggestion(checkIn: DailyCheckIn): string {
   const { moodScore, sleepHours, medicationTaken, moodEmoji } = checkIn;
-  if (moodScore >= 8 && sleepHours >= 7) {
+  if (moodScore >= 8 && sleepHours >= 7)
     return `今天状态很棒！${moodEmoji || '😊'} 心情好、睡眠充足，适合带家人出门散步或做点轻松的活动 🌳`;
-  }
-  if (moodScore >= 6 && sleepHours >= 6) {
+  if (moodScore >= 6 && sleepHours >= 6)
     return `今天整体状态不错，保持轻松的心情是最好的护理 🌸 记得多喝水、多休息哦`;
-  }
-  if (sleepHours < 6) {
-    return `昨晚睡眠时间较短，今天可以安排小憩小睡 💤 充足的休息是最好的护理基础`;
-  }
-  if (moodScore < 5) {
+  if (sleepHours < 6)
+    return `昨晚睡眠时间较短，今天可以安排小憩 💤 充足的休息是最好的护理基础`;
+  if (moodScore < 5)
     return `今天心情有些低落，没关系，这很正常 💜 可以听听音乐或和家人聊聊天，心情会好起来的`;
-  }
-  if (!medicationTaken) {
+  if (!medicationTaken)
     return `今天用药还没记录，记得按时服药哦 💊 规律用药是护理的重要一环`;
-  }
   return `今天的护理记录已完成 ${moodEmoji || '😊'} 你的用心大家都看得到，加油！`;
 }
 
-// --- Home Screen ---
+// ─── 主页面 ─────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [greeting, setGreeting] = useState('');
   const [tip, setTip] = useState<{ category: string; icon: string; tip: string } | null>(null);
-  const [todayDone, setTodayDone] = useState(false);
   const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
   const [allCheckIns, setAllCheckIns] = useState<DailyCheckIn[]>([]);
-  const [zodiacEmoji, setZodiacEmoji] = useState('👤');
-  const [zodiacColor, setZodiacColor] = useState('#FF6B6B');
-  const [zodiacBgColor, setZodiacBgColor] = useState('#FFF0F0');
   const [elderNickname, setElderNickname] = useState('老宝');
   const [caregiverName, setCaregiverName] = useState('');
   const [memberPhotoUri, setMemberPhotoUri] = useState<string | null>(null);
-  const [gpsWeather, setGpsWeather] = useState<GpsWeatherInfo | null>(null);
+  const [zodiacColor, setZodiacColor] = useState('#FF6B6B');
 
   const headerFade = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-15)).current;
   const avatarScale = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  // 标题 🚀 摇摆 — 在 hook 顶层调用
+  const rocketRot = useShakeAnim();
 
   const loadData = useCallback(async () => {
     const profile = await getProfile();
-    if (!profile || !profile.setupComplete) {
-      router.replace('/onboarding' as any);
-      return;
-    }
+    if (!profile || !profile.setupComplete) { router.replace('/onboarding' as any); return; }
     setElderNickname(profile?.nickname || profile?.name || '老宝');
     const cgName = profile?.caregiverName || '';
     if (profile?.caregiverAvatarType === 'photo' && profile?.caregiverPhotoUri) {
@@ -277,24 +566,16 @@ export default function HomeScreen() {
       if (member?.photoUri) setMemberPhotoUri(member.photoUri);
     }
     setCaregiverName(cgName);
-    getWeatherByGPS().then(weather => {
-      setGpsWeather(weather);
-      setGreeting(buildGreetingWithWeather(cgName || undefined, weather));
-    });
+    getWeatherByGPS().then(weather => setGreeting(buildGreetingWithWeather(cgName || undefined, weather)));
     setGreeting(buildGreetingWithWeather(cgName || undefined, null));
     setTip(getRandomTip());
-    if (profile?.zodiacEmoji) {
-      setZodiacEmoji(profile.zodiacEmoji);
+    if (profile?.birthDate) {
       const { getZodiacFromDate } = require('@/lib/zodiac');
-      if (profile.birthDate) {
-        const zodiac = getZodiacFromDate(profile.birthDate);
-        setZodiacColor(zodiac.color);
-        setZodiacBgColor(zodiac.bgColor);
-      }
+      const zodiac = getZodiacFromDate(profile.birthDate);
+      setZodiacColor(zodiac.color);
     }
     const today = await getTodayCheckIn();
     setTodayCheckIn(today);
-    setTodayDone(!!today);
     const all = await getAllCheckIns();
     setAllCheckIns(all);
   }, []);
@@ -309,47 +590,57 @@ export default function HomeScreen() {
     setTimeout(() => {
       Animated.spring(avatarScale, { toValue: 1, speed: 8, bounciness: 12, useNativeDriver: true }).start();
     }, 300);
-    pulseLoop(pulseAnim, { min: 0.98, max: 1.02, duration: 2000 });
   }, []);
 
   const morningDone = todayCheckIn?.morningDone ?? false;
   const eveningDone = todayCheckIn?.eveningDone ?? false;
-  const checkinProgress = (morningDone ? 1 : 0) + (eveningDone ? 1 : 0);
+  const todayDone = morningDone;
 
   const encouragement = morningDone
     ? getPersonalizedAISuggestion(todayCheckIn!)
     : '先完成今天的早间打卡，我再为你生成更贴合今天情况的建议 🌸';
 
   const quickActions = [
-    { emoji: '💊', label: '用药提醒', route: '/medication', gradientStart: '#F472B6', gradientEnd: '#EC4899', bgColor: '#FFF0F6' },
-    { emoji: '📔', label: '护理日记', route: '/diary',      gradientStart: '#60A5FA', gradientEnd: '#3B82F6', bgColor: '#EFF6FF' },
-    { emoji: '👥', label: '家庭共享', route: '/family',     gradientStart: '#C084FC', gradientEnd: '#A855F7', bgColor: '#F5F0FF' },
-    { emoji: '🤖', label: 'AI 助手',  route: '/assistant',  gradientStart: '#34D399', gradientEnd: '#10B981', bgColor: '#EFFDF5' },
+    { emoji: '💊', decorEmoji: '✨', label: '用药提醒', route: '/medication', gradientStart: '#F472B6', gradientEnd: '#EC4899', bgColor: '#FFF0F6' },
+    { emoji: '📔', decorEmoji: '🌸', label: '护理日记', route: '/diary',      gradientStart: '#60A5FA', gradientEnd: '#3B82F6', bgColor: '#EFF6FF' },
+    { emoji: '👥', decorEmoji: '💜', label: '家庭共享', route: '/family',     gradientStart: '#C084FC', gradientEnd: '#A855F7', bgColor: '#F5F0FF' },
+    { emoji: '🤖', decorEmoji: '🧠', label: 'AI 助手',  route: '/assistant',  gradientStart: '#34D399', gradientEnd: '#10B981', bgColor: '#EFFDF5' },
   ];
 
   return (
     <View style={styles.root}>
-      {/* Figma gradient background: linear-gradient(114.7°, #FFF7ED → #FDF2F8 → #FAF5FF) */}
       <LinearGradient
         colors={['#FFF7ED', '#FDF2F8', '#FAF5FF']}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-    <ScrollView
-      style={[styles.container, { paddingTop: insets.top }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* ── Background Decorations ── */}
+
+      {/* ── 背景装饰层（不干扰交互）── */}
       <View style={styles.bgDecorLayer} pointerEvents="none">
-        {/* Clouds */}
-        <CloudDecoration top={60} left={-10} size={0.9} delay={200} />
-        <CloudDecoration top={40} left={width * 0.35} size={0.7} delay={800} />
-        <CloudDecoration top={80} left={width * 0.65} size={1.0} delay={1400} />
-        {/* Mini suns */}
-        <MiniSun top={20} right={80} color="✨" />
-        <MiniSun top={100} right={20} color="🌟" />
-        {/* Floating hearts */}
+        {/* 3朵云 */}
+        <FloatingCloud top={60} left={-10} delay={0} />
+        <FloatingCloud top={40} left={width * 0.38} delay={600} />
+        <FloatingCloud top={80} left={width * 0.68} delay={1200} />
+
+        {/* 4颗星星 */}
+        <TwinkleStar delay={200} top={20} left={width * 0.18} />
+        <TwinkleStar delay={700} top={110} left={width * 0.75} />
+        <TwinkleStar delay={400} top={55} left={width * 0.52} />
+        <TwinkleStar delay={1100} top={90} left={width * 0.28} />
+
+        {/* 5朵飘落小花 */}
+        <FallingFlower delay={0} x={width * 0.08} />
+        <FallingFlower delay={1200} x={width * 0.28} />
+        <FallingFlower delay={500} x={width * 0.55} />
+        <FallingFlower delay={1800} x={width * 0.72} />
+        <FallingFlower delay={900} x={width * 0.90} />
+
+        {/* 3个气球 */}
+        <RisingBalloon delay={0} x={width * 0.10} />
+        <RisingBalloon delay={3500} x={width * 0.50} />
+        <RisingBalloon delay={6000} x={width * 0.82} />
+
+        {/* 6颗爱心 */}
         <FloatingHeart delay={500} x={width * 0.15} />
         <FloatingHeart delay={1200} x={width * 0.35} />
         <FloatingHeart delay={2000} x={width * 0.55} />
@@ -358,192 +649,63 @@ export default function HomeScreen() {
         <FloatingHeart delay={300} x={width * 0.05} />
       </View>
 
-      {/* ── Header ── */}
-      <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
-        <View style={{ flex: 1 }}>
-          <View style={styles.appNameRow}>
-            <Text style={styles.appName}>我们一起照顾好今天</Text>
-            <Text style={styles.headerSparkle}>✨</Text>
-          </View>
-          <Text style={styles.greeting}>{greeting}</Text>
-        </View>
-        <Animated.View style={{ transform: [{ scale: avatarScale }] }}>
-          <TouchableOpacity
-            style={[styles.profileBtn, memberPhotoUri ? { backgroundColor: 'transparent', borderWidth: 2.5, borderColor: zodiacColor + '80' } : {}]}
-            onPress={() => {
-              if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push('/profile' as any);
-            }}
-          >
-            {memberPhotoUri ? (
-              <Image source={{ uri: memberPhotoUri }} style={styles.profilePhoto} />
-            ) : (
-              <LinearGradient
-                colors={['#FFAB9B', '#FF8C7A']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={styles.profileGradient}
-              >
-                <Ionicons name="person-outline" size={22} color="#fff" />
-              </LinearGradient>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-      </Animated.View>
-
-      {/* ── Check-in Banner ── */}
-      <AnimatedCard delay={100}>
-        <Animated.View style={!morningDone ? { transform: [{ scale: pulseAnim }] } : undefined}>
-          {!morningDone ? (
-            <TouchableOpacity
-              onPress={() => router.push('/checkin' as any)}
-              activeOpacity={0.88}
-            >
-              <LinearGradient
-                colors={['#4ADE80', '#10B981']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                style={styles.checkinBanner}
-              >
-                <View style={styles.bannerDecor1} />
-                <View style={styles.bannerDecor2} />
-                <View style={styles.checkinLeft}>
-                  <View style={styles.checkinIconBox}>
-                    <Ionicons name="clipboard-outline" size={28} color="#fff" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.checkinTitle}>开始早间打卡</Text>
-                    <Text style={styles.checkinSub}>记录{elderNickname}的状态，解锁今日 AI 建议 ✨</Text>
-                  </View>
-                </View>
-                <View style={styles.chevronCircle}>
-                  <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.9)" />
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.checkinDone}
-              onPress={() => router.push('/checkin' as any)}
-              activeOpacity={0.88}
-            >
-              <View style={styles.checkinLeft}>
-                <View style={styles.checkinIconBoxDone}>
-                  <Ionicons name="checkmark-circle" size={28} color="#16A34A" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.checkinTitleDone}>今日记录 {checkinProgress}/2 ✅</Text>
-                  <Text style={styles.checkinSubDone}>
-                    早间已完成{eveningDone ? ' · 晚间已完成' : ' · 晚间待完成'}
-                  </Text>
-                  {todayCheckIn?.sleepHours != null && (
-                    <View style={styles.careScoreBadge}>
-                      <Text style={{ fontSize: 11 }}>💤 {elderNickname}睡了 {todayCheckIn.sleepHours}h</Text>
-                      {todayCheckIn.caregiverMoodEmoji && (
-                        <Text style={{ fontSize: 11, marginLeft: 6 }}>{todayCheckIn.caregiverMoodEmoji} {caregiverName}的心情已记录</Text>
-                      )}
-                    </View>
-                  )}
-                </View>
-              </View>
-              <View style={styles.chevronCircleDone}>
-                <Ionicons name="chevron-forward" size={16} color={COLORS.textMuted} />
-              </View>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
-      </AnimatedCard>
-
-      {/* ── AI Card ── */}
-      <AnimatedCard delay={200} onPress={morningDone ? () => router.push('/assistant' as any) : undefined}>
-        <View style={styles.aiCard}>
-          {/* Decorative figure — top right (doctor/care icon) */}
-          <Text style={styles.aiDecorFigure}>🦹‍♀️</Text>
-
-          {/* Header row: gradient icon + title + subtitle */}
-          <View style={styles.aiHeader}>
-            <LinearGradient
-              colors={['#A78BFA', '#7C3AED']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.aiIconBox}
-            >
-              <Ionicons name="sparkles" size={22} color="#FFFFFF" />
-            </LinearGradient>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.aiLabel}>AI 今日护理建议</Text>
-              <Text style={styles.aiSubLabel}>{getDailyMotivation()}</Text>
+      <ScrollView
+        style={[styles.container, { paddingTop: insets.top }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── 顶部 Header ── */}
+        <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
+          <View style={{ flex: 1 }}>
+            <View style={styles.appNameRow}>
+              <Text style={styles.appName}>我们一起照顾好今天</Text>
+              <Text style={styles.headerSparkle}>✨</Text>
             </View>
+            <Text style={styles.greeting}>{greeting}</Text>
           </View>
-
-          {/* White content box — locked: 骨架屏 / unlocked: real advice */}
-          <View style={styles.aiContentBox}>
-            {!morningDone ? (
-              /* ── 骨架屏：打卡前预览 ── */
-              <View style={styles.aiSkeletonWrap}>
-                {/* 假文字行（模拟AI建议文本） */}
-                <View style={styles.aiSkeletonLine} />
-                <View style={[styles.aiSkeletonLine, { width: '78%' }]} />
-                <View style={[styles.aiSkeletonLine, { width: '90%', marginTop: 8 }]} />
-                <View style={[styles.aiSkeletonLine, { width: '65%' }]} />
-                {/* 假标签行 */}
-                <View style={styles.aiSkeletonBadgeRow}>
-                  <View style={styles.aiSkeletonBadge} />
-                  <View style={[styles.aiSkeletonBadge, { width: 72 }]} />
-                  <View style={[styles.aiSkeletonBadge, { width: 64 }]} />
-                </View>
-                {/* 遮罩层 + 锁 */}
-                <View style={styles.aiSkeletonOverlay}>
-                  <View style={styles.aiSkeletonLockBox}>
-                    <Ionicons name="lock-closed" size={20} color="#7C3AED" />
-                    <Text style={styles.aiSkeletonLockText}>完成早间打卡后解锁</Text>
-                    <Text style={styles.aiSkeletonLockSub}>打卡后即可查看今日护理建议 ✨</Text>
-                  </View>
-                </View>
-              </View>
-            ) : (
-              <Text style={styles.aiMessage}>{encouragement}</Text>
-            )}
-          </View>
-
-          {/* Tag pills */}
-          {morningDone && (
-            <View style={styles.aiBadgeRow}>
-              {[
-                { emoji: '🧠', text: '护理指数' },
-                { emoji: '💬', text: '营养建议' },
-                { emoji: '☀️', text: '天气组合' },
-              ].map((b, i) => (
-                <View key={i} style={styles.aiBadge}>
-                  <Text style={styles.aiBadgeEmoji}>{b.emoji}</Text>
-                  <Text style={styles.aiBadgeText}>{b.text}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* View detail link or start checkin CTA */}
-          {morningDone ? (
-            <TouchableOpacity onPress={() => router.push('/assistant' as any)} style={styles.aiDetailLink}>
-              <Text style={styles.aiDetailLinkText}>查看详细建议</Text>
-              <Ionicons name="chevron-forward" size={14} color="#7C3AED" />
+          <Animated.View style={{ transform: [{ scale: avatarScale }] }}>
+            <TouchableOpacity
+              style={[styles.profileBtn, memberPhotoUri ? { backgroundColor: 'transparent', borderWidth: 2.5, borderColor: zodiacColor + '80' } : {}]}
+              onPress={() => {
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/profile' as any);
+              }}
+            >
+              {memberPhotoUri ? (
+                <Image source={{ uri: memberPhotoUri }} style={styles.profilePhoto} />
+              ) : (
+                <LinearGradient colors={['#FFAB9B', '#FF8C7A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.profileGradient}>
+                  <Ionicons name="person-outline" size={22} color="#fff" />
+                </LinearGradient>
+              )}
             </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => router.push('/checkin' as any)} style={styles.aiDetailLink}>
-              <Text style={[styles.aiDetailLinkText, { color: '#10B981' }]}>开始早间打卡 →</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </AnimatedCard>
+          </Animated.View>
+        </Animated.View>
 
-      {/* ── Trend Chart ── */}
-      {allCheckIns.length > 0 && (
-        <AnimatedCard delay={300}>
-          <TrendChart checkIns={allCheckIns} />
-        </AnimatedCard>
-      )}
+        {/* ── 打卡横幅 ── */}
+        <EnhancedCheckinBanner
+          morningDone={morningDone}
+          eveningDone={eveningDone}
+          todayCheckIn={todayCheckIn}
+          elderNickname={elderNickname}
+          caregiverName={caregiverName}
+          onPress={() => router.push('/checkin' as any)}
+        />
 
-      {/* ── Tip Card ── */}
-      {tip && (
-        <AnimatedCard delay={400}>
+        {/* ── AI 卡片 ── */}
+        <EnhancedAICard
+          morningDone={morningDone}
+          encouragement={encouragement}
+          motivation={getDailyMotivation()}
+          onPress={() => router.push('/assistant' as any)}
+          onCheckinPress={() => router.push('/checkin' as any)}
+        />
+
+        {/* ── 趋势图 ── */}
+        {allCheckIns.length > 0 && <TrendChart checkIns={allCheckIns} />}
+
+        {/* ── 护理贴士 ── */}
+        {tip && (
           <View style={styles.tipCard}>
             <View style={styles.tipHeader}>
               <View style={styles.tipIconCircle}>
@@ -553,51 +715,30 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.tipText}>{tip.tip}</Text>
           </View>
-        </AnimatedCard>
-      )}
+        )}
 
-      {/* ── Quick Actions ── */}
-      <AnimatedCard delay={500}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitleEmoji}>🚀</Text>
-          <Text style={styles.sectionTitle}>快捷入口</Text>
+        {/* ── 快捷入口 ── */}
+        <View style={{ marginBottom: 4 }}>
+          <View style={styles.sectionHeader}>
+            <Animated.Text style={[styles.sectionTitleEmoji, { transform: [{ rotate: rocketRot }] }]}>🚀</Animated.Text>
+            <Text style={styles.sectionTitle}>快捷入口</Text>
+          </View>
+          <View style={styles.quickGrid}>
+            <View style={styles.quickRow}>
+              {quickActions.slice(0, 2).map((item, i) => (
+                <QuickActionCard key={item.route} {...item} onPress={() => router.push(item.route as any)} delay={50 + i * 80} />
+              ))}
+            </View>
+            <View style={styles.quickRow}>
+              {quickActions.slice(2, 4).map((item, i) => (
+                <QuickActionCard key={item.route} {...item} onPress={() => router.push(item.route as any)} delay={210 + i * 80} />
+              ))}
+            </View>
+          </View>
         </View>
-      </AnimatedCard>
-      {/* 2×2 grid */}
-      <View style={styles.quickGrid}>
-        <View style={styles.quickRow}>
-          {quickActions.slice(0, 2).map((item, i) => (
-            <QuickAction
-              key={item.route}
-              emoji={item.emoji}
-              label={item.label}
-              gradientStart={item.gradientStart}
-              gradientEnd={item.gradientEnd}
-              bgColor={item.bgColor}
-              onPress={() => router.push(item.route as any)}
-              delay={550 + i * 80}
-            />
-          ))}
-        </View>
-        <View style={styles.quickRow}>
-          {quickActions.slice(2, 4).map((item, i) => (
-            <QuickAction
-              key={item.route}
-              emoji={item.emoji}
-              label={item.label}
-              gradientStart={item.gradientStart}
-              gradientEnd={item.gradientEnd}
-              bgColor={item.bgColor}
-              onPress={() => router.push(item.route as any)}
-              delay={710 + i * 80}
-            />
-          ))}
-        </View>
-      </View>
 
-      {/* Today's check-in data summary (shown after check-in) */}
-      {todayDone && todayCheckIn && (
-        <AnimatedCard delay={600}>
+        {/* ── 今日数据摘要 ── */}
+        {todayDone && todayCheckIn && (
           <View style={styles.summaryCard}>
             <View style={styles.summaryCardHeader}>
               <Text style={styles.summaryCardTitle}>✨ 今日数据摘要</Text>
@@ -635,17 +776,11 @@ export default function HomeScreen() {
               )}
             </View>
           </View>
-        </AnimatedCard>
-      )}
+        )}
 
-      {/* ── Weekly Echo (Sunday evenings) ── */}
-      <WeeklyEcho
-        caregiverName={caregiverName}
-        elderNickname={elderNickname}
-      />
-
-      <View style={{ height: 32 }} />
-    </ScrollView>
+        <WeeklyEcho caregiverName={caregiverName} elderNickname={elderNickname} />
+        <View style={{ height: 32 }} />
+      </ScrollView>
     </View>
   );
 }
@@ -655,222 +790,89 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 24 },
 
-  // Background decoration layer
-  bgDecorLayer: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
-    height: 200,
-    overflow: 'hidden',
-  },
+  bgDecorLayer: { position: 'absolute', top: 0, left: 0, right: 0, height: 220, overflow: 'hidden' },
 
   // Header
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'flex-start', paddingTop: 20, paddingBottom: 16,
-  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 20, paddingBottom: 16 },
   appNameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   appName: { fontSize: 22, fontWeight: '900', color: '#FF4D4D', letterSpacing: -0.5 },
   headerSparkle: { fontSize: 18 },
   greeting: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4, fontWeight: '500' },
-  profileBtn: {
-    width: 52, height: 52, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
-    overflow: 'hidden',
-    ...SHADOWS.md,
-  },
-  profileGradient: {
-    width: 52, height: 52, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  profileEmoji: { fontSize: 24 },
+  profileBtn: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...SHADOWS.md },
+  profileGradient: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   profilePhoto: { width: 52, height: 52, borderRadius: 14 },
 
-  // Check-in banner — green gradient (Figma style)
-  checkinBanner: {
-    flexDirection: 'row', alignItems: 'center',
-    borderRadius: 24, padding: 18, marginBottom: 16,
-    overflow: 'hidden',
-    ...SHADOWS.md,
-  },
-  bannerDecor1: {
-    position: 'absolute', top: -20, right: -20,
-    width: 90, height: 90, borderRadius: 45,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  bannerDecor2: {
-    position: 'absolute', bottom: -20, left: 60,
-    width: 70, height: 70, borderRadius: 35,
-    backgroundColor: 'rgba(255,255,255,0.10)',
-  },
+  // 打卡横幅
+  checkinBanner: { flexDirection: 'row', alignItems: 'center', borderRadius: 24, padding: 18, overflow: 'hidden', ...SHADOWS.md },
+  bannerDecor1: { position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: 45, backgroundColor: 'rgba(255,255,255,0.15)' },
+  bannerDecor2: { position: 'absolute', bottom: -20, left: 60, width: 70, height: 70, borderRadius: 35, backgroundColor: 'rgba(255,255,255,0.10)' },
+  starDecor: { position: 'absolute' },
   checkinLeft: { flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 },
-  checkinIconBox: {
-    width: 56, height: 56, borderRadius: 18,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    // Frosted glass effect
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)',
-  },
-  checkinIconBoxDone: {
-    width: 52, height: 52, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#DCFCE7',
-  },
+  checkinIconBox: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.25)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
+  checkinIconBoxDone: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#DCFCE7' },
   checkinTitle: { fontSize: 17, fontWeight: '800', color: '#fff', letterSpacing: -0.3 },
   checkinTitleDone: { fontSize: 16, fontWeight: '700', color: COLORS.text },
   checkinSub: { fontSize: 13, color: 'rgba(255,255,255,0.88)', marginTop: 2 },
   checkinSubDone: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-  checkinDone: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#BBF7D0',
-    borderRadius: 24, padding: 18, marginBottom: 16,
-    ...SHADOWS.sm,
-  },
-  chevronCircle: {
-    width: 34, height: 34, borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.28)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  chevronCircleDone: {
-    width: 32, height: 32, borderRadius: 16,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  careScoreBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4,
-    backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 8, alignSelf: 'flex-start',
-  },
-  careScoreText: { fontSize: 12, fontWeight: '700', color: '#D97706' },
+  checkinDone: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#BBF7D0', borderRadius: 24, padding: 18, marginBottom: 16, ...SHADOWS.sm },
+  chevronCircle: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.28)', alignItems: 'center', justifyContent: 'center' },
+  chevronCircleDone: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
+  careScoreBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, alignSelf: 'flex-start' },
 
-  // AI card — Figma node-id=4-252
-  aiCard: {
-    marginBottom: 16, backgroundColor: '#F3EEFF', borderRadius: 24, padding: 18,
-    borderWidth: 1, borderColor: '#DDD6FE',
-    overflow: 'hidden',
-    ...SHADOWS.sm,
-  },
-  aiDecorFigure: {
-    position: 'absolute', top: 8, right: 12,
-    fontSize: 44, opacity: 0.18,
-    transform: [{ scaleX: -1 }],
-  },
+  // AI 卡片
+  aiCard: { marginBottom: 16, backgroundColor: '#F3EEFF', borderRadius: 24, padding: 18, borderWidth: 1, borderColor: '#DDD6FE', overflow: 'hidden', ...SHADOWS.sm },
+  aiGlow1: { position: 'absolute', top: 0, right: 0, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(167,139,250,0.15)', transform: [{ translateX: 60 }, { translateY: -60 }] },
+  aiGlow2: { position: 'absolute', bottom: 0, left: 0, width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(139,92,246,0.12)', transform: [{ translateX: -50 }, { translateY: 50 }] },
+  aiDecorFigure: { position: 'absolute', top: 8, right: 12, fontSize: 44, opacity: 0.18, transform: [{ scaleX: -1 }] },
   aiHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  aiIconBox: {
-    width: 48, height: 48, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
-  },
+  aiIconBox: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   aiLabel: { fontSize: 16, fontWeight: '800', color: '#5B21B6', letterSpacing: -0.3 },
   aiSubLabel: { fontSize: 12, color: '#7C3AED', marginTop: 2 },
-  aiContentBox: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, marginBottom: 12,
-  },
+  aiContentBox: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, marginBottom: 12 },
   aiMessage: { fontSize: 14, color: '#374151', lineHeight: 22 },
-  aiMessageLocked: { color: '#6B7280' },
-  aiLockRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  aiLockText: { fontSize: 12, color: '#6B7280', fontWeight: '600' },
-
-  // ── 骨架屏样式 ──
   aiSkeletonWrap: { position: 'relative', overflow: 'hidden', gap: 8, paddingBottom: 4 },
-  aiSkeletonLine: {
-    width: '100%', height: 13, borderRadius: 6,
-    backgroundColor: '#E5E7EB', opacity: 0.7,
-  },
+  aiSkeletonLine: { width: '100%', height: 13, borderRadius: 6, backgroundColor: '#E5E7EB', opacity: 0.7 },
   aiSkeletonBadgeRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  aiSkeletonBadge: {
-    width: 56, height: 24, borderRadius: 12,
-    backgroundColor: '#EDE9FE', opacity: 0.6,
-  },
-  aiSkeletonOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.82)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-  },
-  aiSkeletonLockBox: {
-    alignItems: 'center', gap: 6,
-    backgroundColor: '#F5F3FF',
-    borderRadius: 16, paddingHorizontal: 20, paddingVertical: 14,
-    borderWidth: 1, borderColor: '#DDD6FE',
-  },
-  aiSkeletonLockText: {
-    fontSize: 13, fontWeight: '700', color: '#5B21B6',
-  },
-  aiSkeletonLockSub: {
-    fontSize: 11, color: '#7C3AED', textAlign: 'center',
-  },
-
+  aiSkeletonBadge: { width: 56, height: 24, borderRadius: 12, backgroundColor: '#EDE9FE', opacity: 0.6 },
+  aiSkeletonOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.82)', justifyContent: 'center', alignItems: 'center', borderRadius: 12 },
+  aiSkeletonLockBox: { alignItems: 'center', gap: 6, backgroundColor: '#F5F3FF', borderRadius: 16, paddingHorizontal: 20, paddingVertical: 14, borderWidth: 1, borderColor: '#DDD6FE' },
+  aiSkeletonLockText: { fontSize: 13, fontWeight: '700', color: '#5B21B6' },
+  aiSkeletonLockSub: { fontSize: 11, color: '#7C3AED', textAlign: 'center' },
   aiBadgeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 4 },
-  aiBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#EDE9FE', borderRadius: 20,
-    paddingHorizontal: 10, paddingVertical: 5,
-  },
+  aiBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EDE9FE', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   aiBadgeEmoji: { fontSize: 12 },
   aiBadgeText: { fontSize: 12, color: '#5B21B6', fontWeight: '600' },
   aiDetailLink: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 10 },
   aiDetailLinkText: { fontSize: 13, fontWeight: '700', color: '#7C3AED' },
 
-  // Tip card
-  tipCard: {
-    backgroundColor: '#FFFBEB', borderRadius: 24, padding: 18,
-    marginBottom: 16, borderWidth: 1, borderColor: '#FDE68A',
-    ...SHADOWS.sm,
-  },
+  // 护理贴士
+  tipCard: { backgroundColor: '#FFFBEB', borderRadius: 24, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: '#FDE68A', ...SHADOWS.sm },
   tipHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  tipIconCircle: {
-    width: 36, height: 36, borderRadius: 12,
-    backgroundColor: '#FEF3C7',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  tipCategory: {
-    fontSize: 12, fontWeight: '700', color: '#D4883E',
-    textTransform: 'uppercase', letterSpacing: 0.5,
-  },
+  tipIconCircle: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' },
+  tipCategory: { fontSize: 12, fontWeight: '700', color: '#D4883E', textTransform: 'uppercase', letterSpacing: 0.5 },
   tipText: { fontSize: 14, color: '#555', lineHeight: 22 },
 
-  // Section header
+  // 快捷入口标题
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
   sectionTitleEmoji: { fontSize: 18 },
-  sectionTitle: { fontSize: 17, fontWeight: '800', color: COLORS.text, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 18, fontWeight: '900', color: COLORS.text, letterSpacing: -0.5 },
 
-  // Quick grid — 2×2 (Figma matched)
-  quickGrid: { gap: 0, marginTop: 4 },
+  // 快捷入口网格
+  quickGrid: { marginTop: 4 },
   quickRow: { flexDirection: 'row', gap: 14, marginBottom: 14 },
   quickItem: { flex: 1 },
-  quickCard: {
-    borderRadius: 24,
-    padding: 16,
-    height: 160,
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.8)',
-    ...SHADOWS.sm,
-  },
-  quickIconBox: {
-    width: 64, height: 64,
-    borderRadius: 32,
-    alignItems: 'center', justifyContent: 'center',
-  },
+  quickCard: { borderRadius: 24, padding: 16, height: 160, flexDirection: 'column', alignItems: 'flex-start', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', ...SHADOWS.sm },
+  quickIconBox: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
   quickEmoji: { fontSize: 28, lineHeight: 34 },
   quickLabel: { fontSize: 16, fontWeight: '800', color: '#1C1C1E', letterSpacing: -0.3, lineHeight: 22 },
+  quickDecorEmoji: { fontSize: 22, opacity: 0.65, marginTop: 2 },
 
-  // Today's check-in summary card
-  summaryCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 24, padding: 18,
-    marginBottom: 16, borderWidth: 1, borderColor: '#F0F0F0',
-    ...SHADOWS.sm,
-  },
-  summaryCardHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14,
-  },
+  // 数据摘要卡片
+  summaryCard: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: '#F0F0F0', ...SHADOWS.sm },
+  summaryCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   summaryCardTitle: { fontSize: 15, fontWeight: '800', color: COLORS.text },
   summaryCardEdit: { fontSize: 13, color: '#7C3AED', fontWeight: '600' },
-  summaryCardRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around',
-  },
+  summaryCardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
   summaryCardItem: { flex: 1, alignItems: 'center', gap: 4 },
   summaryCardEmoji: { fontSize: 24 },
   summaryCardLabel: { fontSize: 11, color: COLORS.textMuted, fontWeight: '500' },
