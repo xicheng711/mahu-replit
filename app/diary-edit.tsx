@@ -26,7 +26,6 @@ import { VoiceInput } from '@/components/voice-input';
 import { COLORS, SHADOWS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
 import { trpc } from '@/lib/trpc';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -390,7 +389,7 @@ export default function DiaryEditScreen() {
         {/* Nav bar */}
         <View style={styles.navBar}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-            <Ionicons name="chevron-back" size={22} color={COLORS.text} />
+            <Text style={styles.backArrow}>‹</Text>
             <Text style={styles.backText}>日记列表</Text>
           </TouchableOpacity>
           <Text style={styles.navTitle}>{submitted ? '护理日记' : '写日记'}</Text>
@@ -399,7 +398,9 @@ export default function DiaryEditScreen() {
               <Text style={styles.endBtnText}>结束并保存</Text>
             </TouchableOpacity>
           ) : (
-            <View style={{ width: 80 }} />
+            <TouchableOpacity style={styles.homeBtn} onPress={() => router.replace('/(tabs)' as any)} activeOpacity={0.7}>
+              <Text style={styles.homeBtnText}>🏠 首页</Text>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -584,6 +585,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.06)',
   },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 2, width: 80 },
+  backArrow: { fontSize: 22, color: COLORS.text, lineHeight: 26, fontWeight: '400' },
   backText: { fontSize: 15, color: COLORS.text, fontWeight: '500' },
   navTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text },
   endBtn: {
@@ -591,6 +593,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 6,
   },
   endBtnText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
+  homeBtn: {
+    width: 80, alignItems: 'flex-end',
+    paddingVertical: 4,
+  },
+  homeBtnText: { fontSize: 14, color: COLORS.textSecondary, fontWeight: '500' },
 
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   loadingText: { fontSize: 15, color: COLORS.textSecondary },
