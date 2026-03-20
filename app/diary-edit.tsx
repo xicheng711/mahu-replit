@@ -391,8 +391,8 @@ export default function DiaryEditScreen() {
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.headerHomeBtn} onPress={() => router.replace('/(tabs)' as any)} activeOpacity={0.7}>
-              <Text style={styles.headerHomeBtnText}>🏠 首页</Text>
+            <TouchableOpacity style={styles.headerHomeBtn} onPress={() => router.replace('/(tabs)/diary' as any)} activeOpacity={0.7}>
+              <Text style={styles.headerHomeBtnText}>✕ 取消</Text>
             </TouchableOpacity>
           )}
         </View>
