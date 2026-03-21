@@ -1,10 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, Animated, Dimensions, Platform, Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Circle, Rect, Ellipse } from 'react-native-svg';
 import { ScreenContainer } from '@/components/screen-container';
 import { saveProfile, saveMedication, generateId, createFamilyRoom, joinFamilyRoom, lookupFamilyByCode, generateRoomCode } from '@/lib/storage';
 import { scheduleAllReminders } from '@/lib/notifications';
@@ -106,6 +108,26 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const sparkle1 = useRef(new Animated.Value(1)).current;
+  const sparkle2 = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loop1 = Animated.loop(
+      Animated.sequence([
+        Animated.timing(sparkle1, { toValue: 1.35, duration: 1000, useNativeDriver: true }),
+        Animated.timing(sparkle1, { toValue: 1, duration: 1000, useNativeDriver: true }),
+      ])
+    );
+    const loop2 = Animated.loop(
+      Animated.sequence([
+        Animated.timing(sparkle2, { toValue: 1.5, duration: 1250, useNativeDriver: true }),
+        Animated.timing(sparkle2, { toValue: 1, duration: 1250, useNativeDriver: true }),
+      ])
+    );
+    loop1.start();
+    setTimeout(() => loop2.start(), 500);
+    return () => { loop1.stop(); loop2.stop(); };
+  }, []);
 
   // Elder info
   const [elderName, setElderName] = useState('');
@@ -334,10 +356,16 @@ export default function OnboardingScreen() {
 
   return (
     <ScreenContainer containerClassName="bg-background">
-      {/* Progress bar */}
-      <View style={styles.progressBar}>
+      {/* Progress bar — gradient horizontal segments (Figma design) */}
+      <View style={styles.progressBarRow}>
         {STEPS.map((_, i) => (
-          <View key={i} style={[styles.progressDot, i <= step && styles.progressDotActive]} />
+          <View key={i} style={styles.progressSegmentTrack}>
+            {i < step ? (
+              <LinearGradient colors={['#FB7185', '#EC4899']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.progressSegmentFill} />
+            ) : i === step ? (
+              <LinearGradient colors={['#FB7185', '#EC4899']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.progressSegmentFill, { width: '50%' }]} />
+            ) : null}
+          </View>
         ))}
       </View>
 
@@ -369,56 +397,101 @@ export default function OnboardingScreen() {
           </View>
         )}
 
-        {/* STEP 1: Role Selection */}
+        {/* STEP 1: Role Selection — Figma design */}
         {step === 1 && (
-          <View style={styles.rolePageWrap}>
-            {/* Leaf icon – centred */}
-            <Text style={[styles.mascot, { alignSelf: 'center' }]}>🌿</Text>
+          <View style={styles.stepContainer}>
+            {/* ── Heart mascot with sparkles ── */}
+            <View style={{ alignItems: 'center', marginBottom: 28, marginTop: 8 }}>
+              <View style={styles.heartCircle}>
+                <LinearGradient
+                  colors={['#F472B6', '#FB7185', '#FB923C']}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={styles.heartGradient}
+                >
+                  <Svg viewBox="0 0 100 100" width={64} height={64} fill="none">
+                    <Path
+                      d="M50 85C50 85 20 65 20 40C20 25 28 15 40 15C45 15 50 20 50 20C50 20 55 15 60 15C72 15 80 25 80 40C80 65 50 85 50 85Z"
+                      fill="white" opacity={0.95}
+                    />
+                    <Circle cx="40" cy="40" r="3" fill="#ff6b9d" />
+                    <Circle cx="60" cy="40" r="3" fill="#ff6b9d" />
+                    <Ellipse cx="32" cy="48" rx="4" ry="2.5" fill="#ffb3d0" opacity={0.5} />
+                    <Ellipse cx="68" cy="48" rx="4" ry="2.5" fill="#ffb3d0" opacity={0.5} />
+                    <Path d="M42 52C42 52 46 56 50 56C54 56 58 52 58 52" stroke="#ff6b9d" strokeWidth="2" strokeLinecap="round" fill="none" />
+                    <Circle cx="25" cy="25" r="2" fill="white" opacity={0.8} />
+                    <Circle cx="75" cy="30" r="1.5" fill="white" opacity={0.8} />
+                    <Circle cx="70" cy="20" r="1" fill="white" opacity={0.8} />
+                  </Svg>
+                </LinearGradient>
+                {/* Sparkle 1 – top-right */}
+                <Animated.View style={[styles.sparkle, styles.sparkleTopRight, { transform: [{ scale: sparkle1 }] }]} />
+                {/* Sparkle 2 – bottom-left */}
+                <Animated.View style={[styles.sparkle, styles.sparkleBottomLeft, styles.sparklePink, { transform: [{ scale: sparkle2 }] }]} />
+              </View>
+            </View>
 
-            {/* Title + subtitle: left-aligned */}
-            <Text style={styles.rolePageTitle}>我们要为谁建立档案？</Text>
-            <Text style={styles.rolePageSubtitle}>选择您的角色，以便我们提供合适的功能</Text>
+            {/* ── Title + subtitle ── */}
+            <Text style={styles.title}>你是哪种用户？</Text>
+            <Text style={[styles.subtitle, { marginBottom: 32 }]}>请选择你的身份，{'\n'}我们会为你提供合适的功能</Text>
 
-            {/* Cards */}
-            <View style={{ width: '100%', gap: 14, marginTop: 24 }}>
+            {/* ── Cards ── */}
+            <View style={{ width: '100%', gap: 16 }}>
               {/* Card 1: Primary caregiver */}
               <TouchableOpacity
-                activeOpacity={0.86}
-                style={styles.roleCard}
+                activeOpacity={0.88}
                 onPress={() => {
                   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   setUserType('creator');
                   animateTransition(() => setStep(s => s + 1));
                 }}
               >
-                <View style={[styles.roleIconBox, { backgroundColor: '#EFF6FF' }]}>
-                  <Text style={styles.roleIconEmoji}>📝</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.roleCardTitle}>我是主要照顾者</Text>
-                  <Text style={styles.roleCardDesc}>负责记录用药、护理日常，并邀请家人协助</Text>
-                </View>
-                <Text style={styles.roleCardArrow}>›</Text>
+                <LinearGradient
+                  colors={['#FFF1F3', '#FFF5F7']}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={[styles.roleCard, styles.roleCardCreator]}
+                >
+                  <View style={styles.roleIconBox}>
+                    <Svg viewBox="0 0 24 24" width={28} height={28} fill="none">
+                      <Rect x="5" y="5" width="14" height="14" rx="2" stroke="#f43f5e" strokeWidth="1.5" />
+                      <Path d="M12 8V16" stroke="#f43f5e" strokeWidth="1.5" strokeLinecap="round" />
+                      <Path d="M8 12H16" stroke="#f43f5e" strokeWidth="1.5" strokeLinecap="round" />
+                    </Svg>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.roleCardTitle, { color: '#E11D48' }]}>我是主要照顾者</Text>
+                    <Text style={styles.roleCardDesc}>负责记录用药、护理日常，并邀请家人协助</Text>
+                  </View>
+                  <Text style={[styles.roleCardArrow, { color: '#FDA4AF' }]}>›</Text>
+                </LinearGradient>
               </TouchableOpacity>
 
               {/* Card 2: Family member */}
               <TouchableOpacity
-                activeOpacity={0.86}
-                style={styles.roleCard}
+                activeOpacity={0.88}
                 onPress={() => {
                   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setUserType('joiner');
                   animateTransition(() => setStep(s => s + 1));
                 }}
               >
-                <View style={[styles.roleIconBox, { backgroundColor: '#FFF7ED' }]}>
-                  <Text style={styles.roleIconEmoji}>👨‍👩‍👧</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.roleCardTitle}>我是家庭成员</Text>
-                  <Text style={styles.roleCardDesc}>已有邀请码，我想查看家人的健康动态</Text>
-                </View>
-                <Text style={styles.roleCardArrow}>›</Text>
+                <LinearGradient
+                  colors={['#F8FAFC', '#F1F5F9']}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={[styles.roleCard, styles.roleCardJoiner]}
+                >
+                  <View style={[styles.roleIconBox]}>
+                    <Svg viewBox="0 0 24 24" width={28} height={28} fill="none">
+                      <Path d="M13.5 7.5L16.5 4.5C17.88 3.12 20.12 3.12 21.5 4.5C22.88 5.88 22.88 8.12 21.5 9.5L18.5 12.5" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+                      <Path d="M10.5 16.5L7.5 19.5C6.12 20.88 3.88 20.88 2.5 19.5C1.12 18.12 1.12 15.88 2.5 14.5L5.5 11.5" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+                      <Path d="M14 10L10 14" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+                    </Svg>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.roleCardTitle, { color: '#334155' }]}>我是家庭成员</Text>
+                    <Text style={styles.roleCardDesc}>已有邀请码，我想查看家人的健康动态</Text>
+                  </View>
+                  <Text style={[styles.roleCardArrow, { color: '#94A3B8' }]}>›</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </View>
@@ -1017,9 +1090,19 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  progressBar: { flexDirection: 'row', justifyContent: 'center', gap: 6, paddingVertical: 16 },
-  progressDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E5E7EB' },
-  progressDotActive: { backgroundColor: '#FF6B6B', width: 20 },
+  // ── Progress bar: horizontal gradient segments (Figma) ──────
+  progressBarRow: { flexDirection: 'row', gap: 4, paddingHorizontal: 24, paddingTop: 14, paddingBottom: 10 },
+  progressSegmentTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: '#E5E7EB', overflow: 'hidden' },
+  progressSegmentFill: { height: '100%', width: '100%', borderRadius: 3 },
+
+  // ── Heart mascot (step 1) ────────────────────────────────────
+  heartCircle: { position: 'relative', width: 96, height: 96 },
+  heartGradient: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#FB7185', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 16, elevation: 8 },
+  sparkle: { position: 'absolute', width: 12, height: 12, borderRadius: 6, backgroundColor: '#FDE68A' },
+  sparklePink: { backgroundColor: '#FCA5A5', width: 8, height: 8, borderRadius: 4 },
+  sparkleTopRight: { top: -4, right: -4 },
+  sparkleBottomLeft: { bottom: -8, left: -8 },
   content: { flex: 1, paddingHorizontal: 24 },
   stepContainer: { alignItems: 'center', paddingBottom: 24 },
   mascot: { fontSize: 64, marginBottom: 16, marginTop: 8 },
@@ -1207,31 +1290,27 @@ const styles = StyleSheet.create({
   },
   btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
-  // ── Role Selection page (step 1) ─────────────────────────────
-  // Outer wrapper: NOT centred — matches Figma left-aligned layout
-  rolePageWrap: { width: '100%', paddingBottom: 16 },
-  rolePageTitle: {
-    fontSize: 26, fontWeight: '600', color: '#11181C',
-    textAlign: 'left', marginTop: 4, marginBottom: 8, lineHeight: 34,
-  },
-  rolePageSubtitle: {
-    fontSize: 14, color: '#9BA1A6', textAlign: 'left', lineHeight: 20,
-  },
-  // Card — white, subtle border + shadow
+  // ── Role Selection (step 1) — Figma design ────────────────────
+  // Card now wraps a LinearGradient — only layout/border/shadow here
   roleCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    borderRadius: 16, padding: 16, width: '100%',
-    backgroundColor: '#fff',
-    borderWidth: 1, borderColor: '#EBEBEB',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    borderRadius: 20, padding: 18, width: '100%',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3,
   },
-  // iOS app-icon–style icon box
+  roleCardCreator: {
+    borderWidth: 1.5, borderColor: '#FECDD3',
+  },
+  roleCardJoiner: {
+    borderWidth: 1.5, borderColor: '#E2E8F0',
+  },
+  // iOS app-icon–style icon box — white background
   roleIconBox: {
-    width: 52, height: 52, borderRadius: 12,
+    width: 52, height: 52, borderRadius: 14,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center', justifyContent: 'center',
     flexShrink: 0,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
   },
-  roleIconEmoji: { fontSize: 26 },
   roleCardTitle: { fontSize: 16, fontWeight: '700', color: '#11181C', marginBottom: 3 },
   roleCardDesc: { fontSize: 13, color: '#687076', lineHeight: 19 },
   roleCardArrow: { fontSize: 22, color: '#C8CDD2', marginLeft: 4 },
