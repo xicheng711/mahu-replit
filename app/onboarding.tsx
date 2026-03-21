@@ -373,23 +373,23 @@ export default function OnboardingScreen() {
         {step === 1 && (
           <View style={styles.stepContainer}>
             <Text style={styles.mascot}>🌿</Text>
-            <Text style={styles.title}>你是哪种用户？</Text>
-            <Text style={styles.subtitle}>请选择你的身份，{'\n'}我们会为你定制不同的体验</Text>
-            <View style={{ width: '100%', gap: 16, marginTop: 8 }}>
+            <Text style={styles.title}>我们要为谁建立档案？</Text>
+            <Text style={styles.subtitle}>选择您的角色，以便我们提供合适的功能</Text>
+            <View style={{ width: '100%', gap: 14, marginTop: 8 }}>
               {/* PRIMARY: Creator */}
               <TouchableOpacity
                 activeOpacity={0.88}
-                style={[styles.roleCard, styles.roleCardPrimary]}
+                style={styles.roleCard}
                 onPress={() => {
                   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   setUserType('creator');
                   animateTransition(() => setStep(s => s + 1));
                 }}
               >
-                <Text style={styles.roleCardIcon}>🏥</Text>
+                <Text style={styles.roleCardIcon}>📝</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.roleCardTitle}>创建照护档案</Text>
-                  <Text style={styles.roleCardDesc}>我是主要照顾者，需要记录护理日常、用药、日记，并邀请家人加入</Text>
+                  <Text style={styles.roleCardTitle}>我是主要照顾者</Text>
+                  <Text style={styles.roleCardDesc}>负责记录用药、护理日常，并邀请家人协助</Text>
                 </View>
                 <Text style={styles.roleCardArrow}>›</Text>
               </TouchableOpacity>
@@ -397,17 +397,17 @@ export default function OnboardingScreen() {
               {/* SECONDARY: Joiner */}
               <TouchableOpacity
                 activeOpacity={0.88}
-                style={[styles.roleCard, styles.roleCardSecondary]}
+                style={styles.roleCard}
                 onPress={() => {
                   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setUserType('joiner');
                   animateTransition(() => setStep(s => s + 1));
                 }}
               >
-                <Text style={styles.roleCardIcon}>🔗</Text>
+                <Text style={styles.roleCardIcon}>👨‍👩‍👧</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.roleCardTitle, { color: '#374151' }]}>使用共享码加入</Text>
-                  <Text style={styles.roleCardDesc}>我是家庭成员，已有共享码，只需查看家庭公告和护理简报</Text>
+                  <Text style={styles.roleCardTitle}>我是家庭成员</Text>
+                  <Text style={styles.roleCardDesc}>已有邀请码，我想查看家人的健康动态</Text>
                 </View>
                 <Text style={styles.roleCardArrow}>›</Text>
               </TouchableOpacity>
@@ -1198,23 +1198,18 @@ const styles = StyleSheet.create({
   },
   btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
-  // Role selection cards (step 1)
+  // Role selection cards (step 1) — both identical white cards
   roleCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    borderRadius: 20, padding: 18, width: '100%',
-    borderWidth: 1.5,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+    borderRadius: 20, padding: 20, width: '100%',
+    backgroundColor: '#fff',
+    borderWidth: 1.5, borderColor: '#F0F0F0',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3,
   },
-  roleCardPrimary: {
-    backgroundColor: '#FFF0F0', borderColor: '#FECACA',
-  },
-  roleCardSecondary: {
-    backgroundColor: '#F8F9FA', borderColor: '#E5E7EB',
-  },
-  roleCardIcon: { fontSize: 34 },
-  roleCardTitle: { fontSize: 16, fontWeight: '700', color: '#FF6B6B', marginBottom: 4 },
-  roleCardDesc: { fontSize: 13, color: '#687076', lineHeight: 18 },
-  roleCardArrow: { fontSize: 22, color: '#9BA1A6', fontWeight: '300' },
+  roleCardIcon: { fontSize: 36 },
+  roleCardTitle: { fontSize: 16, fontWeight: '700', color: '#11181C', marginBottom: 4 },
+  roleCardDesc: { fontSize: 13, color: '#687076', lineHeight: 19 },
+  roleCardArrow: { fontSize: 24, color: '#C0C7CF', fontWeight: '300' },
 
   // Invite code banner (step 7 creator)
   inviteCodeBanner: {
