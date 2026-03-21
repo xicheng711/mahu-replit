@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
-  ScrollView, View, Text, TouchableOpacity,
+  ScrollView, View, Text, TouchableOpacity, Modal,
   StyleSheet, Dimensions, Animated, Easing, Platform, Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import { COLORS, SHADOWS, fadeInUp, pressAnimation } from '@/lib/animations';
 import * as Haptics from 'expo-haptics';
 import { WeeklyEcho } from '@/components/weekly-echo';
 import { JoinerHomeScreen } from '@/components/joiner-home';
+import { useFamilyContext } from '@/lib/family-context';
 
 const { width } = Dimensions.get('window');
 
@@ -437,6 +438,8 @@ export default function HomeScreen() {
 function CreatorHomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { memberships, activeMembership, switchFamily } = useFamilyContext();
+  const [showSwitcher, setShowSwitcher] = useState(false);
   const [greeting, setGreeting] = useState('');
   const [tip, setTip] = useState<{ category: string; icon: string; tip: string } | null>(null);
   const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
@@ -572,6 +575,18 @@ function CreatorHomeScreen() {
               <Text style={styles.appName}>我们一起照顾好今天</Text>
               <Text style={styles.headerSparkle}>✨</Text>
             </View>
+            {memberships.length > 0 && (
+              <TouchableOpacity
+                onPress={() => memberships.length > 1 && setShowSwitcher(true)}
+                activeOpacity={memberships.length > 1 ? 0.7 : 1}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}
+              >
+                <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '600' }}>
+                  🏠 {activeMembership?.room.elderName || elderNickname}的家庭
+                </Text>
+                {memberships.length > 1 && <Text style={{ fontSize: 10, color: '#9CA3AF' }}>▼</Text>}
+              </TouchableOpacity>
+            )}
             <Text style={styles.greeting}>{greeting}</Text>
           </View>
           <Animated.View style={{ transform: [{ scale: avatarScale }] }}>
@@ -694,9 +709,53 @@ function CreatorHomeScreen() {
         <WeeklyEcho caregiverName={caregiverName} elderNickname={elderNickname} />
         <View style={{ height: 32 }} />
       </ScrollView>
+
+      {/* Family Switcher Modal */}
+      <Modal visible={showSwitcher} transparent animationType="fade" onRequestClose={() => setShowSwitcher(false)}>
+        <TouchableOpacity style={switStyles.overlay} activeOpacity={1} onPress={() => setShowSwitcher(false)}>
+          <View style={switStyles.sheet}>
+            <Text style={switStyles.title}>切换家庭</Text>
+            {memberships.map(m => (
+              <TouchableOpacity
+                key={m.familyId}
+                style={[switStyles.row, activeMembership?.familyId === m.familyId && switStyles.rowActive]}
+                onPress={async () => {
+                  await switchFamily(m.familyId);
+                  setShowSwitcher(false);
+                }}
+              >
+                <Text style={{ fontSize: 22, marginRight: 12 }}>{m.room.members[0]?.emoji || '🏠'}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={switStyles.name}>{m.room.elderName}</Text>
+                  <Text style={switStyles.role}>{m.role === 'creator' ? '📋 主要照顾者' : '👁️ 家庭成员'}</Text>
+                </View>
+                {activeMembership?.familyId === m.familyId && <Text style={{ fontSize: 16, color: '#6C9E6C' }}>✓</Text>}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={switStyles.addBtn}
+              onPress={() => { setShowSwitcher(false); setTimeout(() => router.push('/(modals)/create-family' as any), 200); }}
+            >
+              <Text style={switStyles.addText}>＋ 创建新家庭</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
+
+const switStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 36, ...SHADOWS.lg },
+  title: { fontSize: 17, fontWeight: '800', color: '#1A1A2E', textAlign: 'center', marginBottom: 16 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14, marginBottom: 8, backgroundColor: '#F9FAFB' },
+  rowActive: { backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#6C9E6C' },
+  name: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
+  role: { fontSize: 12, color: '#6B7280' },
+  addBtn: { marginTop: 8, paddingVertical: 14, alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: '#E5E7EB', borderStyle: 'dashed' },
+  addText: { fontSize: 14, fontWeight: '700', color: '#9CA3AF' },
+});
 
 const styles = StyleSheet.create({
   root: { flex: 1 },

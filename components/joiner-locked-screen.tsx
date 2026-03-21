@@ -60,7 +60,7 @@ export function JoinerLockedScreen({ icon, title, description }: Props) {
 
         <TouchableOpacity
           style={styles.upgradeBtn}
-          onPress={() => router.push('/onboarding' as any)}
+          onPress={() => router.push('/(modals)/create-family' as any)}
           activeOpacity={0.85}
         >
           <LinearGradient

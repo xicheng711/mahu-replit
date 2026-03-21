@@ -189,6 +189,15 @@ export interface FamilyRoom {
   createdAt: string;
 }
 
+// 用户在某个家庭中的成员关系（多家庭支持）
+export interface FamilyMembership {
+  familyId: string;       // FamilyRoom.id
+  myMemberId: string;     // 我在这个家庭中的 FamilyMember.id
+  role: 'creator' | 'joiner';
+  room: FamilyRoom;       // 缓存的家庭信息
+  joinedAt: string;
+}
+
 // ─── Keys ─────────────────────────────────────────────────────────────────────
 
 const KEYS = {
@@ -199,6 +208,8 @@ const KEYS = {
   FAMILY_ROOM: 'family_room_v1',
   FAMILY_ANNOUNCEMENTS: 'family_announcements_v1',
   CURRENT_MEMBER: 'current_family_member_v1',
+  MEMBERSHIPS: 'family_memberships_v1',
+  ACTIVE_FAMILY_ID: 'active_family_id_v1',
 } as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -400,6 +411,16 @@ export async function createFamilyRoom(elderName: string, firstMember: Omit<Fami
   };
   await saveFamilyRoom(room);
   await setCurrentMember(member);
+  // Save membership record
+  const membership: FamilyMembership = {
+    familyId: room.id,
+    myMemberId: member.id,
+    role: 'creator',
+    room,
+    joinedAt: member.joinedAt,
+  };
+  await addOrUpdateMembership(membership);
+  await setActiveFamilyId(room.id);
   return room;
 }
 
@@ -418,6 +439,16 @@ export async function joinFamilyRoom(roomCode: string, member: Omit<FamilyMember
   room.members.push(newMember);
   await saveFamilyRoom(room);
   await setCurrentMember(newMember);
+  // Save membership record
+  const membership: FamilyMembership = {
+    familyId: room.id,
+    myMemberId: newMember.id,
+    role: 'joiner',
+    room,
+    joinedAt: newMember.joinedAt,
+  };
+  await addOrUpdateMembership(membership);
+  await setActiveFamilyId(room.id);
   return room;
 }
 
@@ -496,4 +527,81 @@ export async function deleteFamilyAnnouncement(id: string): Promise<void> {
   const all: FamilyAnnouncement[] = raw ? JSON.parse(raw) : [];
   const filtered = all.filter(a => a.id !== id);
   await AsyncStorage.setItem(KEYS.FAMILY_ANNOUNCEMENTS, JSON.stringify(filtered));
+}
+
+// ─── Multi-Family Support ─────────────────────────────────────────────────────
+
+export async function getAllMemberships(): Promise<FamilyMembership[]> {
+  // Migrate old data first if needed
+  await migrateToMultiFamily();
+  const raw = await AsyncStorage.getItem(KEYS.MEMBERSHIPS);
+  return raw ? JSON.parse(raw) : [];
+}
+
+export async function saveMemberships(memberships: FamilyMembership[]): Promise<void> {
+  await AsyncStorage.setItem(KEYS.MEMBERSHIPS, JSON.stringify(memberships));
+}
+
+export async function addOrUpdateMembership(membership: FamilyMembership): Promise<void> {
+  const raw = await AsyncStorage.getItem(KEYS.MEMBERSHIPS);
+  const all: FamilyMembership[] = raw ? JSON.parse(raw) : [];
+  const idx = all.findIndex(m => m.familyId === membership.familyId);
+  if (idx >= 0) all[idx] = membership;
+  else all.unshift(membership);
+  await AsyncStorage.setItem(KEYS.MEMBERSHIPS, JSON.stringify(all));
+}
+
+export async function getActiveFamilyId(): Promise<string | null> {
+  return AsyncStorage.getItem(KEYS.ACTIVE_FAMILY_ID);
+}
+
+export async function setActiveFamilyId(id: string): Promise<void> {
+  await AsyncStorage.setItem(KEYS.ACTIVE_FAMILY_ID, id);
+}
+
+export async function getActiveMembership(): Promise<FamilyMembership | null> {
+  const all = await getAllMemberships();
+  if (all.length === 0) return null;
+  const activeId = await getActiveFamilyId();
+  if (activeId) {
+    const found = all.find(m => m.familyId === activeId);
+    if (found) return found;
+  }
+  // Default to first membership
+  return all[0] ?? null;
+}
+
+// Refresh the cached room data in a membership
+export async function syncMembershipRoom(familyId: string): Promise<void> {
+  const room = await getFamilyRoom();
+  if (!room || room.id !== familyId) return;
+  const all = await getAllMemberships();
+  const idx = all.findIndex(m => m.familyId === familyId);
+  if (idx >= 0) {
+    all[idx].room = room;
+    await saveMemberships(all);
+  }
+}
+
+let _migrated = false;
+export async function migrateToMultiFamily(): Promise<void> {
+  if (_migrated) return;
+  _migrated = true;
+  const existing = await AsyncStorage.getItem(KEYS.MEMBERSHIPS);
+  if (existing) return; // Already migrated
+  // Check for existing single-family data
+  const roomRaw = await AsyncStorage.getItem(KEYS.FAMILY_ROOM);
+  const memberRaw = await AsyncStorage.getItem(KEYS.CURRENT_MEMBER);
+  if (!roomRaw || !memberRaw) return;
+  const room: FamilyRoom = JSON.parse(roomRaw);
+  const member: FamilyMember = JSON.parse(memberRaw);
+  const membership: FamilyMembership = {
+    familyId: room.id,
+    myMemberId: member.id,
+    role: member.isCreator ? 'creator' : 'joiner',
+    room,
+    joinedAt: member.joinedAt,
+  };
+  await AsyncStorage.setItem(KEYS.MEMBERSHIPS, JSON.stringify([membership]));
+  await AsyncStorage.setItem(KEYS.ACTIVE_FAMILY_ID, room.id);
 }

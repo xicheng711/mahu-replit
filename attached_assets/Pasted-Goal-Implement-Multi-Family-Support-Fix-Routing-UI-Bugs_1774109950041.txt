@@ -1,0 +1,35 @@
+Goal: Implement Multi-Family Support & Fix Routing/UI Bugs for Joiners.
+Please update the application logic and fix the current UI bugs based on the following requirements:
+1. 核心架构：多家庭切换 (Multi-Family Context)
+• Logic: A user can belong to multiple families. They can be a Creator (Primary Caregiver) in Family A, and a Joiner (Viewer/Member) in Family B.
+• UI Requirement: We need a "Context Switcher" so the user can easily switch between families.
+• Action: In the Home screen (app/(tabs)/index.tsx), add a dropdown or a Bottom Sheet triggered by tapping the Family Name at the top of the screen (e.g., "▼ 外婆的家庭").
+• State: Use global state (e.g., Zustand or React Context) to store activeFamilyId and activeRole. All tabs and data fetching must depend on this activeFamilyId.
+2. Bug Fix: Joiner 创建新家庭时的 Onboarding 逻辑与显示问题
+• Issue: When a user who is already a "Joiner" clicks to "Create a Family Profile", the onboarding screen renders incompletely, and it incorrectly asks for their identity again. This is likely a routing conflict between the (auth) stack and (tabs) stack, or missing layout wrappers.
+• Fix:
+• Separate the "First-time Onboarding" from "Add New Family inside the app".
+• Create a dedicated modal or route (e.g., app/(modals)/create-family.tsx) for existing users to create a new family.
+• Conditional Logic: If user.profile.isComplete (they already provided their name when joining previously), SKIP the "What is your role/identity?" step. Start the flow directly at "被照顾者的姓名是什么？" (Who are you caring for?).
+• Ensure this modal has proper SafeAreaView and ScrollView wrappers so the UI renders completely without cutting off.
+3. Bug Fix: 首页右上角 User Avatar 点击无效
+• Issue: The profile avatar (orange circle with person icon in top right) has no onPress action.
+• Fix:
+• Wrap the Avatar component in a TouchableOpacity or Pressable.
+• Link it to a Profile screen or open a Profile Bottom Sheet (router.push('/profile') or similar).
+• This profile area should display the user's basic info, the list of families they belong to (to support the multi-family switching mentioned in point 1), and an option to "Join another family via code".
+4. Bug Fix: Joiner 视角的“家庭共享” (Family Sharing) 页面空白
+• Issue: The purple "Family Sharing" quick access card navigates to an empty screen for Joiners.
+• Fix:
+• The "Family Sharing" screen needs to render dynamically based on activeRole.
+• If role === 'joiner', the screen should NOT be empty. It must fetch and display:
+1. 家庭成员列表 (Member List): Show the Creator and other Joiners.
+2. 家庭公告/通知板 (Announcements): Read-only view of updates posted by the Creator.
+3. 被照顾者基础信息 (Care Recipient Info): Read-only view of the profile.
+• Hide the "Invite new members" or "Edit profile" buttons if the current user is not the Creator.
+给你个人的架构建议
+为了让上述逻辑顺畅运行，你的数据库设计必须是典型的多对多 (Many-to-Many) 关系：
+• Users 表：存用户的基本信息（手机号、姓名）。
+• Families / Patients 表：存被照护者的信息和唯一的共享码。
+• Family_Members (中间表)：存 user_id、family_id 以及这个用户在这个家庭里的 role (Creator 或 Joiner)。
+一旦这个底层关系理顺了，你在 App 里只需要维护一个 currentActiveFamily 的状态，用户切换家庭时，刷新这个状态，整个 App 的权限、打卡记录、用药提醒就会自动切换到对应家庭的数据。

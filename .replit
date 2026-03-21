@@ -61,6 +61,10 @@ externalPort = 3001
 localPort = 23636
 externalPort = 5000
 
+[[ports]]
+localPort = 23637
+externalPort = 4200
+
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bash", "-c", "node dist/index.js"]

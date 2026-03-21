@@ -16,6 +16,7 @@ import {
 } from '@/lib/storage';
 import { getLunarDate, getFormattedDate } from '@/lib/lunar';
 import { COLORS, SHADOWS, RADIUS } from '@/lib/animations';
+import { useFamilyContext } from '@/lib/family-context';
 
 // ─── Feed item type ───────────────────────────────────────────────────────────
 type FeedItem = {
@@ -376,6 +377,7 @@ function PostAnnouncementModal({ visible, onClose, onPosted, member }: {
 export function JoinerHomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { memberships, activeMembership, switchFamily } = useFamilyContext();
   const [elderNickname, setElderNickname] = useState('家人');
   const [elderEmoji, setElderEmoji] = useState('🌸');
   const [caregiverName, setCaregiverName] = useState('');
@@ -384,6 +386,7 @@ export function JoinerHomeScreen() {
   const [latestAnnounce, setLatestAnnounce] = useState<FamilyAnnouncement | null>(null);
   const [currentMember, setCurrentMember] = useState<FamilyMember | null>(null);
   const [postModal, setPostModal] = useState(false);
+  const [showSwitcher, setShowSwitcher] = useState(false);
 
   const headerFade = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-12)).current;
@@ -421,7 +424,7 @@ export function JoinerHomeScreen() {
   }, []);
 
   function goSetup() {
-    router.push('/onboarding' as any);
+    router.push('/(modals)/create-family' as any);
   }
 
   return (
@@ -438,14 +441,33 @@ export function JoinerHomeScreen() {
       >
         {/* Header */}
         <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.dateText}>{todayLabel}</Text>
             <Text style={styles.lunarText}>{lunarDate.full}</Text>
-            <Text style={styles.pageTitle}>{elderNickname}的今日动态</Text>
+            {/* Tappable family name → switcher */}
+            <TouchableOpacity
+              onPress={() => memberships.length > 1 && setShowSwitcher(true)}
+              activeOpacity={memberships.length > 1 ? 0.7 : 1}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+            >
+              <Text style={styles.pageTitle}>{elderNickname}的今日动态</Text>
+              {memberships.length > 1 && <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>▼</Text>}
+            </TouchableOpacity>
           </View>
-          <View style={styles.headerAvatar}>
-            <Text style={{ fontSize: 22 }}>👤</Text>
-          </View>
+          {/* Avatar → Profile */}
+          <TouchableOpacity
+            style={styles.headerAvatar}
+            onPress={() => router.push('/profile' as any)}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#FFAB9B', '#FF8C7A']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Text style={{ fontSize: 20 }}>{currentMember?.emoji || '👤'}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </Animated.View>
 
         {/* Announcement card */}
@@ -484,6 +506,39 @@ export function JoinerHomeScreen() {
         onPosted={() => { setPostModal(false); loadData(); }}
         member={currentMember}
       />
+
+      {/* Family Switcher Modal */}
+      <Modal visible={showSwitcher} transparent animationType="fade" onRequestClose={() => setShowSwitcher(false)}>
+        <TouchableOpacity style={styles.switcherOverlay} activeOpacity={1} onPress={() => setShowSwitcher(false)}>
+          <View style={styles.switcherSheet}>
+            <Text style={styles.switcherTitle}>切换家庭</Text>
+            {memberships.map(m => (
+              <TouchableOpacity
+                key={m.familyId}
+                style={[styles.switcherRow, activeMembership?.familyId === m.familyId && styles.switcherRowActive]}
+                onPress={async () => {
+                  await switchFamily(m.familyId);
+                  setShowSwitcher(false);
+                  setTimeout(() => loadData(), 200);
+                }}
+              >
+                <Text style={{ fontSize: 22, marginRight: 12 }}>{m.room.members[0]?.emoji || '🏠'}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.switcherName}>{m.room.elderName}</Text>
+                  <Text style={styles.switcherRole}>{m.role === 'creator' ? '📋 主要照顾者' : '👁️ 家庭成员'}</Text>
+                </View>
+                {activeMembership?.familyId === m.familyId && <Text style={{ fontSize: 16 }}>✓</Text>}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.switcherAddBtn}
+              onPress={() => { setShowSwitcher(false); setTimeout(() => router.push('/(modals)/create-family' as any), 200); }}
+            >
+              <Text style={styles.switcherAddText}>＋ 创建新家庭</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -498,10 +553,28 @@ const styles = StyleSheet.create({
   lunarText: { fontSize: 11, color: '#B07848', fontWeight: '500', marginBottom: 6 },
   pageTitle: { fontSize: 20, fontWeight: '800', color: '#1A1A2E', letterSpacing: -0.3 },
   headerAvatar: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#FFE4EC', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#FFBCD4',
+    ...SHADOWS.md,
+    borderRadius: 22, overflow: 'hidden',
   },
+
+  // Family Switcher
+  switcherOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  switcherSheet: {
+    backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 36,
+    ...SHADOWS.lg,
+  },
+  switcherTitle: { fontSize: 17, fontWeight: '800', color: '#1A1A2E', textAlign: 'center', marginBottom: 16 },
+  switcherRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14,
+    marginBottom: 8, backgroundColor: '#F9FAFB',
+  },
+  switcherRowActive: { backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#6C9E6C' },
+  switcherName: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
+  switcherRole: { fontSize: 12, color: '#6B7280' },
+  switcherAddBtn: { marginTop: 8, paddingVertical: 14, alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: '#E5E7EB', borderStyle: 'dashed' },
+  switcherAddText: { fontSize: 14, fontWeight: '700', color: '#9CA3AF' },
 
   // Announcement card
   announceCard: {

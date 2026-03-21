@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Animated, Easing, Modal,
@@ -166,6 +166,110 @@ function EmptyState({ onStart }: { onStart: () => void }) {
   );
 }
 
+// ─── Calendar View ────────────────────────────────────────────────────────────
+const WEEK_DAYS = ['日', '一', '二', '三', '四', '五', '六'];
+
+function CalendarView({ entries, onOpenEntry }: { entries: DiaryEntry[]; onOpenEntry: (id: string) => void }) {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const entriesByDate = useMemo(() => {
+    const m: Record<string, DiaryEntry[]> = {};
+    entries.forEach(e => {
+      const d = new Date(e.createdAt);
+      if (!isNaN(d.getTime())) {
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        if (!m[key]) m[key] = [];
+        m[key].push(e);
+      }
+    });
+    return m;
+  }, [entries]);
+
+  const entryDatesSet = useMemo(() => new Set(Object.keys(entriesByDate)), [entriesByDate]);
+
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const cells: (number | null)[] = [
+    ...Array(firstDayOfWeek).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const isAtMax = viewYear === today.getFullYear() && viewMonth === today.getMonth();
+
+  function goMonth(delta: number) {
+    let m = viewMonth + delta, y = viewYear;
+    if (m < 0) { m = 11; y--; }
+    if (m > 11) { m = 0; y++; }
+    setViewMonth(m); setViewYear(y); setSelectedDate(null);
+  }
+
+  function dayKey(day: number) {
+    return `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  }
+
+  function handleDayPress(day: number) {
+    const key = dayKey(day);
+    if (!entryDatesSet.has(key)) return;
+    setSelectedDate(prev => prev === key ? null : key);
+  }
+
+  return (
+    <View style={calStyles.root}>
+      <View style={calStyles.navRow}>
+        <TouchableOpacity onPress={() => goMonth(-1)} style={calStyles.navBtn}>
+          <Text style={calStyles.navArrow}>‹</Text>
+        </TouchableOpacity>
+        <Text style={calStyles.monthLabel}>{viewYear}年{viewMonth + 1}月</Text>
+        <TouchableOpacity onPress={() => goMonth(1)} style={calStyles.navBtn} disabled={isAtMax}>
+          <Text style={[calStyles.navArrow, isAtMax && { color: '#D1D5DB' }]}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={calStyles.weekRow}>
+        {WEEK_DAYS.map(d => <Text key={d} style={calStyles.weekDay}>{d}</Text>)}
+      </View>
+
+      <View style={calStyles.grid}>
+        {cells.map((day, idx) => {
+          if (!day) return <View key={`e${idx}`} style={calStyles.cell} />;
+          const key = dayKey(day);
+          const hasEntry = entryDatesSet.has(key);
+          const isToday = key === todayKey;
+          const isSel = selectedDate === key;
+          return (
+            <TouchableOpacity key={key} style={calStyles.cell} onPress={() => handleDayPress(day)} activeOpacity={hasEntry ? 0.7 : 1}>
+              <View style={[calStyles.dayCircle, isToday && calStyles.dayToday, isSel && calStyles.daySelected, hasEntry && !isToday && !isSel && calStyles.dayHasEntry]}>
+                <Text style={[calStyles.dayText, isToday && calStyles.dayTextToday, isSel && calStyles.dayTextSelected]}>{day}</Text>
+              </View>
+              {hasEntry && <View style={[calStyles.dot, isSel && { backgroundColor: '#fff' }]} />}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {selectedDate && entriesByDate[selectedDate] && (
+        <View style={calStyles.selectedSection}>
+          <Text style={calStyles.selectedLabel}>{selectedDate.replace(/-/g, '年').replace(/年(\d+)年/, '年$1月').replace(/月(\d+)$/, '月$1日')} 的日记</Text>
+          {entriesByDate[selectedDate].map(e => (
+            <TouchableOpacity key={e.id} style={calStyles.miniCard} onPress={() => onOpenEntry(e.id)} activeOpacity={0.8}>
+              <Text style={calStyles.miniMood}>{e.moodEmoji || '📔'}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={calStyles.miniContent} numberOfLines={2}>{e.content}</Text>
+              </View>
+              <Text style={{ fontSize: 12, color: '#9CA3AF' }}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 function DiaryScreenContent() {
   const router = useRouter();
@@ -273,22 +377,36 @@ function DiaryScreenContent() {
         {entries.length === 0 ? (
           <EmptyState onStart={openNewEntry} />
         ) : (
-          <View style={styles.entriesList}>
-            <View style={styles.listTitleRow}>
-              <Text style={styles.listTitle}>📅 最近记录</Text>
-              <Text style={styles.listCount}>{entries.length} 篇</Text>
+          <>
+            {/* ── 最近7条 ── */}
+            <View style={styles.entriesList}>
+              <View style={styles.listTitleRow}>
+                <Text style={styles.listTitle}>📅 最近记录</Text>
+                <Text style={styles.listCount}>共 {entries.length} 篇</Text>
+              </View>
+              {entries.slice(0, 7).map((entry, i) => (
+                <DiaryCard
+                  key={entry.id}
+                  entry={entry}
+                  onPress={() => openDetail(entry.id)}
+                  onDelete={() => confirmDelete(entry.id, entry.date)}
+                  index={i}
+                  editMode={editMode}
+                />
+              ))}
             </View>
-            {entries.map((entry, i) => (
-              <DiaryCard
-                key={entry.id}
-                entry={entry}
-                onPress={() => openDetail(entry.id)}
-                onDelete={() => confirmDelete(entry.id, entry.date)}
-                index={i}
-                editMode={editMode}
-              />
-            ))}
-          </View>
+
+            {/* ── 日历回顾 ── */}
+            {!editMode && (
+              <View style={{ marginTop: 24 }}>
+                <View style={styles.listTitleRow}>
+                  <Text style={styles.listTitle}>🗓️ 日历回顾</Text>
+                  <Text style={styles.listCount}>点击有记录的日期</Text>
+                </View>
+                <CalendarView entries={entries} onOpenEntry={openDetail} />
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -487,6 +605,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444', alignItems: 'center',
   },
   modalDeleteText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+});
+
+const calStyles = StyleSheet.create({
+  root: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16, ...SHADOWS.md, marginTop: 4 },
+  navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  navBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: '#F9FAFB' },
+  navArrow: { fontSize: 22, fontWeight: '700', color: '#374151', lineHeight: 28 },
+  monthLabel: { fontSize: 15, fontWeight: '800', color: '#1A1A2E', letterSpacing: -0.2 },
+  weekRow: { flexDirection: 'row', marginBottom: 6 },
+  weekDay: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '600', color: '#9CA3AF' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  cell: { width: '14.285714%', alignItems: 'center', paddingVertical: 4 },
+  dayCircle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  dayHasEntry: { backgroundColor: '#F0FDF4' },
+  dayToday: { backgroundColor: '#6C9E6C' },
+  daySelected: { backgroundColor: '#1A1A2E' },
+  dayText: { fontSize: 13, fontWeight: '500', color: '#374151' },
+  dayTextToday: { color: '#FFFFFF', fontWeight: '800' },
+  dayTextSelected: { color: '#FFFFFF', fontWeight: '800' },
+  dot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#6C9E6C', marginTop: 2 },
+  selectedSection: { marginTop: 14, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12, gap: 8 },
+  selectedLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 4 },
+  miniCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#F9FAFB', borderRadius: 12, padding: 10 },
+  miniMood: { fontSize: 22 },
+  miniContent: { fontSize: 13, color: '#374151', lineHeight: 18 },
 });
 
 export default function DiaryScreen() {

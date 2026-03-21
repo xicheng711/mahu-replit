@@ -114,6 +114,30 @@ The `users` table stores authentication data. The schema is in `drizzle/schema.t
 - Skeleton makes the "value behind the gate" visible — drives check-in motivation
 - Lock overlay shows purple card with "完成早间打卡后解锁" CTA
 
+### Multi-Family Support (v5.0)
+- **FamilyMembership interface** in `lib/storage.ts`: `{ familyId, room, myMemberId, role, joinedAt }`
+- **Storage keys**: `MEMBERSHIPS_KEY = 'family_memberships_v1'`, `ACTIVE_FAMILY_ID_KEY = 'active_family_id_v1'`
+- **Storage functions**: `getAllMemberships`, `addOrUpdateMembership`, `getActiveFamilyId`, `setActiveFamilyId`, `migrateToMultiFamily`
+- **FamilyContext** (`lib/family-context.tsx`): `FamilyProvider` wraps app, provides `memberships`, `activeMembership`, `isCreator`, `hasFamilies`, `switchFamily()`, `refresh()`
+- **Family Switcher Modal**: both `JoinerHomeScreen` (components/joiner-home.tsx) and `CreatorHomeScreen` (app/(tabs)/index.tsx) show family name tag with ▼ (tappable to switch when multiple families)
+- **Create-family modal** (`app/(modals)/create-family.tsx`): 2-step form (elder info → my info); JoinerLockedScreen CTA routes here
+- **`switchFamily(id)`**: saves activeFamilyId, updates family_room_v1 key + currentMember → triggers re-render across app
+
+### Diary Calendar Redesign (v5.0)
+- `app/(tabs)/diary.tsx` — new layout:
+  - **Top**: most recent 7 diary entries as cards (existing DiaryCard component)
+  - **Bottom**: `CalendarView` component — monthly grid with prev/next navigation
+  - Calendar highlights days with entries (green dot + green circle background)
+  - Today shown in filled primary green circle
+  - Tapping an entry day expands mini-list of that day's entries below the calendar
+  - Mini-cards open the full diary entry editor when tapped
+  - Calendar hidden in edit/delete mode
+
+### Role-Gated Screens (v5.0)
+- `app/(tabs)/index.tsx`: default export checks `getCurrentUserIsCreator()` → renders `JoinerHomeScreen` or `CreatorHomeScreen`
+- `app/(tabs)/checkin.tsx`, `medication.tsx`, `diary.tsx`: wrapper pattern — non-creator users see `JoinerLockedScreen`
+- **`JoinerLockedScreen`**: explains role restriction + CTA to "创建我的家庭档案" (`/(modals)/create-family`)
+
 ### WCAG 2.1 Color Contrast (lib/animations.ts)
 - `COLORS.textMuted` upgraded from `#9BA1A6` (2.7:1 ratio, fail) → `#6B7280` (4.6:1 ratio, pass AA)
 - All hint/muted text now meets minimum contrast for small text (4.5:1)
