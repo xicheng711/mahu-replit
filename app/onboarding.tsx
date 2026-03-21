@@ -26,7 +26,6 @@ const FAMILY_ROLES = [
   { role: 'family' as const, label: '家庭成员' },
   { role: 'nurse' as const, label: '护理人员' },
 ];
-const RELATIONSHIPS = ['女儿', '儿子', '孙女', '孙子', '外孙女', '外孙', '媳妇', '女婿', '兄弟姐妹', '朋友', '护理员', '其他'];
 
 const CARE_NEED_OPTIONS: { id: string; emoji: string; label: string; desc: string }[] = [
   { id: 'memory', emoji: '🧠', label: '记忆/认知', desc: '阿尔茨海默病、失智、记忆力减退' },
@@ -182,7 +181,6 @@ export default function OnboardingScreen() {
   const [joinerPhotoUri, setJoinerPhotoUri] = useState<string | undefined>(undefined);
   const [joinerAvatarType, setJoinerAvatarType] = useState<'photo' | 'emoji'>('emoji');
   const [joinerRelationship, setJoinerRelationship] = useState('');
-  const [joinerCustomRelationship, setJoinerCustomRelationship] = useState('');
 
   async function pickJoinerPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -329,7 +327,7 @@ export default function OnboardingScreen() {
 
   async function handleJoinerFinish() {
     if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const rel = joinerRelationship === '其他' ? joinerCustomRelationship : joinerRelationship;
+    const rel = joinerRelationship.trim();
     const result = await joinFamilyRoom(joinerCode.trim(), {
       name: joinerName.trim() || '家人',
       role: 'family',
@@ -958,6 +956,22 @@ export default function OnboardingScreen() {
                   value={joinerName}
                   onChangeText={setJoinerName}
                   placeholderTextColor="#9BA1A6"
+                />
+              </View>
+
+              {/* Relationship – optional free text */}
+              <View style={[styles.inputGroup, { width: '100%' }]}>
+                <Text style={styles.label}>
+                  你和被照顾者的关系
+                  <Text style={{ fontWeight: '400', color: '#9BA1A6', fontSize: 12 }}> （可选）</Text>
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="如：女儿、儿子、朋友... 可以不填"
+                  value={joinerRelationship}
+                  onChangeText={setJoinerRelationship}
+                  placeholderTextColor="#9BA1A6"
+                  returnKeyType="done"
                 />
               </View>
 

@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ScreenContainer } from '@/components/screen-container';
 import {
-  saveDiaryEntry, updateDiaryEntry, getDiaryEntryById,
+  saveDiaryEntry, updateDiaryEntry, getDiaryEntryById, getDiaryEntries,
   todayStr, getProfile, generateId, DiaryEntry, ConversationMessage,
 } from '@/lib/storage';
 import { VoiceInput } from '@/components/voice-input';
@@ -212,6 +212,7 @@ export default function DiaryEditScreen() {
   const [elderNickname, setElderNickname] = useState('家人');
   const [caregiverName, setCaregiverName] = useState('照顾者');
   const [loadingEntry, setLoadingEntry] = useState(!!existingId);
+  const [diaryCount, setDiaryCount] = useState(0);
 
   const entryRef = useRef<DiaryEntry | null>(null);
   const formFade = useRef(new Animated.Value(0)).current;
@@ -231,11 +232,12 @@ export default function DiaryEditScreen() {
   }, []);
 
   async function loadProfile() {
-    const profile = await getProfile();
+    const [profile, entries] = await Promise.all([getProfile(), getDiaryEntries()]);
     if (profile) {
       setElderNickname(profile.nickname || profile.name || '家人');
       setCaregiverName(profile.caregiverName || '照顾者');
     }
+    setDiaryCount(entries.length);
   }
 
   async function loadExistingEntry(id: string) {
@@ -416,8 +418,36 @@ export default function DiaryEditScreen() {
               {/* ── FORM (only before submission) ── */}
               {!submitted && (
                 <>
+                  {/* Motivational banner */}
+                  <View style={styles.motiveBanner}>
+                    <LinearGradient
+                      colors={['#FFF7ED', '#FEF3C7', '#FFF7ED']}
+                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                      style={styles.motiveBannerInner}
+                    >
+                      <Text style={styles.motiveEmoji}>📔</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.motiveTitle}>每一天都值得被记住</Text>
+                        <Text style={styles.motiveSubtitle}>
+                          {diaryCount > 0
+                            ? `你已经记录了 ${diaryCount} 篇日记，继续加油 🌱`
+                            : `今天写下第一篇护理日记，从现在开始 💛`}
+                        </Text>
+                      </View>
+                      {diaryCount > 0 && (
+                        <View style={styles.motiveCountBadge}>
+                          <Text style={styles.motiveCountNum}>{diaryCount}</Text>
+                          <Text style={styles.motiveCountLabel}>篇</Text>
+                        </View>
+                      )}
+                    </LinearGradient>
+                  </View>
+
                   <View style={styles.section}>
-                    <Text style={styles.label}>{elderNickname}今天的心情</Text>
+                    <Text style={styles.label}>
+                      <Text style={{ color: '#A07858' }}>🌡 </Text>
+                      {elderNickname}今天的状态如何？
+                    </Text>
                     <View style={styles.moodRow}>
                       {MOOD_OPTIONS.map((m, i) => (
                         <MoodOption key={i} mood={m} selected={selectedMood === i} onPress={() => setSelectedMood(i)} />
@@ -426,7 +456,10 @@ export default function DiaryEditScreen() {
                   </View>
 
                   <View style={styles.section}>
-                    <Text style={styles.label}>今天发生了什么？（可多选）</Text>
+                    <Text style={styles.label}>
+                      <Text style={{ color: '#A07858' }}>✨ </Text>
+                      今天有哪些值得记录的事？
+                    </Text>
                     <View style={styles.tagsGrid}>
                       {TAGS.map((tag, i) => (
                         <TagOption key={i} tag={tag} selected={selectedTags.includes(tag)} onPress={() => toggleTag(tag)} />
@@ -436,12 +469,15 @@ export default function DiaryEditScreen() {
 
                   <View style={styles.section}>
                     <View style={styles.noteLabelRow}>
-                      <Text style={styles.label}>详细记录（可选）</Text>
+                      <Text style={styles.label}>
+                        <Text style={{ color: '#A07858' }}>💬 </Text>
+                        用文字记下今天（可选）
+                      </Text>
                       <VoiceInput onResult={handleVoiceResult} />
                     </View>
                     <TextInput
                       style={styles.noteInput}
-                      placeholder={`写下今天的护理情况、${elderNickname}的特别反应、你的感受...\n💡 点击右上角🎙️可语音输入`}
+                      placeholder={`${elderNickname}今天有什么特别的时刻？\n你有什么感受或担心想记下来？\n哪怕只有一两句话，都很有意义 💛`}
                       value={content}
                       onChangeText={setContent}
                       multiline
@@ -449,6 +485,7 @@ export default function DiaryEditScreen() {
                       placeholderTextColor="#C4A0B8"
                       textAlignVertical="top"
                     />
+                    <Text style={styles.noteHint}>🎙️ 可以点右上角语音按钮说给小马虎听</Text>
                   </View>
                 </>
               )}
@@ -532,7 +569,7 @@ export default function DiaryEditScreen() {
                   {submitting ? (
                     <ActivityIndicator color="#fff" size="small" />
                   ) : (
-                    <Text style={styles.submitBtnText}>提交日记，获取小马虎回复 💕</Text>
+                    <Text style={styles.submitBtnText}>记录好了，听小马虎说说 💕</Text>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
@@ -642,6 +679,25 @@ const styles = StyleSheet.create({
   },
   datePillText: { fontSize: 12, color: '#7C6D60' },
 
+  // Motivational banner
+  motiveBanner: { marginBottom: 24 },
+  motiveBannerInner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderRadius: 18, padding: 16,
+    borderWidth: 1.5, borderColor: '#FDE68A',
+    shadowColor: '#F59E0B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 2,
+  },
+  motiveEmoji: { fontSize: 32 },
+  motiveTitle: { fontSize: 14, fontWeight: '800', color: '#92400E', marginBottom: 2 },
+  motiveSubtitle: { fontSize: 12, color: '#B45309', lineHeight: 18 },
+  motiveCountBadge: {
+    alignItems: 'center', backgroundColor: '#FDE68A',
+    borderRadius: 12, paddingHorizontal: 10, paddingVertical: 6,
+    minWidth: 44,
+  },
+  motiveCountNum: { fontSize: 20, fontWeight: '900', color: '#92400E', lineHeight: 24 },
+  motiveCountLabel: { fontSize: 10, color: '#B45309', fontWeight: '600' },
+
   // Form sections
   section: { marginBottom: 24 },
   label: { fontSize: 15, fontWeight: '700', color: '#2D1F14', marginBottom: 12 },
@@ -667,7 +723,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 16,
     borderWidth: 1.5, borderColor: '#DDD7CE',
     padding: 14, fontSize: 15, color: '#2D1F14',
-    minHeight: 120, lineHeight: 22,
+    minHeight: 130, lineHeight: 22,
+  },
+  noteHint: {
+    fontSize: 11, color: '#B0A090', marginTop: 6,
+    textAlign: 'right', fontStyle: 'italic',
   },
 
   // Summary card

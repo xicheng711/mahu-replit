@@ -1,22 +1,12 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
-
-/**
- * Voice input component.
- * - In production build (published app): uses expo-speech-recognition native module
- * - In Expo Go / web: gracefully shows alert, no crash
- *
- * The key fix: we NEVER call require('expo-speech-recognition') at the top level
- * or in useEffect. We only attempt it inside the press handler, wrapped in try/catch.
- */
 
 interface VoiceInputProps {
   onResult: (text: string) => void;
   language?: string;
 }
 
-// ── Safe lazy loader for native module ──────────────────────────────────────
 let _speechModule: any = null;
 let _addListener: any = null;
 let _nativeChecked = false;
@@ -26,7 +16,6 @@ function checkNativeAvailability(): boolean {
   if (_nativeChecked) return _nativeAvailable;
   _nativeChecked = true;
   try {
-    // Dynamic require - will throw in Expo Go where native module is missing
     const mod = require('expo-speech-recognition');
     if (mod?.ExpoSpeechRecognitionModule) {
       _speechModule = mod.ExpoSpeechRecognitionModule;
@@ -41,11 +30,19 @@ function checkNativeAvailability(): boolean {
 
 export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
   const [isListening, setIsListening] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const pulseLoop = useRef<Animated.CompositeAnimation | null>(null);
   const recognitionRef = useRef<any>(null);
   const accumulatedText = useRef('');
   const listenersRef = useRef<Array<() => void>>([]);
+  const errorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showError(msg: string) {
+    setErrorMsg(msg);
+    if (errorTimer.current) clearTimeout(errorTimer.current);
+    errorTimer.current = setTimeout(() => setErrorMsg(''), 3500);
+  }
 
   function startPulse() {
     pulseLoop.current = Animated.loop(
@@ -62,10 +59,8 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
     Animated.timing(pulseAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
   }
 
-  // Register native listeners only if available — called lazily after first successful native start
   const registerNativeListeners = useCallback(() => {
     if (!_addListener || listenersRef.current.length > 0) return;
-
     try {
       const unsub1 = _addListener('result', (event: any) => {
         const results = event.results;
@@ -92,16 +87,14 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
       if (unsub1) listenersRef.current.push(unsub1);
       if (unsub2) listenersRef.current.push(unsub2);
       if (unsub3) listenersRef.current.push(unsub3);
-    } catch {
-      // Silently fail
-    }
+    } catch {}
   }, [onResult]);
 
-  // Cleanup listeners on unmount
   useEffect(() => {
     return () => {
       listenersRef.current.forEach(fn => { try { fn(); } catch {} });
       listenersRef.current = [];
+      if (errorTimer.current) clearTimeout(errorTimer.current);
     };
   }, []);
 
@@ -111,7 +104,6 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
     }
 
     if (isListening) {
-      // Stop listening
       if (_speechModule) {
         try { _speechModule.stop?.(); } catch {}
       }
@@ -133,7 +125,7 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
       try {
         const perm = await _speechModule.requestPermissionsAsync();
         if (!perm.granted) {
-          Alert.alert('需要权限', '请在设置中允许小马虎使用麦克风和语音识别权限');
+          showError('请在系统设置中允许麦克风权限');
           return;
         }
         accumulatedText.current = '';
@@ -143,64 +135,65 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
         startPulse();
         return;
       } catch (e) {
-        // Native failed, fall through to Web Speech API
         console.warn('Native speech recognition failed:', e);
       }
     }
 
-    // ── Fallback: Web Speech API (works in browser) ──
+    // ── Web Speech API ──
     if (typeof window !== 'undefined') {
       const SpeechRecognitionClass =
         (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognitionClass) {
-        const recognition = new SpeechRecognitionClass();
-        recognition.lang = language;
-        recognition.interimResults = false;
-        recognition.continuous = false;
-        recognitionRef.current = recognition;
-        accumulatedText.current = '';
+        try {
+          const recognition = new SpeechRecognitionClass();
+          recognition.lang = language;
+          recognition.interimResults = false;
+          recognition.continuous = false;
+          recognitionRef.current = recognition;
+          accumulatedText.current = '';
 
-        recognition.onresult = (event: any) => {
-          let text = '';
-          for (let i = 0; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-              text += event.results[i][0].transcript;
+          recognition.onresult = (event: any) => {
+            let text = '';
+            for (let i = 0; i < event.results.length; i++) {
+              if (event.results[i].isFinal) {
+                text += event.results[i][0].transcript;
+              }
             }
-          }
-          if (text) accumulatedText.current = text;
-        };
-        recognition.onend = () => {
-          setIsListening(false);
-          stopPulse();
-          if (accumulatedText.current) {
-            onResult(accumulatedText.current);
-            accumulatedText.current = '';
-          }
-          recognitionRef.current = null;
-        };
-        recognition.onerror = (e: any) => {
-          console.warn('Web Speech error:', e.error);
-          setIsListening(false);
-          stopPulse();
-          recognitionRef.current = null;
-          if (e.error === 'not-allowed') {
-            Alert.alert('需要权限', '请在浏览器设置中允许使用麦克风');
-          }
-        };
+            if (text) accumulatedText.current = text;
+          };
+          recognition.onend = () => {
+            setIsListening(false);
+            stopPulse();
+            if (accumulatedText.current) {
+              onResult(accumulatedText.current);
+              accumulatedText.current = '';
+            }
+            recognitionRef.current = null;
+          };
+          recognition.onerror = (e: any) => {
+            setIsListening(false);
+            stopPulse();
+            recognitionRef.current = null;
+            if (e.error === 'not-allowed') {
+              showError('请在浏览器中允许麦克风权限');
+            } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+              showError('语音识别出错，请重试');
+            }
+          };
 
-        recognition.start();
-        setIsListening(true);
-        startPulse();
+          recognition.start();
+          setIsListening(true);
+          startPulse();
+          return;
+        } catch {
+          showError('无法启动语音识别，请直接输入文字');
+        }
         return;
       }
     }
 
-    // ── No speech recognition available (Expo Go on device) ──
-    Alert.alert(
-      '语音输入暂不可用',
-      '语音识别功能需要在正式发布的 App 中使用。\n\n在 Expo Go 中暂不支持此功能，请直接在文本框中输入文字。\n\n发布后的 App 将完整支持语音输入。',
-      [{ text: '好的' }]
-    );
+    // ── No speech recognition available ──
+    showError('当前环境不支持语音输入，请直接打字');
   }, [isListening, language, onResult, registerNativeListeners]);
 
   return (
@@ -217,22 +210,22 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
           </Text>
         </TouchableOpacity>
       </Animated.View>
+      {errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', gap: 6 },
+  container: { alignItems: 'center', gap: 4 },
   micBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#F0F7EE', borderRadius: 16,
     paddingHorizontal: 14, paddingVertical: 10,
     borderWidth: 1.5, borderColor: '#D4E8D4',
   },
-  micBtnActive: {
-    backgroundColor: '#FEE2E2', borderColor: '#FCA5A5',
-  },
+  micBtnActive: { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' },
   micIcon: { fontSize: 18 },
   micLabel: { fontSize: 13, fontWeight: '600', color: '#3D7A3D' },
   micLabelActive: { color: '#DC2626' },
+  errorMsg: { fontSize: 11, color: '#DC2626', textAlign: 'center', maxWidth: 160 },
 });
