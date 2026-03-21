@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, Animated, Platform, Alert, Share, Modal,
+  StyleSheet, Animated, Platform, Alert, Share, Modal, Easing,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
@@ -239,18 +239,28 @@ export default function FamilyScreen() {
   const [elderEmoji, setElderEmoji] = useState('🐯');
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fabBreath = useRef(new Animated.Value(1)).current;
   const scrollRef = useRef<any>(null);
   const [newAnnouncementId, setNewAnnouncementId] = useState<string | null>(null);
   const briefingCardRef = useRef<View>(null);
   const [isGeneratingShare, setIsGeneratingShare] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [isCreator, setIsCreator] = useState(true); // default true to avoid flickering FAB away
+  const [isCreator, setIsCreator] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
       loadData();
     }, [])
   );
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(fabBreath, { toValue: 1.07, duration: 1600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(fabBreath, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
 
   async function loadData() {
     setLoading(true);
@@ -734,17 +744,17 @@ export default function FamilyScreen() {
         )}
       </ScrollView>
 
-      {/* Compose button: only creators can post announcements */}
-      {activeSection === 'broadcast' && isCreator && (
-        <TouchableOpacity
-          style={[styles.fabWrap, { bottom: insets.bottom + 90 }]}
-          onPress={() => setShowCompose(true)}
-          activeOpacity={0.88}
-        >
-          <LinearGradient colors={['#C084FC', '#A855F7', '#7C3AED']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.fab}>
-            <Text style={styles.fabText}>📢 发布公告</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+      {/* Compose FAB — round circle, bottom-right, anyone can post */}
+      {activeSection === 'broadcast' && (
+        <Animated.View style={[styles.fabWrap, { bottom: insets.bottom + 90, transform: [{ scale: fabBreath }] }]}>
+          <TouchableOpacity
+            style={styles.fabBtn}
+            onPress={() => setShowCompose(true)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.fabIcon}>📢</Text>
+          </TouchableOpacity>
+        </Animated.View>
       )}
 
       {/* Compose Modal */}
@@ -1089,9 +1099,15 @@ const styles = StyleSheet.create({
   goCheckinBtn: { backgroundColor: '#A855F7', borderRadius: 14, paddingHorizontal: 20, paddingVertical: 10, marginTop: 4 },
   goCheckinBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   // FAB
-  fabWrap: { position: 'absolute', left: 20, right: 20, borderRadius: 22, shadowColor: '#9333EA', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 14, elevation: 8 },
-  fab: { borderRadius: 22, padding: 17, alignItems: 'center' },
-  fabText: { fontSize: 16, fontWeight: '800', color: '#fff', letterSpacing: 0.3 },
+  fabWrap: { position: 'absolute', right: 24 },
+  fabBtn: {
+    width: 58, height: 58, borderRadius: 29,
+    backgroundColor: '#A855F7',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
+  },
+  fabIcon: { fontSize: 26 },
   // Modal
   modal: { flex: 1, backgroundColor: '#FFFCF8', paddingHorizontal: 20, paddingTop: 16 },
   modalCancelBtn: { alignSelf: 'flex-start', paddingVertical: 4, paddingRight: 12, marginBottom: 8 },
