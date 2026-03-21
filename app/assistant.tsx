@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { ScreenContainer } from '@/components/screen-container';
-import { getProfile, getYesterdayCheckIn, getTodayCheckIn } from '@/lib/storage';
+import { getProfile, getYesterdayCheckIn, getTodayCheckIn, upsertCheckIn } from '@/lib/storage';
 import { scoreSleepInput } from '@/lib/sleep-scoring';
 import { trpc } from '@/lib/trpc';
 import { BackButton } from '@/components/back-button';
@@ -382,6 +382,11 @@ export default function AssistantScreen() {
         setWeatherData(result.weather);
         // 写入当日缓存（含打卡指纹，打卡数据变化会自动失效）
         _adviceCache = { date: todayKey, checkInKey, advice: result.advice, weather: result.weather };
+        // 将 AI 算出的 careScore 同步回打卡记录，确保首页和家庭共享显示一致的分数
+        if (result.advice.careScore != null) {
+          const todayDateStr = new Date().toISOString().split('T')[0];
+          upsertCheckIn({ date: todayDateStr, careScore: result.advice.careScore }).catch(() => {});
+        }
       } else {
         setError(result.error ?? '小马虎分析失败，请稍后重试');
       }
