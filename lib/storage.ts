@@ -164,6 +164,8 @@ export interface FamilyMember {
   photoUri?: string;   // 真实照片 URI
   joinedAt: string;
   isCurrentUser?: boolean;
+  isCreator?: boolean;       // true = 创建者（管理员），false/undefined = 加入者（只读）
+  relationship?: string;     // 与被照顾者的关系，如「孙女」「女婿」
 }
 
 export interface FamilyAnnouncement {
@@ -370,16 +372,28 @@ export async function saveFamilyRoom(room: FamilyRoom): Promise<void> {
   await AsyncStorage.setItem(KEYS.FAMILY_ROOM, JSON.stringify(room));
 }
 
-export async function createFamilyRoom(elderName: string, firstMember: Omit<FamilyMember, 'id' | 'joinedAt'>): Promise<FamilyRoom> {
+export async function lookupFamilyByCode(code: string): Promise<FamilyRoom | null> {
+  const room = await getFamilyRoom();
+  if (!room) return null;
+  return room.roomCode === code.toUpperCase() ? room : null;
+}
+
+export async function getCurrentUserIsCreator(): Promise<boolean> {
+  const member = await getCurrentMember();
+  return member?.isCreator === true;
+}
+
+export async function createFamilyRoom(elderName: string, firstMember: Omit<FamilyMember, 'id' | 'joinedAt'>, existingCode?: string): Promise<FamilyRoom> {
   const member: FamilyMember = {
     id: generateId(),
     ...firstMember,
+    isCreator: true,
     joinedAt: new Date().toISOString(),
     isCurrentUser: true,
   };
   const room: FamilyRoom = {
     id: generateId(),
-    roomCode: generateRoomCode(),
+    roomCode: existingCode ?? generateRoomCode(),
     elderName,
     members: [member],
     createdAt: new Date().toISOString(),
@@ -395,6 +409,7 @@ export async function joinFamilyRoom(roomCode: string, member: Omit<FamilyMember
   const newMember: FamilyMember = {
     id: generateId(),
     ...member,
+    isCreator: false,
     joinedAt: new Date().toISOString(),
     isCurrentUser: true,
   };

@@ -6,13 +6,17 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
-import { saveProfile, saveMedication, generateId, createFamilyRoom, joinFamilyRoom } from '@/lib/storage';
+import { saveProfile, saveMedication, generateId, createFamilyRoom, joinFamilyRoom, lookupFamilyByCode, generateRoomCode } from '@/lib/storage';
 import { scheduleAllReminders } from '@/lib/notifications';
 import { getZodiac } from '@/lib/zodiac';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 
-const STEPS = ['欢迎', '被照顾者', '照顾者', '城市', '用药', '护理需求', '家庭', '完成'];
+// Steps depend on userType:
+// Creator: 欢迎 → 角色 → 被照顾者 → 照顾者 → 城市 → 用药 → 护理需求 → 邀请码 (8 steps, 0-7)
+// Joiner:  欢迎 → 角色 → 共享码 → 确认 → 身份 (5 steps, 0-4)
+const CREATOR_STEPS = ['欢迎', '角色', '被照顾者', '照顾者', '城市', '用药', '护理需求', '邀请码'];
+const JOINER_STEPS  = ['欢迎', '角色', '共享码', '确认', '身份'];
 
 const FAMILY_EMOJIS = ['👩', '👨', '👵', '👴', '👧', '👦', '🧑', '👩‍⚕️', '👨‍⚕️'];
 const FAMILY_ROLES = [
@@ -20,6 +24,7 @@ const FAMILY_ROLES = [
   { role: 'family' as const, label: '家庭成员' },
   { role: 'nurse' as const, label: '护理人员' },
 ];
+const RELATIONSHIPS = ['女儿', '儿子', '孙女', '孙子', '外孙女', '外孙', '媳妇', '女婿', '兄弟姐妹', '朋友', '护理员', '其他'];
 
 const CARE_NEED_OPTIONS: { id: string; emoji: string; label: string; desc: string }[] = [
   { id: 'memory', emoji: '🧠', label: '记忆/认知', desc: '阿尔茨海默病、失智、记忆力减退' },
@@ -139,7 +144,23 @@ export default function OnboardingScreen() {
   const [reminderMorning, setReminderMorning] = useState('08:00');
   const [reminderEvening, setReminderEvening] = useState('21:00');
 
-  // Family setup
+  // ── Path selection ──────────────────────────────────────────
+  const [userType, setUserType] = useState<'creator' | 'joiner' | null>(null);
+
+  // ── Creator: pre-generated room code shown at step 7 ──────────
+  const [previewRoomCode] = useState<string>(() => generateRoomCode());
+
+  // ── Joiner path states ────────────────────────────────────────
+  const [joinerCode, setJoinerCode] = useState('');
+  const [joinerFoundRoom, setJoinerFoundRoom] = useState<{ elderName: string } | null>(null);
+  const [joinerCodeChecked, setJoinerCodeChecked] = useState(false);
+  const [joinerCodeError, setJoinerCodeError] = useState('');
+  const [joinerName, setJoinerName] = useState('');
+  const [joinerEmoji, setJoinerEmoji] = useState('👩');
+  const [joinerRelationship, setJoinerRelationship] = useState('');
+  const [joinerCustomRelationship, setJoinerCustomRelationship] = useState('');
+
+  // ── Legacy family step states (kept for compatibility) ────────
   const [familyMode, setFamilyMode] = useState<'choose' | 'join' | 'create' | 'skip'>('choose');
   const [familyRoomCode, setFamilyRoomCode] = useState('');
   const [familyMemberName, setFamilyMemberName] = useState('');
@@ -255,37 +276,61 @@ export default function OnboardingScreen() {
         color: '#FF6B6B',
       });
     }
-    // Handle family setup choice
-    if (familyMode === 'join' && familyRoomCode.trim().length >= 6) {
-      await joinFamilyRoom(familyRoomCode.trim(), {
-        name: familyMemberName.trim() || caregiverName || '家人',
-        role: familyMemberRole,
-        roleLabel: familyMemberRoleLabel,
-        emoji: familyMemberEmoji,
-        color: '#FF6B6B',
-      }).catch(() => {});
-    } else if (familyMode === 'create') {
-      await createFamilyRoom(elderName || '家人', {
-        name: caregiverName || '家人',
-        role: 'caregiver',
-        roleLabel: '主要照顾者',
-        emoji: '👩',
-        color: '#FF6B6B',
-      }).catch(() => {});
-    }
+    // Creator always creates a family room with the pre-generated code
+    await createFamilyRoom(elderNickname || elderName || '家人', {
+      name: caregiverName || '家人',
+      role: 'caregiver',
+      roleLabel: '主要照顾者',
+      emoji: '👩',
+      color: '#FF6B6B',
+    }, previewRoomCode).catch(() => {});
     router.replace('/(tabs)');
   }
 
-  const familyStepValid = familyMode !== 'join' || (familyRoomCode.trim().length >= 6 && familyMemberName.trim().length > 0);
-  const canNext = [
-    true,                              // 0: welcome
-    elderName.trim().length > 0,       // 1: elder info
-    caregiverName.trim().length > 0,   // 2: caregiver info
-    city.length > 0,                   // 3: city
-    true,                              // 4: medications (optional)
-    true,                              // 5: care needs (optional)
-    familyStepValid,                   // 6: family setup
-  ][step] ?? true;
+  async function handleJoinerFinish() {
+    if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const rel = joinerRelationship === '其他' ? joinerCustomRelationship : joinerRelationship;
+    const result = await joinFamilyRoom(joinerCode.trim(), {
+      name: joinerName.trim() || '家人',
+      role: 'family',
+      roleLabel: rel || '家庭成员',
+      emoji: joinerEmoji,
+      color: '#A855F7',
+      relationship: rel || undefined,
+    });
+    if (!result) {
+      // Room not found on this device — create a minimal placeholder so the family tab shows something
+      // In a real app, this would sync from server
+    }
+    router.replace('/(tabs)/family');
+  }
+
+  async function checkJoinerCode() {
+    if (joinerCode.trim().length < 6) return;
+    const found = await lookupFamilyByCode(joinerCode.trim());
+    setJoinerFoundRoom(found ? { elderName: found.elderName } : null);
+    setJoinerCodeChecked(true);
+    setJoinerCodeError('');
+  }
+
+  const STEPS = userType === 'joiner' ? JOINER_STEPS : CREATOR_STEPS;
+
+  // ── canNext: step 1 is role selection (done via card click, hide next) ──────
+  function getCanNext(): boolean {
+    if (step === 0) return true;
+    if (step === 1) return !!userType; // role selected
+    if (userType === 'joiner') {
+      if (step === 2) return joinerCode.trim().length >= 6;
+      if (step === 3) return true; // confirm step
+      if (step === 4) return joinerName.trim().length > 0;
+    }
+    // Creator path (step 2-7)
+    if (step === 2) return elderName.trim().length > 0;
+    if (step === 3) return caregiverName.trim().length > 0;
+    if (step === 4) return city.length > 0;
+    return true;
+  }
+  const canNext = getCanNext();
 
   return (
     <ScreenContainer containerClassName="bg-background">
@@ -324,8 +369,54 @@ export default function OnboardingScreen() {
           </View>
         )}
 
-        {/* STEP 1: Elder info */}
+        {/* STEP 1: Role Selection */}
         {step === 1 && (
+          <View style={styles.stepContainer}>
+            <Text style={styles.mascot}>🌿</Text>
+            <Text style={styles.title}>你是哪种用户？</Text>
+            <Text style={styles.subtitle}>请选择你的身份，{'\n'}我们会为你定制不同的体验</Text>
+            <View style={{ width: '100%', gap: 16, marginTop: 8 }}>
+              {/* PRIMARY: Creator */}
+              <TouchableOpacity
+                activeOpacity={0.88}
+                style={[styles.roleCard, styles.roleCardPrimary]}
+                onPress={() => {
+                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setUserType('creator');
+                  animateTransition(() => setStep(s => s + 1));
+                }}
+              >
+                <Text style={styles.roleCardIcon}>🏥</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.roleCardTitle}>创建照护档案</Text>
+                  <Text style={styles.roleCardDesc}>我是主要照顾者，需要记录护理日常、用药、日记，并邀请家人加入</Text>
+                </View>
+                <Text style={styles.roleCardArrow}>›</Text>
+              </TouchableOpacity>
+
+              {/* SECONDARY: Joiner */}
+              <TouchableOpacity
+                activeOpacity={0.88}
+                style={[styles.roleCard, styles.roleCardSecondary]}
+                onPress={() => {
+                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setUserType('joiner');
+                  animateTransition(() => setStep(s => s + 1));
+                }}
+              >
+                <Text style={styles.roleCardIcon}>🔗</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.roleCardTitle, { color: '#374151' }]}>使用共享码加入</Text>
+                  <Text style={styles.roleCardDesc}>我是家庭成员，已有共享码，只需查看家庭公告和护理简报</Text>
+                </View>
+                <Text style={styles.roleCardArrow}>›</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* STEP 2: Elder info (Creator only) */}
+        {step === 2 && userType === 'creator' && (
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.stepContainer}>
               <Text style={styles.zodiacBig}>{elderZodiac.emoji}</Text>
@@ -385,8 +476,8 @@ export default function OnboardingScreen() {
           </ScrollView>
         )}
 
-        {/* STEP 2: Caregiver info */}
-        {step === 2 && (
+        {/* STEP 3: Caregiver info (Creator only) */}
+        {step === 3 && userType === 'creator' && (
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.stepContainer}>
               {/* Avatar selection */}
@@ -449,8 +540,8 @@ export default function OnboardingScreen() {
           </ScrollView>
         )}
 
-        {/* STEP 3: City */}
-        {step === 3 && (
+        {/* STEP 4: City (Creator only) */}
+        {step === 4 && userType === 'creator' && (
           <View style={styles.stepContainer}>
             <Text style={styles.mascot}>🌤️</Text>
             <Text style={styles.title}>所在城市</Text>
@@ -482,8 +573,8 @@ export default function OnboardingScreen() {
           </View>
         )}
 
-        {/* STEP 4: Medications */}
-        {step === 4 && (
+        {/* STEP 5: Medications (Creator only) */}
+        {step === 5 && userType === 'creator' && (
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.stepContainer}>
               <Text style={styles.mascot}>💊</Text>
@@ -600,8 +691,8 @@ export default function OnboardingScreen() {
           </ScrollView>
         )}
 
-        {/* STEP 5: Care Needs */}
-        {step === 5 && (
+        {/* STEP 6: Care Needs (Creator only) */}
+        {step === 6 && userType === 'creator' && (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
             <View style={styles.stepContainer}>
               <Text style={styles.title}>🌿 主要护理需求</Text>
@@ -635,149 +726,168 @@ export default function OnboardingScreen() {
           </ScrollView>
         )}
 
-        {/* STEP 6: Family Setup */}
-        {step === 6 && (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+        {/* ══════════════════════════════════════════════
+            JOINER PATH: Step 2 – Enter shared room code
+            ══════════════════════════════════════════════ */}
+        {step === 2 && userType === 'joiner' && (
+          <View style={styles.stepContainer}>
+            <Text style={styles.mascot}>🔗</Text>
+            <Text style={styles.title}>输入共享码</Text>
+            <Text style={styles.subtitle}>请输入主要照顾者分享给你的{'\n'}6位共享码</Text>
+
+            <View style={[styles.inputGroup, { width: '100%', marginTop: 16 }]}>
+              <Text style={styles.label}>共享码</Text>
+              <TextInput
+                style={[styles.input, { letterSpacing: 6, fontSize: 22, textAlign: 'center', fontWeight: '700' }]}
+                placeholder="XXXXXX"
+                value={joinerCode}
+                onChangeText={t => { setJoinerCode(t.toUpperCase()); setJoinerCodeChecked(false); setJoinerCodeError(''); }}
+                maxLength={6}
+                autoCapitalize="characters"
+                placeholderTextColor="#D1D5DB"
+                returnKeyType="done"
+                onSubmitEditing={checkJoinerCode}
+              />
+              {joinerCodeError ? <Text style={{ color: '#EF4444', fontSize: 13, marginTop: 6, textAlign: 'center' }}>{joinerCodeError}</Text> : null}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.btn, { marginTop: 8, opacity: joinerCode.length >= 6 ? 1 : 0.4 }]}
+              onPress={checkJoinerCode}
+              disabled={joinerCode.length < 6}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.btnText}>验证共享码</Text>
+            </TouchableOpacity>
+
+            {joinerCodeChecked && joinerFoundRoom && (
+              <View style={{ width: '100%', marginTop: 12, padding: 16, backgroundColor: '#F0FDF4', borderRadius: 14, borderWidth: 1, borderColor: '#86EFAC', alignItems: 'center' }}>
+                <Text style={{ fontSize: 20 }}>✅</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#15803D', marginTop: 4 }}>找到家庭档案！</Text>
+                <Text style={{ fontSize: 13, color: '#166534', marginTop: 4 }}>被照顾者：{joinerFoundRoom.elderName}</Text>
+              </View>
+            )}
+            {joinerCodeChecked && !joinerFoundRoom && (
+              <View style={{ width: '100%', marginTop: 12, padding: 16, backgroundColor: '#FFF1F2', borderRadius: 14, borderWidth: 1, borderColor: '#FECDD3', alignItems: 'center' }}>
+                <Text style={{ fontSize: 20 }}>❌</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#BE123C', marginTop: 4 }}>未找到此共享码</Text>
+                <Text style={{ fontSize: 13, color: '#9F1239', marginTop: 4 }}>请确认码是否正确</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* ══════════════════════════════════════════════
+            JOINER PATH: Step 3 – Confirm family
+            ══════════════════════════════════════════════ */}
+        {step === 3 && userType === 'joiner' && (
+          <View style={styles.stepContainer}>
+            <Text style={styles.mascot}>🏡</Text>
+            <Text style={styles.title}>确认加入</Text>
+            <Text style={styles.subtitle}>请确认你要加入的家庭</Text>
+
+            <View style={{ width: '100%', padding: 20, backgroundColor: '#FFF7ED', borderRadius: 16, borderWidth: 1, borderColor: '#FED7AA', marginTop: 16, alignItems: 'center', gap: 8 }}>
+              <Text style={{ fontSize: 32 }}>👨‍👩‍👧‍👦</Text>
+              {joinerFoundRoom ? (
+                <>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#92400E' }}>
+                    {joinerFoundRoom.elderName} 的照护家庭
+                  </Text>
+                  <Text style={{ fontSize: 13, color: '#B45309', textAlign: 'center', lineHeight: 20 }}>
+                    加入后你可以查看家庭公告{'\n'}和每日护理简报
+                  </Text>
+                </>
+              ) : (
+                <Text style={{ fontSize: 14, color: '#B45309', textAlign: 'center' }}>
+                  共享码：{joinerCode}{'\n'}加入后可查看家庭公告和护理简报
+                </Text>
+              )}
+            </View>
+
+            <View style={{ width: '100%', marginTop: 16, gap: 8 }}>
+              {['✅ 查看家庭公告', '✅ 阅读每日护理简报', '✅ 关注被照顾者状态'].map(item => (
+                <View key={item} style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 14, color: '#374151' }}>{item}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* ══════════════════════════════════════════════
+            JOINER PATH: Step 4 – Identity (name + relationship)
+            ══════════════════════════════════════════════ */}
+        {step === 4 && userType === 'joiner' && (
+          <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.stepContainer}>
-              <Text style={styles.mascot}>🏡</Text>
-              <Text style={styles.title}>家庭共享</Text>
-              <Text style={styles.subtitle}>
-                和家人一起使用{'\n'}
-                共同记录{elderNickname || elderName || '家人'}的护理日常
-              </Text>
+              <Text style={styles.mascot}>😊</Text>
+              <Text style={styles.title}>告诉我们你是谁</Text>
+              <Text style={styles.subtitle}>方便家庭成员认识你</Text>
 
-              {/* Choose mode */}
-              {familyMode === 'choose' && (
-                <View style={{ width: '100%', gap: 12, marginTop: 8 }}>
-                  <TouchableOpacity style={styles.familyChoiceCard} onPress={() => setFamilyMode('join')} activeOpacity={0.85}>
-                    <Text style={styles.familyChoiceIcon}>🔗</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.familyChoiceTitle}>有邀请码，加入家庭</Text>
-                      <Text style={styles.familyChoiceDesc}>家人已经创建了家庭空间</Text>
-                    </View>
-                    <Text style={{ color: '#9BA1A6' }}>›</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.familyChoiceCard} onPress={() => setFamilyMode('create')} activeOpacity={0.85}>
-                    <Text style={styles.familyChoiceIcon}>✨</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.familyChoiceTitle}>创建新家庭空间</Text>
-                      <Text style={styles.familyChoiceDesc}>之后可以邀请其他家人加入</Text>
-                    </View>
-                    <Text style={{ color: '#9BA1A6' }}>›</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.familySkipBtn} onPress={() => setFamilyMode('skip')} activeOpacity={0.8}>
-                    <Text style={styles.familySkipText}>⏭️ 先跳过，之后再设置</Text>
-                  </TouchableOpacity>
+              {/* Name */}
+              <View style={[styles.inputGroup, { width: '100%', marginTop: 16 }]}>
+                <Text style={styles.label}>你的昵称</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="如：小红、大明..."
+                  value={joinerName}
+                  onChangeText={setJoinerName}
+                  placeholderTextColor="#9BA1A6"
+                />
+              </View>
+
+              {/* Avatar */}
+              <View style={[styles.inputGroup, { width: '100%' }]}>
+                <Text style={styles.label}>选择头像</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                  {FAMILY_EMOJIS.map(e => (
+                    <TouchableOpacity
+                      key={e}
+                      style={[styles.familyEmojiBtn, joinerEmoji === e && styles.familyEmojiBtnActive]}
+                      onPress={() => setJoinerEmoji(e)}
+                    >
+                      <Text style={{ fontSize: 22 }}>{e}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              )}
+              </View>
 
-              {/* Join mode */}
-              {familyMode === 'join' && (
-                <View style={{ width: '100%', gap: 0, marginTop: 8 }}>
-                  <TouchableOpacity onPress={() => { setFamilyMode('choose'); setFamilyJoinError(''); }} style={styles.familyBackBtn}>
-                    <Text style={styles.familyBackText}>← 重新选择</Text>
-                  </TouchableOpacity>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>邀请码</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="输入6位邀请码"
-                      value={familyRoomCode}
-                      onChangeText={t => { setFamilyRoomCode(t.toUpperCase()); setFamilyJoinError(''); }}
-                      maxLength={6}
-                      autoCapitalize="characters"
-                      placeholderTextColor="#9BA1A6"
-                    />
-                    {familyJoinError ? <Text style={{ color: '#EF4444', fontSize: 13, marginTop: 4 }}>{familyJoinError}</Text> : null}
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>你的名字</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="如：小红、大明..."
-                      value={familyMemberName}
-                      onChangeText={setFamilyMemberName}
-                      placeholderTextColor="#9BA1A6"
-                    />
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>选择头像</Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                      {FAMILY_EMOJIS.map(e => (
-                        <TouchableOpacity
-                          key={e}
-                          style={[styles.familyEmojiBtn, familyMemberEmoji === e && styles.familyEmojiBtnActive]}
-                          onPress={() => setFamilyMemberEmoji(e)}
-                        >
-                          <Text style={{ fontSize: 22 }}>{e}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>身份</Text>
-                    <View style={{ flexDirection: 'row', gap: 10 }}>
-                      {FAMILY_ROLES.map(r => (
-                        <TouchableOpacity
-                          key={r.role}
-                          style={[styles.familyRoleBtn, familyMemberRole === r.role && styles.familyRoleBtnActive]}
-                          onPress={() => { setFamilyMemberRole(r.role); setFamilyMemberRoleLabel(r.label); }}
-                        >
-                          <Text style={[styles.familyRoleBtnText, familyMemberRole === r.role && styles.familyRoleBtnTextActive]}>
-                            {r.label}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
+              {/* Relationship */}
+              <View style={[styles.inputGroup, { width: '100%' }]}>
+                <Text style={styles.label}>与被照顾者的关系</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {RELATIONSHIPS.map(r => (
+                    <TouchableOpacity
+                      key={r}
+                      style={[
+                        styles.familyRoleBtn,
+                        joinerRelationship === r && styles.familyRoleBtnActive,
+                        { paddingHorizontal: 12, paddingVertical: 8 }
+                      ]}
+                      onPress={() => setJoinerRelationship(r)}
+                    >
+                      <Text style={[styles.familyRoleBtnText, joinerRelationship === r && styles.familyRoleBtnTextActive]}>
+                        {r}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              )}
-
-              {/* Create mode */}
-              {familyMode === 'create' && (
-                <View style={{ width: '100%', alignItems: 'center', gap: 12, marginTop: 16 }}>
-                  <View style={styles.familyCreateConfirm}>
-                    <Text style={{ fontSize: 40, marginBottom: 8 }}>🏡</Text>
-                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#11181C', textAlign: 'center' }}>
-                      完成设置后将自动创建{'\n'}你的家庭空间
-                    </Text>
-                    <Text style={{ fontSize: 13, color: '#687076', textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
-                      你可以在家庭共享页面{'\n'}邀请其他家人加入
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => setFamilyMode('choose')} style={styles.familyBackBtn}>
-                    <Text style={styles.familyBackText}>← 重新选择</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Skip mode */}
-              {familyMode === 'skip' && (
-                <View style={{ width: '100%', alignItems: 'center', gap: 12, marginTop: 16 }}>
-                  <View style={styles.familyCreateConfirm}>
-                    <Text style={{ fontSize: 40, marginBottom: 8 }}>⏭️</Text>
-                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#11181C', textAlign: 'center' }}>
-                      先跳过没问题
-                    </Text>
-                    <Text style={{ fontSize: 13, color: '#687076', textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
-                      你随时可以在底部「家人共享」页面{'\n'}创建或加入家庭空间
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => setFamilyMode('choose')} style={styles.familyBackBtn}>
-                    <Text style={styles.familyBackText}>← 重新选择</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                {joinerRelationship === '其他' && (
+                  <TextInput
+                    style={[styles.input, { marginTop: 10 }]}
+                    placeholder="请输入关系..."
+                    value={joinerCustomRelationship}
+                    onChangeText={setJoinerCustomRelationship}
+                    placeholderTextColor="#9BA1A6"
+                  />
+                )}
+              </View>
             </View>
           </ScrollView>
         )}
 
-        {/* STEP 7: Done */}
-        {step === 7 && (
+        {/* STEP 7: Invite Code + Done (Creator only) */}
+        {step === 7 && userType === 'creator' && (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           <View style={styles.stepContainer}>
             <Image source={require('../assets/images/icon.png')} style={styles.mascotImgSm} />
@@ -788,6 +898,13 @@ export default function OnboardingScreen() {
               每天只需几分钟打卡{'\n'}
               小马虎为你提供专业护理建议 💕
             </Text>
+
+            {/* Invite Code Banner */}
+            <View style={styles.inviteCodeBanner}>
+              <Text style={styles.inviteCodeLabel}>家庭共享码</Text>
+              <Text style={styles.inviteCodeValue}>{previewRoomCode}</Text>
+              <Text style={styles.inviteCodeHint}>把这串码发给家人{'\n'}他们可以在设置时选择"加入家庭"直接加入</Text>
+            </View>
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>被照顾者</Text>
@@ -864,15 +981,27 @@ export default function OnboardingScreen() {
             <Text style={styles.backBtnText}>← 上一步</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity
-          style={[styles.nextBtn, !canNext && styles.nextBtnDisabled]}
-          onPress={step === 7 ? handleFinish : nextStep}
-          disabled={!canNext}
-        >
-          <Text style={styles.nextBtnText}>
-            {step === 0 ? '开始设置 →' : step === 7 ? '开始使用小马虎 🐴' : step === 6 && familyMode === 'skip' ? '跳过 →' : '下一步 →'}
-          </Text>
-        </TouchableOpacity>
+        {/* Step 1 = role selection: no next button, user taps cards */}
+        {step !== 1 && (() => {
+          const isCreatorDone = step === 7 && userType === 'creator';
+          const isJoinerDone  = step === 4 && userType === 'joiner';
+          const onPress = isCreatorDone ? handleFinish
+                        : isJoinerDone  ? handleJoinerFinish
+                        : nextStep;
+          const label   = step === 0          ? '开始设置 →'
+                        : isCreatorDone       ? '开始使用小马虎 🐴'
+                        : isJoinerDone        ? '完成，进入家庭 →'
+                        : '下一步 →';
+          return (
+            <TouchableOpacity
+              style={[styles.nextBtn, !canNext && styles.nextBtnDisabled]}
+              onPress={onPress}
+              disabled={!canNext}
+            >
+              <Text style={styles.nextBtnText}>{label}</Text>
+            </TouchableOpacity>
+          );
+        })()}
       </View>
     </ScreenContainer>
   );
@@ -1061,4 +1190,42 @@ const styles = StyleSheet.create({
     width: '100%', backgroundColor: '#F8F9FA', borderRadius: 20,
     padding: 24, alignItems: 'center', borderWidth: 1.5, borderColor: '#E5E7EB',
   },
+
+  // Generic primary button
+  btn: {
+    backgroundColor: '#FF6B6B', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 24,
+    alignItems: 'center', width: '100%',
+  },
+  btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+
+  // Role selection cards (step 1)
+  roleCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderRadius: 20, padding: 18, width: '100%',
+    borderWidth: 1.5,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+  },
+  roleCardPrimary: {
+    backgroundColor: '#FFF0F0', borderColor: '#FECACA',
+  },
+  roleCardSecondary: {
+    backgroundColor: '#F8F9FA', borderColor: '#E5E7EB',
+  },
+  roleCardIcon: { fontSize: 34 },
+  roleCardTitle: { fontSize: 16, fontWeight: '700', color: '#FF6B6B', marginBottom: 4 },
+  roleCardDesc: { fontSize: 13, color: '#687076', lineHeight: 18 },
+  roleCardArrow: { fontSize: 22, color: '#9BA1A6', fontWeight: '300' },
+
+  // Invite code banner (step 7 creator)
+  inviteCodeBanner: {
+    width: '100%', backgroundColor: '#EFF6FF', borderRadius: 20,
+    padding: 20, alignItems: 'center', gap: 8,
+    borderWidth: 1.5, borderColor: '#BFDBFE', marginBottom: 16,
+  },
+  inviteCodeLabel: { fontSize: 12, fontWeight: '600', color: '#2563EB', letterSpacing: 1.5, textTransform: 'uppercase' },
+  inviteCodeValue: {
+    fontSize: 34, fontWeight: '900', color: '#1D4ED8', letterSpacing: 8,
+    fontVariant: ['tabular-nums'],
+  },
+  inviteCodeHint: { fontSize: 13, color: '#3B82F6', textAlign: 'center', lineHeight: 20, marginTop: 4 },
 });

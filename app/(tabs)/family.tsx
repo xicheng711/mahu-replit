@@ -12,7 +12,7 @@ import {
   joinFamilyRoom, setCurrentMember, getTodayCheckIn, getYesterdayCheckIn,
   getAllCheckIns, getDiaryEntries,
   getProfile, FamilyAnnouncement, FamilyMember, FamilyRoom, DailyCheckIn,
-  updateFamilyMemberPhoto,
+  updateFamilyMemberPhoto, getCurrentUserIsCreator,
 } from '@/lib/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
@@ -244,6 +244,7 @@ export default function FamilyScreen() {
   const briefingCardRef = useRef<View>(null);
   const [isGeneratingShare, setIsGeneratingShare] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [isCreator, setIsCreator] = useState(true); // default true to avoid flickering FAB away
 
   useFocusEffect(
     useCallback(() => {
@@ -253,14 +254,16 @@ export default function FamilyScreen() {
 
   async function loadData() {
     setLoading(true);
-    const [r, m, a] = await Promise.all([
+    const [r, m, a, creatorFlag] = await Promise.all([
       getFamilyRoom(),
       getCurrentMember(),
       getFamilyAnnouncements(),
+      getCurrentUserIsCreator(),
     ]);
     setRoom(r);
     setCurrentMemberState(m);
     setAnnouncements(a);
+    setIsCreator(creatorFlag);
 
     // Load briefing data
     const [todayCheckIn, allCheckIns, diaryEntries, profile] = await Promise.all([
@@ -731,8 +734,8 @@ export default function FamilyScreen() {
         )}
       </ScrollView>
 
-      {/* Compose button (broadcast section only) */}
-      {activeSection === 'broadcast' && (
+      {/* Compose button: only creators can post announcements */}
+      {activeSection === 'broadcast' && isCreator && (
         <TouchableOpacity
           style={[styles.fabWrap, { bottom: insets.bottom + 90 }]}
           onPress={() => setShowCompose(true)}
