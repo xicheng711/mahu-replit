@@ -6,13 +6,20 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
-import { saveProfile, saveMedication, generateId } from '@/lib/storage';
+import { saveProfile, saveMedication, generateId, createFamilyRoom, joinFamilyRoom } from '@/lib/storage';
 import { scheduleAllReminders } from '@/lib/notifications';
 import { getZodiac } from '@/lib/zodiac';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 
-const STEPS = ['欢迎', '被照顾者', '照顾者', '城市', '用药', '护理需求', '完成'];
+const STEPS = ['欢迎', '被照顾者', '照顾者', '城市', '用药', '护理需求', '家庭', '完成'];
+
+const FAMILY_EMOJIS = ['👩', '👨', '👵', '👴', '👧', '👦', '🧑', '👩‍⚕️', '👨‍⚕️'];
+const FAMILY_ROLES = [
+  { role: 'caregiver' as const, label: '主要照顾者' },
+  { role: 'family' as const, label: '家庭成员' },
+  { role: 'nurse' as const, label: '护理人员' },
+];
 
 const CARE_NEED_OPTIONS: { id: string; emoji: string; label: string; desc: string }[] = [
   { id: 'memory', emoji: '🧠', label: '记忆/认知', desc: '阿尔茨海默病、失智、记忆力减退' },
@@ -132,6 +139,15 @@ export default function OnboardingScreen() {
   const [reminderMorning, setReminderMorning] = useState('08:00');
   const [reminderEvening, setReminderEvening] = useState('21:00');
 
+  // Family setup
+  const [familyMode, setFamilyMode] = useState<'choose' | 'join' | 'create' | 'skip'>('choose');
+  const [familyRoomCode, setFamilyRoomCode] = useState('');
+  const [familyMemberName, setFamilyMemberName] = useState('');
+  const [familyMemberEmoji, setFamilyMemberEmoji] = useState('👩');
+  const [familyMemberRole, setFamilyMemberRole] = useState<'caregiver' | 'family' | 'nurse'>('caregiver');
+  const [familyMemberRoleLabel, setFamilyMemberRoleLabel] = useState('主要照顾者');
+  const [familyJoinError, setFamilyJoinError] = useState('');
+
   // Care needs
   const [selectedCareNeeds, setSelectedCareNeeds] = useState<string[]>([]);
 
@@ -239,9 +255,28 @@ export default function OnboardingScreen() {
         color: '#FF6B6B',
       });
     }
+    // Handle family setup choice
+    if (familyMode === 'join' && familyRoomCode.trim().length >= 6) {
+      await joinFamilyRoom(familyRoomCode.trim(), {
+        name: familyMemberName.trim() || caregiverName || '家人',
+        role: familyMemberRole,
+        roleLabel: familyMemberRoleLabel,
+        emoji: familyMemberEmoji,
+        color: '#FF6B6B',
+      }).catch(() => {});
+    } else if (familyMode === 'create') {
+      await createFamilyRoom(elderName || '家人', {
+        name: caregiverName || '家人',
+        role: 'caregiver',
+        roleLabel: '主要照顾者',
+        emoji: '👩',
+        color: '#FF6B6B',
+      }).catch(() => {});
+    }
     router.replace('/(tabs)');
   }
 
+  const familyStepValid = familyMode !== 'join' || (familyRoomCode.trim().length >= 6 && familyMemberName.trim().length > 0);
   const canNext = [
     true,                              // 0: welcome
     elderName.trim().length > 0,       // 1: elder info
@@ -249,6 +284,7 @@ export default function OnboardingScreen() {
     city.length > 0,                   // 3: city
     true,                              // 4: medications (optional)
     true,                              // 5: care needs (optional)
+    familyStepValid,                   // 6: family setup
   ][step] ?? true;
 
   return (
@@ -599,8 +635,149 @@ export default function OnboardingScreen() {
           </ScrollView>
         )}
 
-        {/* STEP 6: Done */}
+        {/* STEP 6: Family Setup */}
         {step === 6 && (
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+            <View style={styles.stepContainer}>
+              <Text style={styles.mascot}>🏡</Text>
+              <Text style={styles.title}>家庭共享</Text>
+              <Text style={styles.subtitle}>
+                和家人一起使用{'\n'}
+                共同记录{elderNickname || elderName || '家人'}的护理日常
+              </Text>
+
+              {/* Choose mode */}
+              {familyMode === 'choose' && (
+                <View style={{ width: '100%', gap: 12, marginTop: 8 }}>
+                  <TouchableOpacity style={styles.familyChoiceCard} onPress={() => setFamilyMode('join')} activeOpacity={0.85}>
+                    <Text style={styles.familyChoiceIcon}>🔗</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.familyChoiceTitle}>有邀请码，加入家庭</Text>
+                      <Text style={styles.familyChoiceDesc}>家人已经创建了家庭空间</Text>
+                    </View>
+                    <Text style={{ color: '#9BA1A6' }}>›</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.familyChoiceCard} onPress={() => setFamilyMode('create')} activeOpacity={0.85}>
+                    <Text style={styles.familyChoiceIcon}>✨</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.familyChoiceTitle}>创建新家庭空间</Text>
+                      <Text style={styles.familyChoiceDesc}>之后可以邀请其他家人加入</Text>
+                    </View>
+                    <Text style={{ color: '#9BA1A6' }}>›</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.familySkipBtn} onPress={() => setFamilyMode('skip')} activeOpacity={0.8}>
+                    <Text style={styles.familySkipText}>⏭️ 先跳过，之后再设置</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Join mode */}
+              {familyMode === 'join' && (
+                <View style={{ width: '100%', gap: 0, marginTop: 8 }}>
+                  <TouchableOpacity onPress={() => { setFamilyMode('choose'); setFamilyJoinError(''); }} style={styles.familyBackBtn}>
+                    <Text style={styles.familyBackText}>← 重新选择</Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>邀请码</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="输入6位邀请码"
+                      value={familyRoomCode}
+                      onChangeText={t => { setFamilyRoomCode(t.toUpperCase()); setFamilyJoinError(''); }}
+                      maxLength={6}
+                      autoCapitalize="characters"
+                      placeholderTextColor="#9BA1A6"
+                    />
+                    {familyJoinError ? <Text style={{ color: '#EF4444', fontSize: 13, marginTop: 4 }}>{familyJoinError}</Text> : null}
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>你的名字</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="如：小红、大明..."
+                      value={familyMemberName}
+                      onChangeText={setFamilyMemberName}
+                      placeholderTextColor="#9BA1A6"
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>选择头像</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                      {FAMILY_EMOJIS.map(e => (
+                        <TouchableOpacity
+                          key={e}
+                          style={[styles.familyEmojiBtn, familyMemberEmoji === e && styles.familyEmojiBtnActive]}
+                          onPress={() => setFamilyMemberEmoji(e)}
+                        >
+                          <Text style={{ fontSize: 22 }}>{e}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>身份</Text>
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                      {FAMILY_ROLES.map(r => (
+                        <TouchableOpacity
+                          key={r.role}
+                          style={[styles.familyRoleBtn, familyMemberRole === r.role && styles.familyRoleBtnActive]}
+                          onPress={() => { setFamilyMemberRole(r.role); setFamilyMemberRoleLabel(r.label); }}
+                        >
+                          <Text style={[styles.familyRoleBtnText, familyMemberRole === r.role && styles.familyRoleBtnTextActive]}>
+                            {r.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Create mode */}
+              {familyMode === 'create' && (
+                <View style={{ width: '100%', alignItems: 'center', gap: 12, marginTop: 16 }}>
+                  <View style={styles.familyCreateConfirm}>
+                    <Text style={{ fontSize: 40, marginBottom: 8 }}>🏡</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#11181C', textAlign: 'center' }}>
+                      完成设置后将自动创建{'\n'}你的家庭空间
+                    </Text>
+                    <Text style={{ fontSize: 13, color: '#687076', textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
+                      你可以在家庭共享页面{'\n'}邀请其他家人加入
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setFamilyMode('choose')} style={styles.familyBackBtn}>
+                    <Text style={styles.familyBackText}>← 重新选择</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Skip mode */}
+              {familyMode === 'skip' && (
+                <View style={{ width: '100%', alignItems: 'center', gap: 12, marginTop: 16 }}>
+                  <View style={styles.familyCreateConfirm}>
+                    <Text style={{ fontSize: 40, marginBottom: 8 }}>⏭️</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#11181C', textAlign: 'center' }}>
+                      先跳过没问题
+                    </Text>
+                    <Text style={{ fontSize: 13, color: '#687076', textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
+                      你随时可以在底部「家人共享」页面{'\n'}创建或加入家庭空间
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setFamilyMode('choose')} style={styles.familyBackBtn}>
+                    <Text style={styles.familyBackText}>← 重新选择</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        )}
+
+        {/* STEP 7: Done */}
+        {step === 7 && (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           <View style={styles.stepContainer}>
             <Image source={require('../assets/images/icon.png')} style={styles.mascotImgSm} />
@@ -689,11 +866,11 @@ export default function OnboardingScreen() {
         )}
         <TouchableOpacity
           style={[styles.nextBtn, !canNext && styles.nextBtnDisabled]}
-          onPress={step === 6 ? handleFinish : nextStep}
+          onPress={step === 7 ? handleFinish : nextStep}
           disabled={!canNext}
         >
           <Text style={styles.nextBtnText}>
-            {step === 0 ? '开始设置 →' : step === 6 ? '开始使用小马虎 🐴' : '下一步 →'}
+            {step === 0 ? '开始设置 →' : step === 7 ? '开始使用小马虎 🐴' : step === 6 && familyMode === 'skip' ? '跳过 →' : '下一步 →'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -854,4 +1031,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center',
   },
   careNeedsSkipHint: { fontSize: 12, color: '#9CA3AF', marginTop: 12, textAlign: 'center' },
+  // Family step
+  familyChoiceCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: '#fff', borderRadius: 18, padding: 18,
+    borderWidth: 1.5, borderColor: '#E5E7EB',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+  },
+  familyChoiceIcon: { fontSize: 30 },
+  familyChoiceTitle: { fontSize: 16, fontWeight: '700', color: '#11181C', marginBottom: 2 },
+  familyChoiceDesc: { fontSize: 13, color: '#687076' },
+  familySkipBtn: { alignItems: 'center', paddingVertical: 14 },
+  familySkipText: { fontSize: 14, color: '#9BA1A6', fontWeight: '500' },
+  familyBackBtn: { alignSelf: 'flex-start', paddingVertical: 8, marginBottom: 4 },
+  familyBackText: { fontSize: 14, color: '#687076' },
+  familyEmojiBtn: {
+    width: 44, height: 44, borderRadius: 12, backgroundColor: '#F8F9FA',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#E5E7EB',
+  },
+  familyEmojiBtnActive: { borderColor: '#FF6B6B', backgroundColor: '#FFF0F0' },
+  familyRoleBtn: {
+    flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
+    backgroundColor: '#F8F9FA', borderWidth: 1.5, borderColor: '#E5E7EB',
+  },
+  familyRoleBtnActive: { backgroundColor: '#FFF0F0', borderColor: '#FF6B6B' },
+  familyRoleBtnText: { fontSize: 13, fontWeight: '600', color: '#687076' },
+  familyRoleBtnTextActive: { color: '#FF6B6B' },
+  familyCreateConfirm: {
+    width: '100%', backgroundColor: '#F8F9FA', borderRadius: 20,
+    padding: 24, alignItems: 'center', borderWidth: 1.5, borderColor: '#E5E7EB',
+  },
 });
