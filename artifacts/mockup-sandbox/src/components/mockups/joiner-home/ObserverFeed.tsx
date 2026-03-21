@@ -32,24 +32,41 @@ export function ObserverFeed() {
       </div>
 
       {/* Elder status card */}
-      <div className="mx-5 mb-4 rounded-2xl overflow-hidden shadow-sm">
-        <div className="bg-gradient-to-r from-violet-500 to-purple-600 px-4 py-3 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl">🐂</div>
-          <div className="flex-1">
-            <p className="text-white/80 text-xs font-medium">被照顾者</p>
-            <p className="text-white font-bold text-base">王奶奶 · 今天状态不错 😊</p>
-          </div>
-          <div className="text-right">
-            <p className="text-white text-xl font-black">92</p>
-            <p className="text-white/70 text-xs">护理分</p>
+      <div className="mx-5 mb-4 rounded-2xl overflow-hidden shadow-md border border-violet-100">
+        {/* Top: identity + score */}
+        <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 px-5 pt-4 pb-5">
+          <div className="flex items-center gap-3">
+            {/* Avatar */}
+            <div className="w-13 h-13 flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-2xl shadow-lg ring-2 ring-white/60">🐂</div>
+            </div>
+            {/* Name + status */}
+            <div className="flex-1 min-w-0">
+              <p className="text-violet-200 text-xs font-semibold tracking-wide mb-0.5">被照顾者</p>
+              <p className="text-white font-black text-lg leading-tight">王奶奶</p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+                <p className="text-violet-100 text-xs font-medium">今天状态不错 😊</p>
+              </div>
+            </div>
+            {/* Score badge */}
+            <div className="flex-shrink-0 bg-white/15 backdrop-blur rounded-xl px-3 py-2 text-center border border-white/25">
+              <p className="text-white font-black text-2xl leading-none">92</p>
+              <p className="text-violet-200 text-xs font-semibold mt-0.5">护理分</p>
+            </div>
           </div>
         </div>
-        <div className="bg-white px-4 py-3 flex justify-around">
-          {[{ emoji: "😊", label: "心情", val: "好" }, { emoji: "💤", label: "睡眠", val: "7.5h" }, { emoji: "🍚", label: "饮食", val: "良好" }].map(m => (
-            <div key={m.label} className="text-center">
-              <p className="text-base">{m.emoji}</p>
-              <p className="text-xs text-slate-400">{m.label}</p>
-              <p className="text-sm font-bold text-slate-700">{m.val}</p>
+        {/* Bottom: 3 metrics — overlapping card */}
+        <div className="bg-white px-4 pt-3 pb-3 flex justify-around divide-x divide-slate-100">
+          {[
+            { emoji: "😊", label: "心情", val: "好", color: "#F59E0B" },
+            { emoji: "💤", label: "睡眠", val: "7.5h", color: "#6366F1" },
+            { emoji: "🍚", label: "饮食", val: "良好", color: "#10B981" },
+          ].map(m => (
+            <div key={m.label} className="flex-1 text-center px-2">
+              <p className="text-lg leading-none mb-1">{m.emoji}</p>
+              <p className="text-slate-400 text-xs mb-0.5">{m.label}</p>
+              <p className="text-sm font-bold" style={{ color: m.color }}>{m.val}</p>
             </div>
           ))}
         </div>
