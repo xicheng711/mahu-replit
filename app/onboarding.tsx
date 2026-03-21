@@ -371,14 +371,19 @@ export default function OnboardingScreen() {
 
         {/* STEP 1: Role Selection */}
         {step === 1 && (
-          <View style={styles.stepContainer}>
-            <Text style={styles.mascot}>🌿</Text>
-            <Text style={styles.title}>我们要为谁建立档案？</Text>
-            <Text style={styles.subtitle}>选择您的角色，以便我们提供合适的功能</Text>
-            <View style={{ width: '100%', gap: 14, marginTop: 8 }}>
-              {/* PRIMARY: Creator */}
+          <View style={styles.rolePageWrap}>
+            {/* Leaf icon – centred */}
+            <Text style={[styles.mascot, { alignSelf: 'center' }]}>🌿</Text>
+
+            {/* Title + subtitle: left-aligned */}
+            <Text style={styles.rolePageTitle}>我们要为谁建立档案？</Text>
+            <Text style={styles.rolePageSubtitle}>选择您的角色，以便我们提供合适的功能</Text>
+
+            {/* Cards */}
+            <View style={{ width: '100%', gap: 14, marginTop: 24 }}>
+              {/* Card 1: Primary caregiver */}
               <TouchableOpacity
-                activeOpacity={0.88}
+                activeOpacity={0.86}
                 style={styles.roleCard}
                 onPress={() => {
                   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -386,7 +391,9 @@ export default function OnboardingScreen() {
                   animateTransition(() => setStep(s => s + 1));
                 }}
               >
-                <Text style={styles.roleCardIcon}>📝</Text>
+                <View style={[styles.roleIconBox, { backgroundColor: '#EFF6FF' }]}>
+                  <Text style={styles.roleIconEmoji}>📝</Text>
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.roleCardTitle}>我是主要照顾者</Text>
                   <Text style={styles.roleCardDesc}>负责记录用药、护理日常，并邀请家人协助</Text>
@@ -394,9 +401,9 @@ export default function OnboardingScreen() {
                 <Text style={styles.roleCardArrow}>›</Text>
               </TouchableOpacity>
 
-              {/* SECONDARY: Joiner */}
+              {/* Card 2: Family member */}
               <TouchableOpacity
-                activeOpacity={0.88}
+                activeOpacity={0.86}
                 style={styles.roleCard}
                 onPress={() => {
                   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -404,7 +411,9 @@ export default function OnboardingScreen() {
                   animateTransition(() => setStep(s => s + 1));
                 }}
               >
-                <Text style={styles.roleCardIcon}>👨‍👩‍👧</Text>
+                <View style={[styles.roleIconBox, { backgroundColor: '#FFF7ED' }]}>
+                  <Text style={styles.roleIconEmoji}>👨‍👩‍👧</Text>
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.roleCardTitle}>我是家庭成员</Text>
                   <Text style={styles.roleCardDesc}>已有邀请码，我想查看家人的健康动态</Text>
@@ -1198,18 +1207,34 @@ const styles = StyleSheet.create({
   },
   btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
-  // Role selection cards (step 1) — both identical white cards
+  // ── Role Selection page (step 1) ─────────────────────────────
+  // Outer wrapper: NOT centred — matches Figma left-aligned layout
+  rolePageWrap: { width: '100%', paddingBottom: 16 },
+  rolePageTitle: {
+    fontSize: 26, fontWeight: '600', color: '#11181C',
+    textAlign: 'left', marginTop: 4, marginBottom: 8, lineHeight: 34,
+  },
+  rolePageSubtitle: {
+    fontSize: 14, color: '#9BA1A6', textAlign: 'left', lineHeight: 20,
+  },
+  // Card — white, subtle border + shadow
   roleCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    borderRadius: 20, padding: 20, width: '100%',
+    borderRadius: 16, padding: 16, width: '100%',
     backgroundColor: '#fff',
-    borderWidth: 1.5, borderColor: '#F0F0F0',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3,
+    borderWidth: 1, borderColor: '#EBEBEB',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  roleCardIcon: { fontSize: 36 },
-  roleCardTitle: { fontSize: 16, fontWeight: '700', color: '#11181C', marginBottom: 4 },
+  // iOS app-icon–style icon box
+  roleIconBox: {
+    width: 52, height: 52, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+  },
+  roleIconEmoji: { fontSize: 26 },
+  roleCardTitle: { fontSize: 16, fontWeight: '700', color: '#11181C', marginBottom: 3 },
   roleCardDesc: { fontSize: 13, color: '#687076', lineHeight: 19 },
-  roleCardArrow: { fontSize: 24, color: '#C0C7CF', fontWeight: '300' },
+  roleCardArrow: { fontSize: 22, color: '#C8CDD2', marginLeft: 4 },
 
   // Invite code banner (step 7 creator)
   inviteCodeBanner: {
