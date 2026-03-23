@@ -206,18 +206,21 @@ export default function AssistantScreen() {
 
   const sleepBarData = useMemo(() => {
     const reversed = [...weeklyData].reverse();
-    return reversed.map((d, i) => {
+    return reversed.map((d) => {
       const dayOfWeek = new Date(d.date + 'T00:00:00').getDay();
       const label = WEEKDAY_LABELS[dayOfWeek];
       const hours = d.sleepHours || 0;
-      const color = hours >= 7 ? '#6C9E6C' : hours >= 5 ? '#F59E0B' : hours > 0 ? '#EF4444' : '#E5E7EB';
+      const hasData = hours > 0;
+      const color = hasData
+        ? (hours >= 7 ? '#6EE7B7' : hours >= 5 ? '#FCD34D' : '#FCA5A5')
+        : '#F3F4F6';
       return {
-        value: hours,
+        value: hasData ? hours : 0.15,
         label,
         frontColor: color,
         topLabelComponent: () => (
           <Text style={{ fontSize: 10, color: '#6B7280', marginBottom: 2 }}>
-            {hours > 0 ? `${hours}h` : ''}
+            {hasData ? `${hours}h` : ''}
           </Text>
         ),
       };
@@ -349,35 +352,37 @@ export default function AssistantScreen() {
               </View>
               <View style={s.chartStatRow}>
                 <View style={s.chartStatPill}>
-                  <View style={[s.chartDot, { backgroundColor: '#6C9E6C' }]} />
+                  <View style={[s.chartDot, { backgroundColor: '#6EE7B7' }]} />
                   <Text style={s.chartStatText}>7h+</Text>
                 </View>
                 <View style={s.chartStatPill}>
-                  <View style={[s.chartDot, { backgroundColor: '#F59E0B' }]} />
+                  <View style={[s.chartDot, { backgroundColor: '#FCD34D' }]} />
                   <Text style={s.chartStatText}>5-7h</Text>
                 </View>
                 <View style={s.chartStatPill}>
-                  <View style={[s.chartDot, { backgroundColor: '#EF4444' }]} />
+                  <View style={[s.chartDot, { backgroundColor: '#FCA5A5' }]} />
                   <Text style={s.chartStatText}>&lt;5h</Text>
                 </View>
               </View>
             </View>
-            {sleepBarData.length > 0 && sleepBarData.some(d => d.value > 0) ? (
+            {sleepBarData.length > 0 ? (
               <BarChart
                 data={sleepBarData}
+                adjustToWidth
                 width={CHART_W}
                 height={140}
-                barWidth={28}
-                spacing={16}
-                roundedTop
-                roundedBottom={false}
+                barBorderTopLeftRadius={6}
+                barBorderTopRightRadius={6}
                 noOfSections={4}
                 maxValue={12}
                 yAxisThickness={0}
+                yAxisLabelWidth={30}
                 xAxisThickness={1}
                 xAxisColor="#E5E7EB"
                 rulesColor="#F3F4F6"
                 rulesType="solid"
+                initialSpacing={8}
+                endSpacing={8}
                 yAxisTextStyle={{ fontSize: 10, color: '#9CA3AF' }}
                 xAxisLabelTextStyle={{ fontSize: 11, color: '#6B7280', fontWeight: '500' }}
                 isAnimated
@@ -408,12 +413,18 @@ export default function AssistantScreen() {
                   const ms = endD.getTime() - startD.getTime();
                   const hrs = ms <= 0 ? 0 : Math.min(ms / 3600000, 16);
                   const fmt = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                  const isLast = i === (ci.sleepSegments?.length ?? 1) - 1;
                   return (
                     <View key={i} style={s.segmentRow}>
-                      <View style={[s.segmentDot, { backgroundColor: '#6C9E6C' }]} />
+                      <View style={s.segmentTimeline}>
+                        <View style={[s.segmentDot, { backgroundColor: '#6EE7B7' }]} />
+                        {!isLast && <View style={s.segmentLine} />}
+                      </View>
                       <Text style={s.segmentLabel}>{`睡眠 ${i + 1}`}</Text>
                       <Text style={s.segmentTime}>{fmt(startD)} - {fmt(endD)}</Text>
-                      <Text style={s.segmentDuration}>{Math.round(hrs * 10) / 10}h</Text>
+                      <View style={s.segmentBadge}>
+                        <Text style={s.segmentDuration}>{Math.round(hrs * 10) / 10}h</Text>
+                      </View>
                     </View>
                   );
                 })}
@@ -427,7 +438,7 @@ export default function AssistantScreen() {
 
       <View style={s.bottomBar}>
         <TouchableOpacity onPress={() => router.replace('/(tabs)' as any)} activeOpacity={0.88} style={{ flex: 1 }}>
-          <LinearGradient colors={['#A07858', '#8B6914']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.bottomBtn}>
+          <LinearGradient colors={['#FF6B6B', '#FF8E8E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.bottomBtn}>
             <Text style={s.bottomBtnText}>返回首页</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -496,14 +507,17 @@ const s = StyleSheet.create({
   },
   wakingText: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
   segmentCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 24,
-    borderWidth: 1, borderColor: '#E5E7EB', gap: 10,
+    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, paddingLeft: 12, marginBottom: 24,
+    borderWidth: 1, borderColor: '#E5E7EB',
   },
-  segmentRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  segmentDot: { width: 10, height: 10, borderRadius: 5 },
+  segmentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 36 },
+  segmentTimeline: { width: 16, alignItems: 'center' },
+  segmentDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: '#D1FAE5' },
+  segmentLine: { width: 2, height: 24, backgroundColor: '#E5E7EB', marginTop: 2 },
   segmentLabel: { fontSize: 13, color: '#374151', fontWeight: '600', width: 50 },
   segmentTime: { flex: 1, fontSize: 13, color: '#6B7280' },
-  segmentDuration: { fontSize: 13, fontWeight: '700', color: '#374151' },
+  segmentBadge: { backgroundColor: '#F3F4F6', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8 },
+  segmentDuration: { fontSize: 13, fontWeight: '700', color: '#4B5563' },
   bottomBar: {
     backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 20,
     borderTopWidth: 1, borderTopColor: '#E5E7EB',
