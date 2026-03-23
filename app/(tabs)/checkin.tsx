@@ -584,8 +584,8 @@ function CheckinScreenContent() {
   // Evening fields
   const [moodIdx, setMoodIdx] = useState(1);
   const [medicationTaken, setMedicationTaken] = useState(true);
-  const [mealOptionIdx, setMealOptionIdx] = useState(0); // "正常进食"（智能默认）
-  const [mealNotes, setMealNotes] = useState('');
+  const [mealSelected, setMealSelected] = useState<Set<number>>(new Set([0]));
+  const [mealCustom, setMealCustom] = useState('');
   const [eveningNotes, setEveningNotes] = useState('');
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -666,10 +666,18 @@ function CheckinScreenContent() {
         if (mIdx >= 0) setMoodIdx(mIdx);
         setMedicationTaken(today.medicationTaken ?? true);
         if (today.mealOption) {
-          const idx = MEAL_OPTIONS.indexOf(today.mealOption);
-          if (idx >= 0) setMealOptionIdx(idx);
+          const parts = today.mealOption.split('、');
+          const indices = new Set<number>();
+          let custom = '';
+          parts.forEach(p => {
+            const idx = MEAL_OPTIONS.indexOf(p.trim());
+            if (idx >= 0) indices.add(idx);
+            else if (p.trim()) custom = p.trim();
+          });
+          if (indices.size > 0) setMealSelected(indices);
+          if (custom) setMealCustom(custom);
+          else setMealCustom(today.mealNotes && !MEAL_OPTIONS.includes(today.mealNotes) ? today.mealNotes : '');
         }
-        setMealNotes(today.mealNotes ?? '');
         setEveningNotes(today.eveningNotes ?? '');
       } else {
         // 今日没有数据 → 尝试用最近一次历史打卡预填睡眠字段
@@ -783,8 +791,8 @@ function CheckinScreenContent() {
         moodEmoji: selectedMood.emoji,
         moodScore: selectedMood.score,
         medicationTaken,
-        mealOption: MEAL_OPTIONS[mealOptionIdx],
-        mealNotes: MEAL_OPTIONS[mealOptionIdx],  // 兼容旧字段
+        mealOption: [...mealSelected].map(i => MEAL_OPTIONS[i]).concat(mealCustom.trim() ? [mealCustom.trim()] : []).join('、'),
+        mealNotes: [...mealSelected].map(i => MEAL_OPTIONS[i]).concat(mealCustom.trim() ? [mealCustom.trim()] : []).join('、'),
         eveningNotes,
         eveningDone: true,
       });
@@ -1156,26 +1164,39 @@ function CheckinScreenContent() {
     {
       role: 'elder' as const,
       roleLabel: `【${elderNickname}】的状态`,
-      q: `${elderNickname}今天饮食情况怎么样？`,
+      q: `${elderNickname}今天吃了什么？`,
       emoji: '🍽️',
-      hint: '默认"正常进食"——直接点下一步即可',
+      hint: '可多选，也可以补充具体内容',
       content: (
-        <View style={styles.pillList}>
+        <View style={{ gap: 10 }}>
           {MEAL_OPTIONS.map((label, i) => (
             <TouchableOpacity
               key={i}
-              style={[styles.pillItem, mealOptionIdx === i && styles.pillItemSelected]}
+              style={[styles.pillItem, mealSelected.has(i) && styles.pillItemSelected]}
               onPress={() => {
-                setMealOptionIdx(i);
+                setMealSelected(prev => {
+                  const next = new Set(prev);
+                  if (next.has(i)) next.delete(i);
+                  else next.add(i);
+                  return next;
+                });
                 if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }}
               activeOpacity={0.8}
             >
               <Text style={styles.pillIcon}>{MEAL_ICONS[i]}</Text>
-              <Text style={[styles.pillLabel, mealOptionIdx === i && styles.pillLabelSelected]}>{label}</Text>
-              {mealOptionIdx === i && <Text style={styles.pillCheck}>✓</Text>}
+              <Text style={[styles.pillLabel, mealSelected.has(i) && styles.pillLabelSelected]}>{label}</Text>
+              {mealSelected.has(i) && <Text style={styles.pillCheck}>✓</Text>}
             </TouchableOpacity>
           ))}
+          <TextInput
+            style={styles.mealCustomInput}
+            placeholder={`补充${elderNickname}今天吃的东西…`}
+            value={mealCustom}
+            onChangeText={setMealCustom}
+            placeholderTextColor="#B8BCC0"
+            returnKeyType="done"
+          />
         </View>
       ),
     },
@@ -1468,6 +1489,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA', borderRadius: RADIUS.lg, padding: 16,
     fontSize: 15, color: COLORS.text, borderWidth: 1.5, borderColor: '#EBEBEB',
     minHeight: 110, textAlignVertical: 'top', lineHeight: 22,
+  },
+  mealCustomInput: {
+    backgroundColor: '#F8F9FA', borderRadius: RADIUS.lg, padding: 14,
+    fontSize: 14, color: COLORS.text, borderWidth: 1.5, borderColor: '#E5E7EB',
+    marginTop: 4, lineHeight: 20,
   },
   noteHint: {
     fontSize: 12, color: COLORS.textMuted, marginTop: 8, lineHeight: 18,
