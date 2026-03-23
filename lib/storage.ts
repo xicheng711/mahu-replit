@@ -167,6 +167,15 @@ export interface DiaryEntry {
   conversationFinished?: boolean; // true when user tapped "End and Save"
 }
 
+export interface CareBriefing {
+  date: string;
+  careScore: number;
+  summary: string;
+  encouragement: string;
+  generatedAt: string;
+  checkInDate: string;
+}
+
 // ─── Family Types ───────────────────────────────────────────────────────────
 
 export interface FamilyMember {
@@ -227,6 +236,7 @@ const KEYS = {
   CURRENT_MEMBER: 'current_family_member_v1',
   MEMBERSHIPS: 'family_memberships_v1',
   ACTIVE_FAMILY_ID: 'active_family_id_v1',
+  BRIEFINGS: 'care_briefings_v1',
 } as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -638,6 +648,32 @@ export async function syncMembershipRoom(familyId: string): Promise<void> {
     all[idx].room = room;
     await saveMemberships(all);
   }
+}
+
+// ─── Care Briefings ──────────────────────────────────────────────────────────
+
+export async function saveBriefing(briefing: CareBriefing): Promise<void> {
+  const raw = await AsyncStorage.getItem(KEYS.BRIEFINGS);
+  const all: CareBriefing[] = raw ? JSON.parse(raw) : [];
+  const idx = all.findIndex(b => b.date === briefing.date);
+  if (idx >= 0) all[idx] = briefing;
+  else all.unshift(briefing);
+  const trimmed = all.slice(0, 30);
+  await AsyncStorage.setItem(KEYS.BRIEFINGS, JSON.stringify(trimmed));
+}
+
+export async function getTodayBriefing(): Promise<CareBriefing | null> {
+  const raw = await AsyncStorage.getItem(KEYS.BRIEFINGS);
+  if (!raw) return null;
+  const all: CareBriefing[] = JSON.parse(raw);
+  return all.find(b => b.date === todayStr()) ?? null;
+}
+
+export async function getLatestBriefing(): Promise<CareBriefing | null> {
+  const raw = await AsyncStorage.getItem(KEYS.BRIEFINGS);
+  if (!raw) return null;
+  const all: CareBriefing[] = JSON.parse(raw);
+  return all.length > 0 ? all[0] : null;
 }
 
 let _migrated = false;

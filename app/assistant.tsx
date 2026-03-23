@@ -8,7 +8,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { ScreenContainer } from '@/components/screen-container';
 import {
   getProfile, getYesterdayCheckIn, getTodayCheckIn, upsertCheckIn,
-  getWeeklySleepData, DailyCheckIn,
+  getWeeklySleepData, DailyCheckIn, todayStr,
+  saveBriefing, getTodayBriefing, getLatestBriefing, CareBriefing,
 } from '@/lib/storage';
 import { scoreSleepInput } from '@/lib/sleep-scoring';
 import { trpc } from '@/lib/trpc';
@@ -93,18 +94,6 @@ function formatDateShort(dateStr: string) {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-let _adviceCache: { date: string; key: string; advice: { careScore?: number; summary?: string; encouragement?: string } } | null = null;
-
-function getTodayKey(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-}
-
-function buildCacheKey(today: any, yesterday: any): string {
-  const ci = today ?? yesterday;
-  if (!ci) return 'empty';
-  return [ci.moodScore ?? '', ci.sleepHours ?? '', ci.medicationTaken ?? '', ci.morningNotes ?? '', ci.mealOption ?? ''].join('|');
-}
 
 export default function AssistantScreen() {
   const [advice, setAdvice] = useState<{
@@ -144,14 +133,26 @@ export default function AssistantScreen() {
       const weekly = await getWeeklySleepData(7);
       setWeeklyData(weekly);
 
-      const todayKey = getTodayKey();
-      const cacheKey = buildCacheKey(today, yesterday);
+      const savedBriefing = await getTodayBriefing();
+      const latestCheckInTime = today?.completedAt ?? yesterday?.completedAt ?? '';
+      const briefingIsFresh = savedBriefing && (!latestCheckInTime || savedBriefing.generatedAt >= latestCheckInTime);
 
-      if (_adviceCache && _adviceCache.date === todayKey && _adviceCache.key === cacheKey) {
-        setAdvice(_adviceCache.advice);
+      if (briefingIsFresh) {
+        setAdvice({ careScore: savedBriefing.careScore, summary: savedBriefing.summary, encouragement: savedBriefing.encouragement });
         setLoading(false);
         Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
         return;
+      }
+
+      const hasNewCheckIn = (today?.morningDone || today?.eveningDone || yesterday?.eveningDone);
+      if (!hasNewCheckIn) {
+        const fallback = savedBriefing ?? await getLatestBriefing();
+        if (fallback) {
+          setAdvice({ careScore: fallback.careScore, summary: fallback.summary, encouragement: fallback.encouragement });
+          setLoading(false);
+          Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+          return;
+        }
       }
 
       const sleepData = yesterday?.sleepInput ?? today?.sleepInput ?? null;
@@ -168,21 +169,29 @@ export default function AssistantScreen() {
           sleep_range: yesterday?.sleepRange ?? today?.sleepRange ?? undefined,
         } : undefined,
         today_input: {
-          mood: today?.moodScore && today.moodScore >= 7 ? '良好' : today?.moodScore && today.moodScore >= 5 ? '一般' : '较差',
-          mood_score: today?.moodScore ?? yesterday?.moodScore ?? undefined,
-          medication_taken: today?.medicationTaken ?? yesterday?.medicationTaken ?? undefined,
-          meal: today?.mealOption ?? yesterday?.mealOption ?? undefined,
-          notes: today?.morningNotes || today?.eveningNotes || yesterday?.eveningNotes || undefined,
+          mood: yesterday?.moodScore && yesterday.moodScore >= 7 ? '良好' : yesterday?.moodScore && yesterday.moodScore >= 5 ? '一般' : '较差',
+          mood_score: yesterday?.moodScore ?? undefined,
+          medication_taken: yesterday?.medicationTaken ?? undefined,
+          meal: yesterday?.mealOption ?? undefined,
+          notes: yesterday?.eveningNotes || today?.morningNotes || undefined,
         },
         careNeeds: profile?.careNeeds?.selectedNeeds ?? undefined,
       });
 
       if (result.success && result.advice) {
         setAdvice(result.advice);
-        _adviceCache = { date: todayKey, key: cacheKey, advice: result.advice };
+        const dateStr = todayStr();
+        const briefing: CareBriefing = {
+          date: dateStr,
+          careScore: result.advice.careScore ?? 50,
+          summary: result.advice.summary ?? '',
+          encouragement: result.advice.encouragement ?? '',
+          generatedAt: new Date().toISOString(),
+          checkInDate: yesterday?.date ?? today?.date ?? dateStr,
+        };
+        saveBriefing(briefing).catch(() => {});
         if (result.advice.careScore != null) {
-          const todayDateStr = new Date().toISOString().split('T')[0];
-          upsertCheckIn({ date: todayDateStr, careScore: result.advice.careScore }).catch(() => {});
+          upsertCheckIn({ date: dateStr, careScore: result.advice.careScore }).catch(() => {});
         }
       } else {
         setError(result.error ?? '小马虎暂时无法生成分析');
@@ -251,7 +260,7 @@ export default function AssistantScreen() {
   const score = advice.careScore ?? 70;
   const sd = getScoreDisplay(score);
   const todayLabel = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-  const ci = todayCheckIn ?? yesterdayCheckIn;
+  const ci = yesterdayCheckIn ?? todayCheckIn;
 
   const moodLabel = ci?.moodScore ? (ci.moodScore >= 7 ? '状态不错' : ci.moodScore >= 5 ? '状态一般' : '状态欠佳') : null;
   const moodEmoji = ci?.moodScore ? (ci.moodScore >= 7 ? '😊' : ci.moodScore >= 5 ? '😐' : '😟') : null;

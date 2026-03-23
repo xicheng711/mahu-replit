@@ -175,10 +175,17 @@ The `users` table stores authentication data. The schema is in `drizzle/schema.t
 ### Care Summary Page (app/assistant.tsx) — Refactored
 - **No more AI advice cards** — replaced with data visualization
 - **Care score header**: ring display + summary + encouragement (from simplified AI response)
-- **Yesterday's review cards**: 2x2 grid (情绪/睡眠/用药/饮食) with color-coded backgrounds
+- **Yesterday's review cards**: 2x2 grid (情绪/睡眠/用药/饮食) — **prioritizes yesterdayCheckIn** for correct time-series
 - **Weekly sleep bar chart**: react-native-gifted-charts BarChart, color-coded (green ≥7h, yellow 5-7h, red <5h)
 - **Sleep segment timeline**: shows detailed sleep segments when available
 - **Night waking summary**: weekly total displayed below chart
+
+### Briefing Persistence (lib/storage.ts, app/assistant.tsx) — v5.1
+- **CareBriefing** interface: `{ date, careScore, summary, encouragement, generatedAt, checkInDate }`
+- **Storage key**: `BRIEFINGS = 'care_briefings_v1'` — persists up to 30 briefings
+- **Storage functions**: `saveBriefing()`, `getTodayBriefing()`, `getLatestBriefing()`
+- **Load priority**: (1) today's saved briefing if fresh (generatedAt >= latest check-in completedAt) → (2) if no new check-in, latest saved briefing → (3) generate new via API and persist
+- **Data source fix**: AI prompt `today_input` now reads from yesterday's evening check-in (mood, medication, meal), not mixed today/yesterday
 
 ### New Dependencies
 - `react-native-gifted-charts` — chart library for sleep visualization
