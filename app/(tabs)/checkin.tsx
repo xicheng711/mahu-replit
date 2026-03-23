@@ -557,8 +557,8 @@ const AWAKE_TIME_KEYS: SleepInput['awakeDuration'][] = ['none', '10to30', '30to6
 const NAP_DURATIONS = ['没有', '少于20分钟', '20-60分钟', '1小时以上'];
 const NAP_ICONS = ['☀️', '⏱️', '😪', '🛏️'];
 const NAP_KEYS: NonNullable<SleepInput['napDuration']>[] = ['none', 'lt20', '20to60', 'gt60'];
-const MEAL_OPTIONS = ['正常进食', '食量偏少', '几乎没吃', '吃了特别的东西'];
-const MEAL_ICONS = ['🍽️', '🥢', '🚫', '🍳'];
+const MEAL_OPTIONS = ['正常进食', '食量偏少', '几乎没吃'];
+const MEAL_ICONS = ['🍽️', '🥢', '🚫'];
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 function CheckinScreenContent() {
@@ -584,7 +584,7 @@ function CheckinScreenContent() {
   // Evening fields
   const [moodIdx, setMoodIdx] = useState(1);
   const [medicationTaken, setMedicationTaken] = useState(true);
-  const [mealSelected, setMealSelected] = useState<Set<number>>(new Set([0]));
+  const [mealOptionIdx, setMealOptionIdx] = useState(0);
   const [mealCustom, setMealCustom] = useState('');
   const [eveningNotes, setEveningNotes] = useState('');
 
@@ -667,16 +667,10 @@ function CheckinScreenContent() {
         setMedicationTaken(today.medicationTaken ?? true);
         if (today.mealOption) {
           const parts = today.mealOption.split('、');
-          const indices = new Set<number>();
-          let custom = '';
-          parts.forEach(p => {
-            const idx = MEAL_OPTIONS.indexOf(p.trim());
-            if (idx >= 0) indices.add(idx);
-            else if (p.trim()) custom = p.trim();
-          });
-          if (indices.size > 0) setMealSelected(indices);
-          if (custom) setMealCustom(custom);
-          else setMealCustom(today.mealNotes && !MEAL_OPTIONS.includes(today.mealNotes) ? today.mealNotes : '');
+          const idx = MEAL_OPTIONS.indexOf(parts[0]?.trim());
+          if (idx >= 0) setMealOptionIdx(idx);
+          const customParts = parts.filter(p => !MEAL_OPTIONS.includes(p.trim())).map(p => p.trim()).filter(Boolean);
+          setMealCustom(customParts.join('、') || '');
         }
         setEveningNotes(today.eveningNotes ?? '');
       } else {
@@ -791,8 +785,8 @@ function CheckinScreenContent() {
         moodEmoji: selectedMood.emoji,
         moodScore: selectedMood.score,
         medicationTaken,
-        mealOption: [...mealSelected].map(i => MEAL_OPTIONS[i]).concat(mealCustom.trim() ? [mealCustom.trim()] : []).join('、'),
-        mealNotes: [...mealSelected].map(i => MEAL_OPTIONS[i]).concat(mealCustom.trim() ? [mealCustom.trim()] : []).join('、'),
+        mealOption: [MEAL_OPTIONS[mealOptionIdx]].concat(mealCustom.trim() ? [mealCustom.trim()] : []).join('、'),
+        mealNotes: [MEAL_OPTIONS[mealOptionIdx]].concat(mealCustom.trim() ? [mealCustom.trim()] : []).join('、'),
         eveningNotes,
         eveningDone: true,
       });
@@ -1166,32 +1160,27 @@ function CheckinScreenContent() {
       roleLabel: `【${elderNickname}】的状态`,
       q: `${elderNickname}今天吃了什么？`,
       emoji: '🍽️',
-      hint: '可多选，也可以补充具体内容',
+      hint: '选择饮食情况，也可以补充具体内容',
       content: (
         <View style={{ gap: 10 }}>
           {MEAL_OPTIONS.map((label, i) => (
             <TouchableOpacity
               key={i}
-              style={[styles.pillItem, mealSelected.has(i) && styles.pillItemSelected]}
+              style={[styles.pillItem, mealOptionIdx === i && styles.pillItemSelected]}
               onPress={() => {
-                setMealSelected(prev => {
-                  const next = new Set(prev);
-                  if (next.has(i)) next.delete(i);
-                  else next.add(i);
-                  return next;
-                });
+                setMealOptionIdx(i);
                 if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }}
               activeOpacity={0.8}
             >
               <Text style={styles.pillIcon}>{MEAL_ICONS[i]}</Text>
-              <Text style={[styles.pillLabel, mealSelected.has(i) && styles.pillLabelSelected]}>{label}</Text>
-              {mealSelected.has(i) && <Text style={styles.pillCheck}>✓</Text>}
+              <Text style={[styles.pillLabel, mealOptionIdx === i && styles.pillLabelSelected]}>{label}</Text>
+              {mealOptionIdx === i && <Text style={styles.pillCheck}>✓</Text>}
             </TouchableOpacity>
           ))}
           <TextInput
             style={styles.mealCustomInput}
-            placeholder={`补充${elderNickname}今天吃的东西…`}
+            placeholder={`补充【${elderNickname}】今天吃的东西…`}
             value={mealCustom}
             onChangeText={setMealCustom}
             placeholderTextColor="#B8BCC0"
