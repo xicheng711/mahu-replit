@@ -10,12 +10,12 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
   getProfile, getAllCheckIns, getDiaryEntries, getFamilyAnnouncements,
-  getFamilyRoom, getCurrentMember,
+  getCurrentMember,
   saveFamilyAnnouncement,
   DailyCheckIn, DiaryEntry, FamilyAnnouncement, FamilyMember,
 } from '@/lib/storage';
 import { getLunarDate, getFormattedDate } from '@/lib/lunar';
-import { COLORS, SHADOWS, RADIUS } from '@/lib/animations';
+import { SHADOWS } from '@/lib/animations';
 import { useFamilyContext } from '@/lib/family-context';
 
 // ─── Feed item type ───────────────────────────────────────────────────────────
@@ -102,68 +102,7 @@ function buildFeed(
   return items.sort((a, b) => a.sortKey - b.sortKey);
 }
 
-// ─── Status card ─────────────────────────────────────────────────────────────
-function ElderStatusCard({ elderNickname, elderEmoji, checkIn }: {
-  elderNickname: string;
-  elderEmoji: string;
-  checkIn: DailyCheckIn | null;
-}) {
-  const scale = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.spring(scale, { toValue: 1, speed: 8, bounciness: 10, useNativeDriver: true }).start();
-  }, []);
-
-  const score = checkIn?.careScore;
-  const metrics = [
-    { emoji: checkIn?.moodEmoji || '—',  label: '心情', val: checkIn ? (checkIn.moodScore >= 7 ? '好' : checkIn.moodScore >= 5 ? '还好' : '需关注') : '—', color: '#F59E0B' },
-    { emoji: '💤',                        label: '睡眠', val: checkIn ? `${checkIn.sleepHours}h` : '—', color: '#6366F1' },
-    { emoji: checkIn?.medicationTaken ? '✅' : (checkIn ? '❌' : '—'), label: '用药', val: checkIn ? (checkIn.medicationTaken ? '已服' : '未服') : '—', color: checkIn?.medicationTaken ? '#10B981' : '#EF4444' },
-  ];
-
-  return (
-    <Animated.View style={[styles.elderCard, { transform: [{ scale }] }]}>
-      <LinearGradient
-        colors={['#FFF3E8', '#FDE8EF', '#FDF0F8']}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={styles.elderCardTop}
-      >
-        <View style={styles.elderCardRow}>
-          <View style={styles.elderAvatar}>
-            <Text style={{ fontSize: 26 }}>{elderEmoji}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.elderLabel}>被照顾者</Text>
-            <Text style={styles.elderName}>{elderNickname}</Text>
-            <View style={styles.elderStatusRow}>
-              <View style={[styles.statusDot, { backgroundColor: checkIn ? '#34D399' : '#D1D5DB' }]} />
-              <Text style={styles.elderStatusText}>
-                {checkIn ? (checkIn.moodScore >= 7 ? '今天状态不错 😊' : checkIn.moodScore >= 5 ? '今天还好 😌' : '需要多关注 💜') : '暂无今日记录'}
-              </Text>
-            </View>
-          </View>
-          {score != null && (
-            <View style={styles.scoreBadge}>
-              <Text style={styles.scoreNumber}>{score}</Text>
-              <Text style={styles.scoreLabel}>护理分</Text>
-            </View>
-          )}
-        </View>
-      </LinearGradient>
-      <View style={styles.metricsRow}>
-        {metrics.map((m, i) => (
-          <React.Fragment key={m.label}>
-            {i > 0 && <View style={styles.metricDivider} />}
-            <View style={styles.metricItem}>
-              <Text style={{ fontSize: 18, lineHeight: 22 }}>{m.emoji}</Text>
-              <Text style={styles.metricLabel}>{m.label}</Text>
-              <Text style={[styles.metricVal, { color: m.color }]}>{m.val}</Text>
-            </View>
-          </React.Fragment>
-        ))}
-      </View>
-    </Animated.View>
-  );
-}
+// ElderStatusCard is now rendered inline in JoinerHomeScreen for richer layout
 
 // ─── Announcement card ────────────────────────────────────────────────────────
 function AnnouncementCard({ latest, onPost, onViewAll }: {
@@ -259,7 +198,7 @@ function UpgradeCard({ onPress }: { onPress: () => void }) {
       <Text style={styles.upgradeDesc}>打卡、用药、日记是主要照顾者的专属功能。{'\n'}创建自己的家庭档案，即可解锁完整记录能力。</Text>
       <TouchableOpacity style={styles.upgradeBtn} onPress={onPress} activeOpacity={0.85}>
         <LinearGradient
-          colors={['#FF8904', '#FF637E', '#F6339A']}
+          colors={['#8B5CF6', '#7C3AED', '#6D28D9']}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
           style={styles.upgradeBtnGradient}
         >
@@ -427,10 +366,31 @@ export function JoinerHomeScreen() {
     router.push('/(modals)/create-family' as any);
   }
 
+  const greetingText = (() => {
+    const h = new Date().getHours();
+    if (h < 6) return '夜深了，注意休息';
+    if (h < 11) return '早上好';
+    if (h < 14) return '中午好';
+    if (h < 18) return '下午好';
+    return '晚上好';
+  })();
+
+  const TIPS = [
+    '每天关注家人的状态，是最温暖的守护 💛',
+    '一个微笑、一声问候，都是爱的传递 🌸',
+    '陪伴是最长情的告白，感谢您的坚持 ✨',
+    '记录下每一个美好的瞬间 📝',
+    '家人的健康，从日常的点滴开始 🌿',
+  ];
+  const today = new Date();
+  const localDay = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  const dailyTip = TIPS[localDay % TIPS.length];
+
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient
-        colors={['#FFF7ED', '#FDF2F8', '#FAF5FF']}
+        colors={['#FFF8F0', '#FEF0F5', '#F8F0FF', '#F0F4FF']}
+        locations={[0, 0.3, 0.6, 1]}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
@@ -439,65 +399,131 @@ export function JoinerHomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
+        {/* ── Header ── */}
         <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.dateText}>{todayLabel}</Text>
-            <Text style={styles.lunarText}>{lunarDate.full}</Text>
-            {/* Tappable family name → switcher */}
+            <View style={styles.dateRow}>
+              <Text style={styles.dateText}>{todayLabel}</Text>
+              <Text style={styles.lunarDot}>·</Text>
+              <Text style={styles.lunarText}>{lunarDate.full}</Text>
+            </View>
             <TouchableOpacity
               onPress={() => memberships.length > 1 && setShowSwitcher(true)}
               activeOpacity={memberships.length > 1 ? 0.7 : 1}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
             >
-              <Text style={styles.pageTitle}>{elderNickname}的今日动态</Text>
-              {memberships.length > 1 && <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>▼</Text>}
+              <Text style={styles.pageTitle}>{greetingText} 👋</Text>
+              {memberships.length > 1 && <Text style={styles.switcher}>▼</Text>}
             </TouchableOpacity>
           </View>
-          {/* Avatar → Profile */}
           <TouchableOpacity
             style={styles.headerAvatar}
             onPress={() => router.push('/profile' as any)}
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={['#FFAB9B', '#FF8C7A']}
+              colors={['#F9A8D4', '#F472B6']}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}
+              style={styles.avatarGradient}
             >
-              <Text style={{ fontSize: 20 }}>{currentMember?.emoji || '👤'}</Text>
+              <Text style={{ fontSize: 22 }}>{currentMember?.emoji || '👤'}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Announcement card */}
+        {/* ── Daily Tip Banner ── */}
+        <View style={styles.tipBanner}>
+          <LinearGradient
+            colors={['#FFF7ED', '#FFFBEB']}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={styles.tipBannerInner}
+          >
+            <Text style={styles.tipIcon}>🌱</Text>
+            <Text style={styles.tipText}>{dailyTip}</Text>
+          </LinearGradient>
+        </View>
+
+        {/* ── Elder Status Card (redesigned) ── */}
+        <View style={styles.elderCardNew}>
+          <LinearGradient
+            colors={['#FFFFFF', '#FFF9F5']}
+            style={styles.elderCardBody}
+          >
+            <View style={styles.elderHeaderRow}>
+              <View style={styles.elderAvatarNew}>
+                <LinearGradient
+                  colors={['#FBBF24', '#F59E0B']}
+                  style={styles.elderAvatarGrad}
+                >
+                  <Text style={{ fontSize: 28 }}>{elderEmoji}</Text>
+                </LinearGradient>
+                <View style={[styles.statusIndicator, { backgroundColor: latestCheckIn ? '#34D399' : '#D1D5DB' }]} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.elderLabelNew}>被照顾者</Text>
+                <Text style={styles.elderNameNew}>{elderNickname}</Text>
+                <Text style={styles.elderStatusNew}>
+                  {latestCheckIn
+                    ? (latestCheckIn.moodScore >= 7 ? '😊 今天状态不错' : latestCheckIn.moodScore >= 5 ? '😌 今天还好' : '💜 需要多关注')
+                    : '📋 暂无今日记录'}
+                </Text>
+              </View>
+              {latestCheckIn?.careScore != null && (
+                <View style={styles.scoreBadgeNew}>
+                  <Text style={styles.scoreNumberNew}>{latestCheckIn.careScore}</Text>
+                  <Text style={styles.scoreLabelNew}>分</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.metricsRowNew}>
+              {[
+                { emoji: latestCheckIn?.moodEmoji || '😊', label: '心情', val: latestCheckIn ? (latestCheckIn.moodScore >= 7 ? '好' : latestCheckIn.moodScore >= 5 ? '还好' : '需关注') : '—', color: '#F59E0B', bg: '#FFFBEB' },
+                { emoji: '💤', label: '睡眠', val: latestCheckIn ? `${latestCheckIn.sleepHours}h` : '—', color: '#6366F1', bg: '#EEF2FF' },
+                { emoji: latestCheckIn?.medicationTaken ? '✅' : (latestCheckIn ? '⚠️' : '💊'), label: '用药', val: latestCheckIn ? (latestCheckIn.medicationTaken ? '已服' : '未服') : '—', color: latestCheckIn?.medicationTaken ? '#10B981' : '#EF4444', bg: latestCheckIn?.medicationTaken ? '#ECFDF5' : '#FEF2F2' },
+              ].map((m) => (
+                <View key={m.label} style={[styles.metricItemNew, { backgroundColor: m.bg }]}>
+                  <Text style={{ fontSize: 20 }}>{m.emoji}</Text>
+                  <Text style={styles.metricLabelNew}>{m.label}</Text>
+                  <Text style={[styles.metricValNew, { color: m.color }]}>{m.val}</Text>
+                </View>
+              ))}
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* ── Announcement Card ── */}
         <AnnouncementCard
           latest={latestAnnounce}
           onPost={() => setPostModal(true)}
           onViewAll={() => router.push('/family' as any)}
         />
 
-        {/* Elder status */}
-        <ElderStatusCard
-          elderNickname={elderNickname}
-          elderEmoji={elderEmoji}
-          checkIn={latestCheckIn}
-        />
-
-        {/* Feed */}
+        {/* ── Feed ── */}
         {feed.length > 0 && (
           <View style={styles.feedSection}>
-            <Text style={styles.feedSectionLabel}>今日活动记录</Text>
+            <View style={styles.feedLabelRow}>
+              <Text style={styles.feedLabelIcon}>📋</Text>
+              <Text style={styles.feedSectionLabel}>今日活动记录</Text>
+            </View>
             {feed.map((item, i) => (
               <FeedRow key={item.id} item={item} isLast={i === feed.length - 1} />
             ))}
           </View>
         )}
 
-        {/* Upgrade card */}
+        {/* ── Empty state when no feed ── */}
+        {feed.length === 0 && (
+          <View style={styles.emptyFeed}>
+            <Text style={styles.emptyFeedEmoji}>🌤️</Text>
+            <Text style={styles.emptyFeedTitle}>今天还没有新动态</Text>
+            <Text style={styles.emptyFeedSub}>主要照顾者完成打卡后，{'\n'}这里会显示{elderNickname}的最新状态</Text>
+          </View>
+        )}
+
+        {/* ── Upgrade Card ── */}
         <UpgradeCard onPress={goSetup} />
 
-        <View style={{ height: 20 }} />
+        <View style={{ height: 24 }} />
       </ScrollView>
 
       <PostAnnouncementModal
@@ -547,41 +573,63 @@ export function JoinerHomeScreen() {
 const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
 
-  // Header
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 20, paddingBottom: 16 },
-  dateText: { fontSize: 12, fontWeight: '600', color: '#9CA3AF', letterSpacing: 0.3, marginBottom: 2 },
-  lunarText: { fontSize: 11, color: '#B07848', fontWeight: '500', marginBottom: 6 },
-  pageTitle: { fontSize: 20, fontWeight: '800', color: '#1A1A2E', letterSpacing: -0.3 },
-  headerAvatar: {
-    ...SHADOWS.md,
-    borderRadius: 22, overflow: 'hidden',
-  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 16, paddingBottom: 12 },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  dateText: { fontSize: 12, fontWeight: '600', color: '#9CA3AF', letterSpacing: 0.3 },
+  lunarDot: { fontSize: 12, color: '#D1D5DB' },
+  lunarText: { fontSize: 11, color: '#B07848', fontWeight: '500' },
+  pageTitle: { fontSize: 22, fontWeight: '900', color: '#1A1A2E', letterSpacing: -0.3 },
+  switcher: { fontSize: 11, color: '#9CA3AF', marginTop: 4 },
+  headerAvatar: { ...SHADOWS.md, borderRadius: 24, overflow: 'hidden' },
+  avatarGradient: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
 
-  // Family Switcher
-  switcherOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  switcherSheet: {
-    backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 36,
-    ...SHADOWS.lg,
+  tipBanner: { marginBottom: 16 },
+  tipBannerInner: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12,
+    borderWidth: 1, borderColor: '#FDE68A',
   },
-  switcherTitle: { fontSize: 17, fontWeight: '800', color: '#1A1A2E', textAlign: 'center', marginBottom: 16 },
-  switcherRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14,
-    marginBottom: 8, backgroundColor: '#F9FAFB',
-  },
-  switcherRowActive: { backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#6C9E6C' },
-  switcherName: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
-  switcherRole: { fontSize: 12, color: '#6B7280' },
-  switcherAddBtn: { marginTop: 8, paddingVertical: 14, alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: '#E5E7EB', borderStyle: 'dashed' },
-  switcherAddText: { fontSize: 14, fontWeight: '700', color: '#9CA3AF' },
+  tipIcon: { fontSize: 20 },
+  tipText: { fontSize: 13, color: '#92400E', fontWeight: '600', flex: 1, lineHeight: 19 },
 
-  // Announcement card
+  elderCardNew: {
+    borderRadius: 20, marginBottom: 16, overflow: 'hidden',
+    ...SHADOWS.md, borderWidth: 1.5, borderColor: '#FDE8D0',
+  },
+  elderCardBody: { borderRadius: 20, padding: 18 },
+  elderHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
+  elderAvatarNew: { position: 'relative' },
+  elderAvatarGrad: {
+    width: 56, height: 56, borderRadius: 28,
+    alignItems: 'center', justifyContent: 'center',
+    ...SHADOWS.sm,
+  },
+  statusIndicator: {
+    position: 'absolute', bottom: 0, right: 0,
+    width: 14, height: 14, borderRadius: 7,
+    borderWidth: 2.5, borderColor: '#FFFFFF',
+  },
+  elderLabelNew: { fontSize: 11, fontWeight: '700', color: '#F97316', letterSpacing: 0.5, marginBottom: 2 },
+  elderNameNew: { fontSize: 20, fontWeight: '900', color: '#1A1A2E', letterSpacing: -0.3, marginBottom: 3 },
+  elderStatusNew: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
+  scoreBadgeNew: {
+    backgroundColor: '#FFF7ED', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10,
+    alignItems: 'center', borderWidth: 1.5, borderColor: '#FDBA74',
+  },
+  scoreNumberNew: { fontSize: 26, fontWeight: '900', color: '#EA580C', lineHeight: 28 },
+  scoreLabelNew: { fontSize: 10, color: '#9CA3AF', fontWeight: '600', marginTop: 1 },
+  metricsRowNew: { flexDirection: 'row', gap: 10 },
+  metricItemNew: {
+    flex: 1, alignItems: 'center', gap: 4,
+    paddingVertical: 12, borderRadius: 14,
+  },
+  metricLabelNew: { fontSize: 11, color: '#6B7280', fontWeight: '500' },
+  metricValNew: { fontSize: 14, fontWeight: '800' },
+
   announceCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 18, marginBottom: 12,
+    backgroundColor: '#FFFFFF', borderRadius: 18, marginBottom: 16,
     borderWidth: 1.5, borderColor: '#BAE6FD',
-    ...SHADOWS.md,
-    overflow: 'hidden',
+    ...SHADOWS.md, overflow: 'hidden',
   },
   announceHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 10 },
   announceHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -600,28 +648,10 @@ const styles = StyleSheet.create({
   viewAllBtn: { borderTopWidth: 1, borderTopColor: '#E0F2FE', paddingVertical: 10, backgroundColor: '#F0F9FF', alignItems: 'center' },
   viewAllBtnText: { fontSize: 12, fontWeight: '700', color: '#38BDF8' },
 
-  // Elder card
-  elderCard: { borderRadius: 18, marginBottom: 12, overflow: 'hidden', ...SHADOWS.md, borderWidth: 1, borderColor: '#FDE8D8' },
-  elderCardTop: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 },
-  elderCardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  elderAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 3, borderWidth: 2, borderColor: '#FFE4D6' },
-  elderLabel: { fontSize: 11, fontWeight: '600', color: '#F97316', letterSpacing: 0.5, marginBottom: 2 },
-  elderName: { fontSize: 18, fontWeight: '900', color: '#1A1A2E', letterSpacing: -0.3 },
-  elderStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
-  statusDot: { width: 7, height: 7, borderRadius: 4 },
-  elderStatusText: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
-  scoreBadge: { backgroundColor: '#FFFFFF', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', ...SHADOWS.sm, borderWidth: 1, borderColor: '#FFE4D6' },
-  scoreNumber: { fontSize: 24, fontWeight: '900', color: '#F97316', lineHeight: 26 },
-  scoreLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 1 },
-  metricsRow: { flexDirection: 'row', backgroundColor: '#FFFFFF', paddingVertical: 12 },
-  metricItem: { flex: 1, alignItems: 'center', gap: 3 },
-  metricDivider: { width: 1, backgroundColor: '#F3F4F6', marginVertical: 4 },
-  metricLabel: { fontSize: 11, color: '#9CA3AF' },
-  metricVal: { fontSize: 13, fontWeight: '700' },
-
-  // Feed
-  feedSection: { marginBottom: 12 },
-  feedSectionLabel: { fontSize: 11, fontWeight: '700', color: '#9CA3AF', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 },
+  feedSection: { marginBottom: 16 },
+  feedLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
+  feedLabelIcon: { fontSize: 14 },
+  feedSectionLabel: { fontSize: 13, fontWeight: '700', color: '#374151', letterSpacing: 0.3 },
   feedRow: { flexDirection: 'row', gap: 12, marginBottom: 4 },
   feedTimeline: { alignItems: 'center', width: 30 },
   feedDot: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
@@ -637,19 +667,42 @@ const styles = StyleSheet.create({
   feedTitle: { fontSize: 13, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
   feedDetail: { fontSize: 12, color: '#6B7280', lineHeight: 17 },
 
-  // Upgrade
-  upgradeCard: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16, marginBottom: 12, ...SHADOWS.md, borderWidth: 1, borderColor: '#E5E7EB' },
-  upgradeSectionLabel: { fontSize: 11, fontWeight: '700', color: '#9CA3AF', letterSpacing: 0.8, marginBottom: 14 },
-  upgradeIconRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 14 },
-  upgradeIconItem: { alignItems: 'center', gap: 5 },
-  upgradeIconBox: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
-  upgradeIconLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '500' },
-  upgradeDesc: { fontSize: 13, color: '#6B7280', lineHeight: 20, textAlign: 'center', marginBottom: 14 },
-  upgradeBtn: { borderRadius: 14, overflow: 'hidden' },
-  upgradeBtnGradient: { paddingVertical: 14, alignItems: 'center' },
-  upgradeBtnText: { fontSize: 14, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.2 },
+  emptyFeed: { alignItems: 'center', paddingVertical: 28, marginBottom: 16 },
+  emptyFeedEmoji: { fontSize: 36, marginBottom: 8 },
+  emptyFeedTitle: { fontSize: 15, fontWeight: '700', color: '#9CA3AF', marginBottom: 4 },
+  emptyFeedSub: { fontSize: 13, color: '#B0B8C4', textAlign: 'center', lineHeight: 20 },
 
-  // Modal
+  upgradeCard: {
+    backgroundColor: '#FFFFFF', borderRadius: 20, padding: 20, marginBottom: 12,
+    ...SHADOWS.md, borderWidth: 1.5, borderColor: '#F3E8FF',
+  },
+  upgradeSectionLabel: { fontSize: 12, fontWeight: '700', color: '#7C3AED', letterSpacing: 0.5, marginBottom: 16 },
+  upgradeIconRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 16 },
+  upgradeIconItem: { alignItems: 'center', gap: 6 },
+  upgradeIconBox: { width: 56, height: 56, borderRadius: 18, backgroundColor: '#F5F3FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E9D5FF' },
+  upgradeIconLabel: { fontSize: 12, color: '#7C3AED', fontWeight: '600' },
+  upgradeDesc: { fontSize: 13, color: '#6B7280', lineHeight: 20, textAlign: 'center', marginBottom: 16 },
+  upgradeBtn: { borderRadius: 16, overflow: 'hidden' },
+  upgradeBtnGradient: { paddingVertical: 15, alignItems: 'center' },
+  upgradeBtnText: { fontSize: 15, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.3 },
+
+  switcherOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  switcherSheet: {
+    backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 36, ...SHADOWS.lg,
+  },
+  switcherTitle: { fontSize: 17, fontWeight: '800', color: '#1A1A2E', textAlign: 'center', marginBottom: 16 },
+  switcherRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14,
+    marginBottom: 8, backgroundColor: '#F9FAFB',
+  },
+  switcherRowActive: { backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#6C9E6C' },
+  switcherName: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
+  switcherRole: { fontSize: 12, color: '#6B7280' },
+  switcherAddBtn: { marginTop: 8, paddingVertical: 14, alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: '#E5E7EB', borderStyle: 'dashed' },
+  switcherAddText: { fontSize: 14, fontWeight: '700', color: '#9CA3AF' },
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 36 },
   modalHandle: { width: 40, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
