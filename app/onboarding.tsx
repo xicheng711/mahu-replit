@@ -421,7 +421,7 @@ export default function OnboardingScreen() {
               {[
                 { icon: '🌅', label: '每日护理', desc: '贴心建议', color: '#FEF3C7', border: '#FDE68A' },
                 { icon: '💊', label: '用药管理', desc: '按时提醒', color: '#DBEAFE', border: '#93C5FD' },
-                { icon: '📔', label: '护理日记', desc: '温暖记录', color: '#FCE7F3', border: '#F9A8D4' },
+                { icon: '📔', label: '护理日记', desc: '智能陪伴', color: '#FCE7F3', border: '#F9A8D4' },
                 { icon: '🤝', label: '家庭共享', desc: '全家守护', color: '#D1FAE5', border: '#6EE7B7' },
               ].map(f => (
                 <View key={f.icon} style={[styles.featureCard, { backgroundColor: f.color, borderColor: f.border }]}>
