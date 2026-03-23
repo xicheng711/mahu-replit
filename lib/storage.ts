@@ -199,6 +199,8 @@ export interface FamilyRoom {
   id: string;
   roomCode: string;    // 6位邀请码
   elderName: string;
+  elderEmoji?: string;
+  elderPhotoUri?: string;
   members: FamilyMember[];
   createdAt: string;
 }
@@ -446,7 +448,7 @@ export async function getCurrentUserIsCreator(): Promise<boolean> {
   return member?.isCreator === true;
 }
 
-export async function createFamilyRoom(elderName: string, firstMember: Omit<FamilyMember, 'id' | 'joinedAt'>, existingCode?: string): Promise<FamilyRoom> {
+export async function createFamilyRoom(elderName: string, firstMember: Omit<FamilyMember, 'id' | 'joinedAt'>, existingCode?: string, elderOpts?: { emoji?: string; photoUri?: string }): Promise<FamilyRoom> {
   const member: FamilyMember = {
     id: generateId(),
     ...firstMember,
@@ -458,6 +460,8 @@ export async function createFamilyRoom(elderName: string, firstMember: Omit<Fami
     id: generateId(),
     roomCode: existingCode ?? generateRoomCode(),
     elderName,
+    elderEmoji: elderOpts?.emoji,
+    elderPhotoUri: elderOpts?.photoUri,
     members: [member],
     createdAt: new Date().toISOString(),
   };

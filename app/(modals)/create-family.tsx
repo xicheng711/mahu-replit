@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, Animated, Easing, Platform,
+  StyleSheet, Animated, Easing, Platform, Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import {
   createFamilyRoom, getProfile, saveProfile, generateId,
   addOrUpdateMembership, setActiveFamilyId, FamilyMembership,
@@ -21,7 +22,6 @@ const ROLES = [
   { role: 'family' as const, label: '家庭成员', desc: '关注家人动态' },
   { role: 'nurse' as const, label: '护理人员', desc: '专业护理支持' },
 ];
-const RELATIONSHIPS = ['女儿', '儿子', '孙女', '孙子', '外孙女', '外孙', '媳妇', '女婿', '兄弟姐妹', '护理员', '其他'];
 const MEMBER_COLORS = ['#6C9E6C', '#E07B4A', '#7B7EC8', '#E07B9A', '#4A9EC8', '#C89A4A'];
 
 export default function CreateFamilyModal() {
@@ -34,24 +34,43 @@ export default function CreateFamilyModal() {
   // Elder info
   const [elderName, setElderName] = useState('');
   const [elderEmoji, setElderEmoji] = useState('👵');
+  const [elderPhotoUri, setElderPhotoUri] = useState('');
 
   // My info
   const [myName, setMyName] = useState('');
   const [myRole, setMyRole] = useState<'caregiver' | 'family' | 'nurse'>('caregiver');
   const [myRoleLabel, setMyRoleLabel] = useState('主要照顾者');
   const [myEmoji, setMyEmoji] = useState('👩');
-  const [myRelationship, setMyRelationship] = useState('');
+  const [myPhotoUri, setMyPhotoUri] = useState('');
   const [myColor, setMyColor] = useState(MEMBER_COLORS[0]);
 
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Pre-fill name from existing profile
     getProfile().then(p => {
       if (p?.caregiverName) setMyName(p.caregiverName);
     });
   }, []);
+
+  async function pickPhoto(target: 'elder' | 'my') {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      if (target === 'elder') {
+        setElderPhotoUri(result.assets[0].uri);
+      } else {
+        setMyPhotoUri(result.assets[0].uri);
+      }
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  }
 
   function animateNext() {
     Animated.sequence([
@@ -74,12 +93,13 @@ export default function CreateFamilyModal() {
       const room = await createFamilyRoom(elderName.trim(), {
         name: myName.trim() || '我',
         role: myRole,
-        roleLabel: myRelationship || myRoleLabel,
+        roleLabel: myRoleLabel,
         emoji: myEmoji,
+        photoUri: myPhotoUri || undefined,
         color: myColor,
         isCreator: true,
         isCurrentUser: true,
-      });
+      }, undefined, { emoji: elderEmoji, photoUri: elderPhotoUri || undefined });
       // Refresh family context
       await refresh();
       // Navigate back to home
@@ -93,7 +113,7 @@ export default function CreateFamilyModal() {
   }
 
   const canGoNext0 = elderName.trim().length >= 1;
-  const canGoNext1 = myName.trim().length >= 1 && myRelationship.length > 0;
+  const canGoNext1 = myName.trim().length >= 1;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -143,17 +163,39 @@ export default function CreateFamilyModal() {
               />
 
               <Text style={styles.fieldLabel}>头像</Text>
-              <View style={styles.emojiRow}>
-                {ELDER_EMOJIS.map(e => (
-                  <TouchableOpacity
-                    key={e}
-                    style={[styles.emojiBtn, elderEmoji === e && styles.emojiBtnActive]}
-                    onPress={() => setElderEmoji(e)}
-                  >
-                    <Text style={{ fontSize: 26 }}>{e}</Text>
+              <View style={styles.avatarSection}>
+                <TouchableOpacity style={styles.photoBtn} onPress={() => pickPhoto('elder')} activeOpacity={0.7}>
+                  {elderPhotoUri ? (
+                    <Image source={{ uri: elderPhotoUri }} style={styles.photoPreview} />
+                  ) : (
+                    <View style={styles.photoBtnInner}>
+                      <Text style={{ fontSize: 28 }}>📷</Text>
+                      <Text style={styles.photoBtnLabel}>上传照片</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                {elderPhotoUri ? (
+                  <TouchableOpacity onPress={() => setElderPhotoUri('')} style={styles.clearPhotoBtn}>
+                    <Text style={styles.clearPhotoText}>✕ 移除照片</Text>
                   </TouchableOpacity>
-                ))}
+                ) : null}
               </View>
+              {!elderPhotoUri && (
+                <>
+                  <Text style={[styles.fieldLabel, { marginTop: 12 }]}>或选择一个表情头像</Text>
+                  <View style={styles.emojiRow}>
+                    {ELDER_EMOJIS.map(e => (
+                      <TouchableOpacity
+                        key={e}
+                        style={[styles.emojiBtn, elderEmoji === e && styles.emojiBtnActive]}
+                        onPress={() => setElderEmoji(e)}
+                      >
+                        <Text style={{ fontSize: 26 }}>{e}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
             </View>
           )}
 
@@ -161,7 +203,7 @@ export default function CreateFamilyModal() {
             <View>
               <Text style={styles.stepLabel}>Step 2</Text>
               <Text style={styles.stepTitle}>您是谁？</Text>
-              <Text style={styles.stepDesc}>告诉我们您与{elderName}的关系</Text>
+              <Text style={styles.stepDesc}>设置您的个人信息</Text>
 
               <Text style={styles.fieldLabel}>您的名字</Text>
               <TextInput
@@ -191,7 +233,42 @@ export default function CreateFamilyModal() {
                 </TouchableOpacity>
               ))}
 
-              <Text style={styles.fieldLabel}>头像颜色</Text>
+              <Text style={styles.fieldLabel}>头像</Text>
+              <View style={styles.avatarSection}>
+                <TouchableOpacity style={styles.photoBtn} onPress={() => pickPhoto('my')} activeOpacity={0.7}>
+                  {myPhotoUri ? (
+                    <Image source={{ uri: myPhotoUri }} style={styles.photoPreview} />
+                  ) : (
+                    <View style={styles.photoBtnInner}>
+                      <Text style={{ fontSize: 28 }}>📷</Text>
+                      <Text style={styles.photoBtnLabel}>上传照片</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                {myPhotoUri ? (
+                  <TouchableOpacity onPress={() => setMyPhotoUri('')} style={styles.clearPhotoBtn}>
+                    <Text style={styles.clearPhotoText}>✕ 移除照片</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+              {!myPhotoUri && (
+                <>
+                  <Text style={[styles.fieldLabel, { marginTop: 12 }]}>或选择表情头像</Text>
+                  <View style={styles.emojiRow}>
+                    {MY_EMOJIS.map(e => (
+                      <TouchableOpacity
+                        key={e}
+                        style={[styles.emojiBtn, myEmoji === e && styles.emojiBtnActive]}
+                        onPress={() => setMyEmoji(e)}
+                      >
+                        <Text style={{ fontSize: 26 }}>{e}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
+
+              <Text style={styles.fieldLabel}>主题颜色</Text>
               <View style={styles.colorRow}>
                 {MEMBER_COLORS.map(c => (
                   <TouchableOpacity
@@ -291,6 +368,14 @@ const styles = StyleSheet.create({
   colorRow: { flexDirection: 'row', gap: 10 },
   colorBtn: { width: 32, height: 32, borderRadius: 16 },
   colorBtnActive: { borderWidth: 3, borderColor: '#FFFFFF', ...SHADOWS.md },
+
+  avatarSection: { alignItems: 'center', marginBottom: 4 },
+  photoBtn: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#E5E7EB', borderStyle: 'dashed', overflow: 'hidden' },
+  photoBtnInner: { alignItems: 'center', justifyContent: 'center' },
+  photoBtnLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 4 },
+  photoPreview: { width: 100, height: 100, borderRadius: 50 },
+  clearPhotoBtn: { marginTop: 8, paddingVertical: 4, paddingHorizontal: 12 },
+  clearPhotoText: { fontSize: 12, color: '#EF4444', fontWeight: '600' },
 
   footer: { paddingHorizontal: 24, paddingTop: 12 },
   nextBtn: { borderRadius: 16, overflow: 'hidden' },
