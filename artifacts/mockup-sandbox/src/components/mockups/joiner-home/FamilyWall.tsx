@@ -17,7 +17,7 @@ export function FamilyWall() {
       id: 2,
       author: "小明", emoji: "👨", color: "#6C9E6C",
       time: "今天 10:15", tag: "🌿 日常", tagColor: "#ECFDF5", tagText: "#065F46",
-      content: "今天带奶奶在楼下花园散步20分钟，她说"腿感觉轻多了"，血压也比上周好了。☀️",
+      content: "今天带奶奶在楼下花园散步20分钟，她说「腿感觉轻多了」，血压也比上周好了。☀️",
       likes: 1,
     },
   ];
