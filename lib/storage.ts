@@ -79,6 +79,12 @@ export type SleepInput = {
   notes?: string;
 };
 
+// ─── Sleep Segment (v5.0) — 详细睡眠时间段 ──────────────────────────────────
+export interface SleepSegment {
+  start: string;  // ISO 8601, e.g. "2026-03-22T23:00:00Z"
+  end: string;    // ISO 8601, e.g. "2026-03-23T06:30:00Z"
+}
+
 export interface DailyCheckIn {
   id: string;
   date: string;            // YYYY-MM-DD
@@ -89,14 +95,19 @@ export interface DailyCheckIn {
   sleepInput?: SleepInput;
   sleepScore?: number;       // 0-100，规则引擎计算，非AI
   sleepProblems?: string[];  // 规则引擎推导的问题标签
+  // v5.0 睡眠记录模式
+  sleepType?: 'quick' | 'detailed';  // 快捷 or 详细
+  sleepSegments?: SleepSegment[];    // 详细模式：多段睡眠时间
+  nightWakings?: number;             // 夜里醒来次数
+  daytimeNap?: boolean;              // 白天是否有小睡
   // v4.0 展示字段（兼容旧数据，用于UI显示）
   sleepRange?: string;       // 如 "7-9小时"
   nightAwakenings?: string;  // 如 "1-2次"
   nightAwakeTime?: string;   // 如 "几乎没有"
   napDuration?: string;      // 如 "没有"
   morningNotes: string;    // 早上补充说明（可语音）
-  caregiverMoodEmoji?: string;   // 照顾者早间心情 emoji
-  caregiverMoodScore?: number;   // 照顾者早间心情分数 1-10
+  caregiverMoodEmoji?: string;   // 照顾者早间心情 emoji (deprecated: moved to diary)
+  caregiverMoodScore?: number;   // 照顾者早间心情分数 (deprecated: moved to diary)
   morningDone: boolean;
   // 晚上打卡
   moodEmoji: string;
@@ -144,6 +155,8 @@ export interface DiaryEntry {
   moodScore?: number;
   tags?: string[];
   createdAt?: string;
+  caregiverMoodEmoji?: string;  // v5.0: 照顾者心情（从打卡移过来）
+  caregiverMoodLabel?: string;
   // AI reply fields (legacy — kept for backward compatibility)
   aiReply?: string;
   aiEmoji?: string;
@@ -295,6 +308,44 @@ export async function upsertCheckIn(data: Partial<DailyCheckIn> & { date: string
 export async function getRecentCheckIns(days = 7): Promise<DailyCheckIn[]> {
   const all = await getAllCheckIns();
   return all.slice(0, days);
+}
+
+export async function getWeeklySleepData(days = 7): Promise<Array<{
+  date: string;
+  sleepHours: number;
+  sleepType: 'quick' | 'detailed' | undefined;
+  sleepSegments: SleepSegment[];
+  nightWakings: number;
+  daytimeNap: boolean;
+  hasMorningData: boolean;
+}>> {
+  const all = await getAllCheckIns();
+  const result: Array<{
+    date: string;
+    sleepHours: number;
+    sleepType: 'quick' | 'detailed' | undefined;
+    sleepSegments: SleepSegment[];
+    nightWakings: number;
+    daytimeNap: boolean;
+    hasMorningData: boolean;
+  }> = [];
+  const today = new Date();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    const checkin = all.find(c => c.date === dateStr);
+    result.push({
+      date: dateStr,
+      sleepHours: checkin?.sleepHours ?? 0,
+      sleepType: checkin?.sleepType,
+      sleepSegments: checkin?.sleepSegments ?? [],
+      nightWakings: checkin?.nightWakings ?? 0,
+      daytimeNap: checkin?.daytimeNap ?? false,
+      hasMorningData: checkin?.morningDone ?? false,
+    });
+  }
+  return result;
 }
 
 // ─── Medications ──────────────────────────────────────────────────────────────

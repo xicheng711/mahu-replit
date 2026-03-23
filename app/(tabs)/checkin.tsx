@@ -573,12 +573,15 @@ function CheckinScreenContent() {
   const [caregiverName, setCaregiverName] = useState('您');
   const [streak, setStreak] = useState(1);
 
-  // Morning fields — v4.0 睡眠范围（智能默认 = 最常见的好状态）
-  const [sleepRangeIdx, setSleepRangeIdx] = useState(3);  // "7-9小时"
+  // Morning fields — v5.0 睡眠记录（快捷 / 详细）
+  const [sleepType, setSleepType] = useState<'quick' | 'detailed'>('quick');
+  const [sleepRangeIdx, setSleepRangeIdx] = useState(3);  // "7-9小时"（快捷模式）
+  const [sleepSegments, setSleepSegments] = useState<Array<{ start: string; end: string }>>([]);
   const [awakeningsIdx, setAwakeningsIdx] = useState(0);  // "没醒"
   const [awakeTimeIdx, setAwakeTimeIdx] = useState(0);    // "几乎没有"
   const [napIdx, setNapIdx] = useState(0);                // "没有"
-  const [caregiverMoodIdx, setCaregiverMoodIdx] = useState(1);
+  const [nightWakings, setNightWakings] = useState(0);
+  const [daytimeNap, setDaytimeNap] = useState(false);
   const [morningNotes, setMorningNotes] = useState('');
 
   // Evening fields
@@ -658,10 +661,10 @@ function CheckinScreenContent() {
         // 今日已有数据 → 完整恢复
         restoreSleepFields(today);
         setMorningNotes(today.morningNotes ?? '');
-        if (today.caregiverMoodScore != null) {
-          const idx = MOODS.findIndex(m => m.score === today.caregiverMoodScore);
-          if (idx >= 0) setCaregiverMoodIdx(idx);
-        }
+        if (today.sleepType) setSleepType(today.sleepType);
+        if (today.sleepSegments) setSleepSegments(today.sleepSegments);
+        if (today.nightWakings != null) setNightWakings(today.nightWakings);
+        if (today.daytimeNap != null) setDaytimeNap(today.daytimeNap);
         const mIdx = MOODS.findIndex(m => m.score === today.moodScore);
         if (mIdx >= 0) setMoodIdx(mIdx);
         setMedicationTaken(today.medicationTaken ?? true);
@@ -707,7 +710,6 @@ function CheckinScreenContent() {
     })();
   }, []));
 
-  const selectedCaregiverMood = MOODS[caregiverMoodIdx];
   const selectedMood = MOODS[moodIdx];
 
   function animateStep(next: () => void) {
@@ -760,24 +762,30 @@ function CheckinScreenContent() {
       // 规则引擎打分（非AI）
       const { score: sleepScore, problems: sleepProblems } = scoreSleepInput(sleepInput);
 
-      // 由夜醒次数推导睡眠质量（向后兼容图表）
       const derivedQuality: 'good' | 'fair' | 'poor' =
-        awakeningsIdx === 0 ? 'good' : awakeningsIdx === 1 ? 'fair' : 'poor';
+        nightWakings === 0 ? 'good' : nightWakings <= 2 ? 'fair' : 'poor';
+      const effectiveSleepHours = sleepType === 'detailed' && sleepSegments.length > 0
+        ? sleepSegments.reduce((sum, seg) => {
+            const ms = new Date(seg.end).getTime() - new Date(seg.start).getTime();
+            return sum + Math.max(0, ms / 3600000);
+          }, 0)
+        : SLEEP_RANGE_HOURS[sleepRangeIdx];
+
       Object.assign(data, {
-        // v4.1 结构化字段（AI 管道使用）
         sleepInput,
         sleepScore,
         sleepProblems,
-        // v4.0 向后兼容字段（图表/显示使用）
-        sleepHours: SLEEP_RANGE_HOURS[sleepRangeIdx],
+        sleepType,
+        sleepSegments: sleepType === 'detailed' ? sleepSegments : undefined,
+        nightWakings,
+        daytimeNap,
+        sleepHours: Math.round(effectiveSleepHours * 10) / 10,
         sleepQuality: derivedQuality,
         sleepRange: SLEEP_RANGES[sleepRangeIdx],
         nightAwakenings: AWAKENINGS[awakeningsIdx],
         nightAwakeTime: AWAKE_TIMES[awakeTimeIdx],
         napDuration: NAP_DURATIONS[napIdx],
         morningNotes,
-        caregiverMoodEmoji: selectedCaregiverMood.emoji,
-        caregiverMoodScore: selectedCaregiverMood.score,
         morningDone: true,
       });
     } else {
@@ -938,155 +946,277 @@ function CheckinScreenContent() {
     );
   }
 
-  // ── Morning Steps (v4.0 Typeform-style + 智能默认值) ──
+  const computeSegmentTotal = () => {
+    if (sleepSegments.length === 0) return 0;
+    return sleepSegments.reduce((sum, seg) => {
+      const ms = new Date(seg.end).getTime() - new Date(seg.start).getTime();
+      return sum + Math.max(0, ms / 3600000);
+    }, 0);
+  };
+
+  const addSleepSegment = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const defaultStart = new Date(yesterday);
+    defaultStart.setHours(22, 0, 0, 0);
+    const defaultEnd = new Date();
+    defaultEnd.setHours(6, 30, 0, 0);
+    setSleepSegments(prev => [...prev, {
+      start: defaultStart.toISOString(),
+      end: defaultEnd.toISOString(),
+    }]);
+  };
+
+  const removeSleepSegment = (idx: number) => {
+    setSleepSegments(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateSegmentTime = (idx: number, field: 'start' | 'end', hour: number, minute: number) => {
+    setSleepSegments(prev => {
+      const updated = [...prev];
+      const d = new Date(updated[idx][field]);
+      d.setHours(hour, minute, 0, 0);
+      if (field === 'start') {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        d.setFullYear(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+      }
+      updated[idx] = { ...updated[idx], [field]: d.toISOString() };
+      return updated;
+    });
+  };
+
+  // ── Morning Steps (v5.0: 快捷/详细睡眠 + 无照顾者心情) ──
   const morningSteps = [
     {
-      // Q1: 总睡眠时长（范围选择）
       role: 'elder' as const,
       roleLabel: `【${elderNickname}】的状态`,
-      q: `${elderNickname}昨晚一共睡了多久？`,
+      q: `${elderNickname}昨晚睡眠情况`,
       emoji: '🌙',
-      hint: '已为您预选最常见的情况，如实际不同请修改 👆',
+      hint: sleepType === 'quick' ? '选择总睡眠时长' : '添加具体睡眠时间段',
       content: (
-        <View style={styles.pillList}>
-          {SLEEP_RANGES.map((label, i) => (
+        <View style={{ gap: 12 }}>
+          <View style={styles.sleepToggleRow}>
             <TouchableOpacity
-              key={i}
-              style={[styles.pillItem, sleepRangeIdx === i && styles.pillItemSelected]}
+              style={[styles.sleepToggleBtn, sleepType === 'quick' && styles.sleepToggleBtnActive]}
+              onPress={() => setSleepType('quick')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.sleepToggleText, sleepType === 'quick' && styles.sleepToggleTextActive]}>⚡ 快捷记录</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sleepToggleBtn, sleepType === 'detailed' && styles.sleepToggleBtnActive]}
               onPress={() => {
-                setSleepRangeIdx(i);
-                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSleepType('detailed');
+                if (sleepSegments.length === 0) addSleepSegment();
               }}
               activeOpacity={0.8}
             >
-              <Text style={styles.pillIcon}>{SLEEP_RANGE_ICONS[i]}</Text>
-              <Text style={[styles.pillLabel, sleepRangeIdx === i && styles.pillLabelSelected]}>{label}</Text>
-              {sleepRangeIdx === i && <Text style={styles.pillCheck}>✓</Text>}
+              <Text style={[styles.sleepToggleText, sleepType === 'detailed' && styles.sleepToggleTextActive]}>📋 详细记录</Text>
             </TouchableOpacity>
-          ))}
+          </View>
+
+          {sleepType === 'quick' ? (
+            <View style={styles.pillList}>
+              {SLEEP_RANGES.map((label, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={[styles.pillItem, sleepRangeIdx === i && styles.pillItemSelected]}
+                  onPress={() => {
+                    setSleepRangeIdx(i);
+                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.pillIcon}>{SLEEP_RANGE_ICONS[i]}</Text>
+                  <Text style={[styles.pillLabel, sleepRangeIdx === i && styles.pillLabelSelected]}>{label}</Text>
+                  {sleepRangeIdx === i && <Text style={styles.pillCheck}>✓</Text>}
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <View style={{ gap: 10 }}>
+              <View style={styles.segmentTotalBar}>
+                <Text style={styles.segmentTotalText}>
+                  总计：{computeSegmentTotal().toFixed(1)} 小时
+                </Text>
+              </View>
+              {sleepSegments.map((seg, idx) => {
+                const s = new Date(seg.start);
+                const e = new Date(seg.end);
+                return (
+                  <View key={idx} style={styles.segmentCard}>
+                    <View style={styles.segmentHeader}>
+                      <Text style={styles.segmentTitle}>时间段 {idx + 1}</Text>
+                      {sleepSegments.length > 1 && (
+                        <TouchableOpacity onPress={() => removeSleepSegment(idx)}>
+                          <Text style={styles.segmentRemoveBtn}>✕</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                    <View style={styles.segmentTimeRow}>
+                      <View style={styles.segmentTimeBlock}>
+                        <Text style={styles.segmentTimeLabel}>入睡</Text>
+                        <View style={styles.timePickerRow}>
+                          <TouchableOpacity
+                            style={styles.timeAdjustBtn}
+                            onPress={() => updateSegmentTime(idx, 'start', (s.getHours() - 1 + 24) % 24, s.getMinutes())}
+                          >
+                            <Text style={styles.timeAdjustText}>−</Text>
+                          </TouchableOpacity>
+                          <Text style={styles.timeDisplay}>
+                            {s.getHours().toString().padStart(2, '0')}:{s.getMinutes().toString().padStart(2, '0')}
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.timeAdjustBtn}
+                            onPress={() => updateSegmentTime(idx, 'start', (s.getHours() + 1) % 24, s.getMinutes())}
+                          >
+                            <Text style={styles.timeAdjustText}>+</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.timePickerRow}>
+                          <TouchableOpacity
+                            style={styles.timeAdjustBtnSmall}
+                            onPress={() => updateSegmentTime(idx, 'start', s.getHours(), (s.getMinutes() - 15 + 60) % 60)}
+                          >
+                            <Text style={styles.timeAdjustTextSmall}>-15分</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.timeAdjustBtnSmall}
+                            onPress={() => updateSegmentTime(idx, 'start', s.getHours(), (s.getMinutes() + 15) % 60)}
+                          >
+                            <Text style={styles.timeAdjustTextSmall}>+15分</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      <Text style={styles.segmentArrow}>→</Text>
+                      <View style={styles.segmentTimeBlock}>
+                        <Text style={styles.segmentTimeLabel}>醒来</Text>
+                        <View style={styles.timePickerRow}>
+                          <TouchableOpacity
+                            style={styles.timeAdjustBtn}
+                            onPress={() => updateSegmentTime(idx, 'end', (e.getHours() - 1 + 24) % 24, e.getMinutes())}
+                          >
+                            <Text style={styles.timeAdjustText}>−</Text>
+                          </TouchableOpacity>
+                          <Text style={styles.timeDisplay}>
+                            {e.getHours().toString().padStart(2, '0')}:{e.getMinutes().toString().padStart(2, '0')}
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.timeAdjustBtn}
+                            onPress={() => updateSegmentTime(idx, 'end', (e.getHours() + 1) % 24, e.getMinutes())}
+                          >
+                            <Text style={styles.timeAdjustText}>+</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.timePickerRow}>
+                          <TouchableOpacity
+                            style={styles.timeAdjustBtnSmall}
+                            onPress={() => updateSegmentTime(idx, 'end', e.getHours(), (e.getMinutes() - 15 + 60) % 60)}
+                          >
+                            <Text style={styles.timeAdjustTextSmall}>-15分</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.timeAdjustBtnSmall}
+                            onPress={() => updateSegmentTime(idx, 'end', e.getHours(), (e.getMinutes() + 15) % 60)}
+                          >
+                            <Text style={styles.timeAdjustTextSmall}>+15分</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                );
+              })}
+              <TouchableOpacity style={styles.addSegmentBtn} onPress={addSleepSegment}>
+                <Text style={styles.addSegmentText}>＋ 添加睡眠时间段</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       ),
     },
     {
-      // Q2: 夜间醒来次数
       role: 'elder' as const,
       roleLabel: `【${elderNickname}】的状态`,
       q: `夜里醒了几次？`,
       emoji: '😴',
-      hint: '默认"没醒"——如果醒了请修改',
+      hint: '用加减按钮调整次数',
       content: (
-        <View style={styles.optionGrid2}>
-          {AWAKENINGS.map((label, i) => (
+        <View style={{ gap: 20, alignItems: 'center' }}>
+          <View style={styles.counterRow}>
             <TouchableOpacity
-              key={i}
-              style={[styles.gridPill, awakeningsIdx === i && styles.gridPillSelected]}
+              style={[styles.counterBtn, nightWakings === 0 && styles.counterBtnDisabled]}
               onPress={() => {
-                setAwakeningsIdx(i);
+                if (nightWakings > 0) setNightWakings(v => v - 1);
                 if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }}
-              activeOpacity={0.8}
+              activeOpacity={0.7}
             >
-              <Text style={styles.pillIcon}>{AWAKENINGS_ICONS[i]}</Text>
-              <Text style={[styles.gridPillLabel, awakeningsIdx === i && styles.gridPillLabelSelected]}>{label}</Text>
-              {awakeningsIdx === i && <Text style={styles.pillCheck}>✓</Text>}
+              <Text style={styles.counterBtnText}>−</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-      ),
-    },
-    {
-      // Q3: 夜间清醒时长
-      role: 'elder' as const,
-      roleLabel: `【${elderNickname}】的状态`,
-      q: `夜里醒着加起来多久？`,
-      emoji: '⏰',
-      hint: '默认"几乎没有"——如果清醒较久请修改',
-      content: (
-        <View style={styles.optionGrid2}>
-          {AWAKE_TIMES.map((label, i) => (
-            <TouchableOpacity
-              key={i}
-              style={[styles.gridPill, awakeTimeIdx === i && styles.gridPillSelected]}
-              onPress={() => {
-                setAwakeTimeIdx(i);
-                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.pillIcon}>{AWAKE_TIME_ICONS[i]}</Text>
-              <Text style={[styles.gridPillLabel, awakeTimeIdx === i && styles.gridPillLabelSelected]}>{label}</Text>
-              {awakeTimeIdx === i && <Text style={styles.pillCheck}>✓</Text>}
-            </TouchableOpacity>
-          ))}
-        </View>
-      ),
-    },
-    {
-      // Q4: 白天小睡
-      role: 'elder' as const,
-      roleLabel: `【${elderNickname}】的状态`,
-      q: `昨天白天有小睡吗？`,
-      emoji: '☀️',
-      hint: '默认"没有"——如有小睡请修改',
-      content: (
-        <View style={styles.optionGrid2}>
-          {NAP_DURATIONS.map((label, i) => (
-            <TouchableOpacity
-              key={i}
-              style={[styles.gridPill, napIdx === i && styles.gridPillSelected]}
-              onPress={() => {
-                setNapIdx(i);
-                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.pillIcon}>{NAP_ICONS[i]}</Text>
-              <Text style={[styles.gridPillLabel, napIdx === i && styles.gridPillLabelSelected]}>{label}</Text>
-              {napIdx === i && <Text style={styles.pillCheck}>✓</Text>}
-            </TouchableOpacity>
-          ))}
-        </View>
-      ),
-    },
-    {
-      // Q5: Caregiver's own mood
-      role: 'caregiver' as const,
-      roleLabel: `【${caregiverName}】您的状态`,
-      q: `${caregiverName}，您今天心情怎么样？`,
-      emoji: '💛',
-      hint: '照顾好自己也很重要，别忘了关心一下自己 💜',
-      content: (
-        <View>
-          <View style={styles.moodGrid}>
-            {MOODS.map((m, i) => (
-              <MoodCard
-                key={i}
-                emoji={m.emoji}
-                label={m.label}
-                selected={caregiverMoodIdx === i}
-                onPress={() => {
-                  setCaregiverMoodIdx(i);
-                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
-              />
-            ))}
-          </View>
-          {caregiverMoodIdx >= 0 && (
-            <View style={styles.moodScoreContainer}>
-              <Text style={styles.moodScoreEmoji}>{selectedCaregiverMood.emoji}</Text>
-              <Text style={styles.moodScore}>您的心情：{selectedCaregiverMood.label}</Text>
+            <View style={styles.counterDisplay}>
+              <Text style={styles.counterValue}>{nightWakings}</Text>
+              <Text style={styles.counterUnit}>次</Text>
             </View>
+            <TouchableOpacity
+              style={styles.counterBtn}
+              onPress={() => {
+                setNightWakings(v => v + 1);
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.counterBtnText}>＋</Text>
+            </TouchableOpacity>
+          </View>
+          {nightWakings === 0 && (
+            <Text style={{ fontSize: 14, color: '#9BA1A6' }}>很好！一夜无醒 🎉</Text>
           )}
-          <View style={styles.caregiverSupportNote}>
-            <Text style={styles.caregiverSupportText}>
-              在照顾家人的同时，也别忘了给自己一点温柔 🌸
-            </Text>
+          {nightWakings >= 3 && (
+            <Text style={{ fontSize: 14, color: '#E67E22' }}>频繁醒来需关注 ⚠️</Text>
+          )}
+        </View>
+      ),
+    },
+    {
+      role: 'elder' as const,
+      roleLabel: `【${elderNickname}】的状态`,
+      q: `白天有小睡吗？`,
+      emoji: '☀️',
+      hint: '选择是否有白天小睡',
+      content: (
+        <View style={{ gap: 12 }}>
+          <View style={styles.optionGrid2}>
+            <TouchableOpacity
+              style={[styles.gridPill, !daytimeNap && styles.gridPillSelected]}
+              onPress={() => {
+                setDaytimeNap(false);
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.pillIcon}>☀️</Text>
+              <Text style={[styles.gridPillLabel, !daytimeNap && styles.gridPillLabelSelected]}>没有小睡</Text>
+              {!daytimeNap && <Text style={styles.pillCheck}>✓</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.gridPill, daytimeNap && styles.gridPillSelected]}
+              onPress={() => {
+                setDaytimeNap(true);
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.pillIcon}>😪</Text>
+              <Text style={[styles.gridPillLabel, daytimeNap && styles.gridPillLabelSelected]}>有小睡</Text>
+              {daytimeNap && <Text style={styles.pillCheck}>✓</Text>}
+            </TouchableOpacity>
           </View>
         </View>
       ),
     },
     {
-      // Q6: Optional notes
       role: 'notes' as const,
       roleLabel: '补充备注（可选）',
       q: '还有什么要补充的吗？',
@@ -1103,7 +1233,7 @@ function CheckinScreenContent() {
             placeholderTextColor="#B8BCC0"
             returnKeyType="done"
           />
-          <Text style={styles.noteHint}>💡 这里的信息会帮助小马虎给出更准确的护理建议</Text>
+          <Text style={styles.noteHint}>💡 这里的信息会帮助生成更准确的护理简报</Text>
         </View>
       ),
     },
@@ -1487,6 +1617,83 @@ const styles = StyleSheet.create({
   noteHint: {
     fontSize: 12, color: COLORS.textMuted, marginTop: 8, lineHeight: 18,
   },
+
+  sleepToggleRow: {
+    flexDirection: 'row', gap: 8, marginBottom: 4,
+  },
+  sleepToggleBtn: {
+    flex: 1, paddingVertical: 10, borderRadius: RADIUS.lg,
+    backgroundColor: '#F3F4F6', alignItems: 'center',
+    borderWidth: 1.5, borderColor: 'transparent',
+  },
+  sleepToggleBtnActive: {
+    backgroundColor: COLORS.primaryBg, borderColor: COLORS.primary,
+  },
+  sleepToggleText: { fontSize: 14, fontWeight: '600', color: '#9BA1A6' },
+  sleepToggleTextActive: { color: COLORS.primary },
+
+  segmentTotalBar: {
+    backgroundColor: '#EEF9EE', borderRadius: RADIUS.lg,
+    padding: 10, alignItems: 'center',
+  },
+  segmentTotalText: { fontSize: 15, fontWeight: '700', color: '#059669' },
+
+  segmentCard: {
+    backgroundColor: '#F8F9FA', borderRadius: RADIUS.lg,
+    padding: 14, borderWidth: 1, borderColor: '#E5E7EB',
+  },
+  segmentHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 10,
+  },
+  segmentTitle: { fontSize: 13, fontWeight: '700', color: '#374151' },
+  segmentRemoveBtn: { fontSize: 16, color: '#EF4444', fontWeight: '700', padding: 4 },
+
+  segmentTimeRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+  },
+  segmentTimeBlock: { flex: 1, alignItems: 'center', gap: 6 },
+  segmentTimeLabel: { fontSize: 12, fontWeight: '600', color: '#9BA1A6' },
+  segmentArrow: { fontSize: 18, color: '#9BA1A6', fontWeight: '700' },
+
+  timePickerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  timeAdjustBtn: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center',
+  },
+  timeAdjustText: { fontSize: 18, fontWeight: '700', color: '#374151' },
+  timeDisplay: {
+    fontSize: 20, fontWeight: '800', color: '#11181C',
+    minWidth: 60, textAlign: 'center',
+  },
+  timeAdjustBtnSmall: {
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+  },
+  timeAdjustTextSmall: { fontSize: 11, fontWeight: '600', color: '#6B7280' },
+
+  addSegmentBtn: {
+    borderRadius: RADIUS.lg, padding: 12,
+    borderWidth: 1.5, borderColor: COLORS.primary, borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  addSegmentText: { fontSize: 14, fontWeight: '600', color: COLORS.primary },
+
+  counterRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 20,
+  },
+  counterBtn: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: COLORS.primaryBg, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: COLORS.primary,
+  },
+  counterBtnDisabled: {
+    backgroundColor: '#F3F4F6', borderColor: '#E5E7EB',
+  },
+  counterBtnText: { fontSize: 24, fontWeight: '700', color: COLORS.primary },
+  counterDisplay: { alignItems: 'center' },
+  counterValue: { fontSize: 48, fontWeight: '900', color: '#11181C' },
+  counterUnit: { fontSize: 14, fontWeight: '600', color: '#9BA1A6', marginTop: -4 },
 
   // Nav
   navRow: { flexDirection: 'row', gap: 12 },

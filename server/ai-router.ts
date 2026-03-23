@@ -225,60 +225,28 @@ export const aiRouter = router({
       const prompt = `
 照顾者：${caregiverName}，正在照顾老人：${nickname}。
 
-以下是今日护理数据（已由规则引擎预处理，请直接使用这些事实）：
+以下是今日护理数据（已由规则引擎预处理）：
 
 ${JSON.stringify(structuredInput, null, 2)}
 
-请根据以上结构化数据生成今日专业护理建议报告。
+请根据以上数据快速生成极简护理简报。
 注意：
-- sleep_analysis.score 和 problems 是规则引擎的计算结果，您无需重新判断，直接引用
-- 如果 sleep_analysis.problems 为空，说明睡眠状况良好，请给出积极的肯定
-- 建议必须与 baseline.care_needs 中的护理需求相关联
-- 如果 care_needs 为空，默认按老年认知/身体保健给出通用建议
+- sleep_analysis.score 是规则引擎的计算结果，直接使用
+- 只需要三个字段，不要多余内容
 
 返回以下JSON格式（不包含任何代码块标记，直接返回JSON）：
 {
-  "careScore": <1-100整数，综合护理难度/关注指数，100=状态极佳，sleep_analysis.score可作为重要参考>,
-  "scoreLabel": "<状态极佳/状态良好/状态平稳/需要关注/需要照顾>",
-  "greeting": "<给${caregiverName}的温馨问候，提到${nickname}>",
-  "overallAssessment": "<2-3句综合评估，直接引用sleep_analysis数据，专业且温暖>",
-  "adviceCards": [
-    {
-      "title": "<建议标题>",
-      "icon": "<emoji>",
-      "priority": "<high/medium/low>",
-      "advice": "<详细建议2-3句，必须基于传入的数据，不要泛泛而谈>",
-      "actionTips": ["<具体可操作建议1>", "<建议2>", "<建议3>"]
-    }
-  ],
-  "nutritionAdvice": {
-    "breakfast": ["<早餐建议1>", "<早餐建议2>"],
-    "lunch": ["<午餐建议1>", "<午餐建议2>"],
-    "dinner": ["<晚餐建议1>"],
-    "hydration": "<饮水提醒>"
-  },
-  "outdoorAdvice": ${weatherInfo ? '"<结合今日天气的户外活动建议，30字以内>"' : '"<简短通用的户外或室内活动建议，30字以内，不要提天气>"'},
-  "encouragement": "<给照顾者加油打气，必须20字以内，只说一句温暖正能量的话，不加任何修饰>",
-  "watchOut": "<今日最需要特别注意的一件事>"
-}
-
-adviceCards必须包含3-5张，第一张必须关于睡眠（直接引用sleep_analysis.problems）。`;
+  "careScore": <1-100整数，综合护理关注指数，100=状态极佳，sleep_analysis.score可作为重要参考>,
+  "summary": "<一句客观的昨日情况小结，20-40字，直接描述数据事实>",
+  "encouragement": "<给照顾者的温暖鼓励，必须20字以内>"
+}`;
 
       try {
-        const raw = await callQwen(prompt, SYSTEM_PROMPT);
+        const raw = await callQwen(prompt, SYSTEM_PROMPT, 1, 500);
         const advice = JSON.parse(raw);
-        // 截断 encouragement，最多保留第一句话，不超过 20 字
         if (advice.encouragement && advice.encouragement.length > 20) {
           const first = advice.encouragement.split(/[。！？!?]/)[0];
           advice.encouragement = first.slice(0, 20);
-        }
-        // 过滤 outdoorAdvice：若含"缺失"/"无法"或超过60字，取第一句并截断
-        if (advice.outdoorAdvice) {
-          if (/缺失|无法获取|天气信息/.test(advice.outdoorAdvice)) {
-            advice.outdoorAdvice = "可陪老人在室内阳光充足处活动15分钟";
-          } else if (advice.outdoorAdvice.length > 60) {
-            advice.outdoorAdvice = advice.outdoorAdvice.split(/[。！？]/)[0].slice(0, 40);
-          }
         }
         return { success: true, advice, weather: weatherData };
       } catch (e) {
@@ -291,6 +259,50 @@ adviceCards必须包含3-5张，第一张必须关于睡眠（直接引用sleep_
           error: e instanceof Error ? e.message : "AI生成失败",
         };
       }
+    }),
+
+  getWeeklySleepData: publicProcedure
+    .input(z.object({
+      days: z.number().min(1).max(30).default(7),
+      checkIns: z.array(z.object({
+        date: z.string(),
+        sleepHours: z.number(),
+        sleepType: z.enum(['quick', 'detailed']).optional(),
+        sleepSegments: z.array(z.object({
+          start: z.string(),
+          end: z.string(),
+        })).optional(),
+        nightWakings: z.number().optional(),
+        daytimeNap: z.boolean().optional(),
+        morningDone: z.boolean().optional(),
+      })),
+    }))
+    .query(({ input }) => {
+      const { days, checkIns } = input;
+      const result: Array<{
+        date: string;
+        sleepHours: number;
+        sleepType: string | null;
+        nightWakings: number;
+        daytimeNap: boolean;
+        hasMorningData: boolean;
+      }> = [];
+      const today = new Date();
+      for (let i = 0; i < days; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        const ci = checkIns.find(c => c.date === dateStr);
+        result.push({
+          date: dateStr,
+          sleepHours: ci?.sleepHours ?? 0,
+          sleepType: ci?.sleepType ?? null,
+          nightWakings: ci?.nightWakings ?? 0,
+          daytimeNap: ci?.daytimeNap ?? false,
+          hasMorningData: ci?.morningDone ?? false,
+        });
+      }
+      return { success: true, data: result.reverse() };
     }),
 
   // Generate daily briefing for family sharing

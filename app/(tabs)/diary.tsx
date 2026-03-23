@@ -190,6 +190,16 @@ function CalendarView({ entries, onOpenEntry }: { entries: DiaryEntry[]; onOpenE
 
   const entryDatesSet = useMemo(() => new Set(Object.keys(entriesByDate)), [entriesByDate]);
 
+  const dateMoodEmoji = useMemo(() => {
+    const m: Record<string, string> = {};
+    Object.entries(entriesByDate).forEach(([key, es]) => {
+      if (es.length > 0 && es[0].moodEmoji) {
+        m[key] = es[0].moodEmoji;
+      }
+    });
+    return m;
+  }, [entriesByDate]);
+
   const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -246,7 +256,11 @@ function CalendarView({ entries, onOpenEntry }: { entries: DiaryEntry[]; onOpenE
               <View style={[calStyles.dayCircle, isToday && calStyles.dayToday, isSel && calStyles.daySelected, hasEntry && !isToday && !isSel && calStyles.dayHasEntry]}>
                 <Text style={[calStyles.dayText, isToday && calStyles.dayTextToday, isSel && calStyles.dayTextSelected]}>{day}</Text>
               </View>
-              {hasEntry && <View style={[calStyles.dot, isSel && { backgroundColor: '#fff' }]} />}
+              {hasEntry && dateMoodEmoji[key] ? (
+                <Text style={calStyles.dayMoodEmoji}>{dateMoodEmoji[key]}</Text>
+              ) : hasEntry ? (
+                <View style={[calStyles.dot, isSel && { backgroundColor: '#fff' }]} />
+              ) : null}
             </TouchableOpacity>
           );
         })}
@@ -625,6 +639,7 @@ const calStyles = StyleSheet.create({
   dayTextToday: { color: '#FFFFFF', fontWeight: '800' },
   dayTextSelected: { color: '#FFFFFF', fontWeight: '800' },
   dot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#6C9E6C', marginTop: 2 },
+  dayMoodEmoji: { fontSize: 10, marginTop: 1, lineHeight: 12 },
   selectedSection: { marginTop: 14, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12, gap: 8 },
   selectedLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 4 },
   miniCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#F9FAFB', borderRadius: 12, padding: 10 },

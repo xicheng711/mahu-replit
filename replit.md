@@ -146,3 +146,40 @@ The `users` table stores authentication data. The schema is in `drizzle/schema.t
 - Uses `expo-sharing.shareAsync()` on native → triggers iOS Share Sheet
 - No WeChat SDK needed; user picks WeChat from native system panel
 - Web fallback: React Native `Share.share()` for text sharing
+
+## v5.1 Restructure: Data Visualization + Warm Companionship
+
+### Schema Changes (lib/storage.ts)
+- **DailyCheckIn** new fields: `sleepType` ('quick'|'detailed'), `sleepSegments` (SleepSegment[]), `nightWakings` (number), `daytimeNap` (boolean)
+- **SleepSegment** interface: `{ startTime, endTime, hours, label }`
+- **DiaryEntry** new fields: `caregiverMoodEmoji`, `caregiverMoodLabel` — caregiver mood moved from morning check-in to diary
+- **`getWeeklySleepData(days)`**: returns 7 days of sleep data for chart visualization
+
+### Backend Simplification (server/ai-router.ts)
+- `getDailyAdvice` AI response simplified to 3 fields: `careScore`, `summary` (1 sentence), `encouragement` (≤20 chars)
+- 500 token limit for fast responses
+- `getWeeklySleepData` tRPC query endpoint added
+
+### Morning Check-in Redesign (app/(tabs)/checkin.tsx)
+- Quick/Detailed sleep toggle: Quick mode uses slider, Detailed mode allows multiple sleep segments
+- Sleep segment time pickers with +/- hour/15min controls
+- Night wakings stepper counter, daytime nap boolean toggle
+- Caregiver mood step removed from morning flow (moved to diary)
+
+### Diary Enhancement (app/diary-edit.tsx, app/(tabs)/diary.tsx)
+- **Caregiver mood selector** added above text input in diary-edit: 5 mood options (挺好的/还行/有点累/不太好/快撑不住了)
+- Purple-themed chip UI with "照顾好自己也很重要" hint text
+- Mood saved as `caregiverMoodEmoji`/`caregiverMoodLabel` in DiaryEntry
+- Calendar shows mood emoji on date cells (with useMemo for performance)
+
+### Care Summary Page (app/assistant.tsx) — Refactored
+- **No more AI advice cards** — replaced with data visualization
+- **Care score header**: ring display + summary + encouragement (from simplified AI response)
+- **Yesterday's review cards**: 2x2 grid (情绪/睡眠/用药/饮食) with color-coded backgrounds
+- **Weekly sleep bar chart**: react-native-gifted-charts BarChart, color-coded (green ≥7h, yellow 5-7h, red <5h)
+- **Sleep segment timeline**: shows detailed sleep segments when available
+- **Night waking summary**: weekly total displayed below chart
+
+### New Dependencies
+- `react-native-gifted-charts` — chart library for sleep visualization
+- `react-native-svg` — SVG rendering for charts

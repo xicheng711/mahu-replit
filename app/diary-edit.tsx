@@ -31,6 +31,14 @@ const MOOD_OPTIONS = [
   { emoji: '😤', label: '烦躁', color: '#DC2626' },
 ];
 
+const CAREGIVER_MOODS = [
+  { emoji: '😊', label: '挺好的' },
+  { emoji: '😌', label: '还行' },
+  { emoji: '😕', label: '有点累' },
+  { emoji: '😢', label: '不太好' },
+  { emoji: '😤', label: '快撑不住了' },
+];
+
 const TAGS = [
   '散步', '吃饭好', '睡眠好', '认出家人', '情绪稳定',
   '有点混乱', '拒绝服药', '跌倒', '特别开心', '需要安慰',
@@ -199,6 +207,7 @@ export default function DiaryEditScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
   const [selectedMood, setSelectedMood] = useState(0);
+  const [caregiverMoodIdx, setCaregiverMoodIdx] = useState(-1);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [content, setContent] = useState('');
   const [entryId, setEntryId] = useState<string | null>(existingId ?? null);
@@ -247,6 +256,10 @@ export default function DiaryEditScreen() {
       entryRef.current = entry;
       const moodIdx = MOOD_OPTIONS.findIndex(m => m.emoji === entry.moodEmoji);
       setSelectedMood(moodIdx >= 0 ? moodIdx : 0);
+      if (entry.caregiverMoodEmoji) {
+        const cgIdx = CAREGIVER_MOODS.findIndex(m => m.emoji === entry.caregiverMoodEmoji);
+        if (cgIdx >= 0) setCaregiverMoodIdx(cgIdx);
+      }
       setSelectedTags(entry.tags ?? []);
       setContent(entry.content ?? '');
       setSubmitted(true);
@@ -282,7 +295,17 @@ export default function DiaryEditScreen() {
     if (submitting) return;
     setSubmitting(true);
     const mood = MOOD_OPTIONS[selectedMood];
-    const savedEntry = await saveDiaryEntry({ date: todayStr(), moodEmoji: mood.emoji, moodLabel: mood.label, tags: selectedTags, content: content.trim(), conversation: [] });
+    const cgMood = caregiverMoodIdx >= 0 ? CAREGIVER_MOODS[caregiverMoodIdx] : undefined;
+    const savedEntry = await saveDiaryEntry({
+      date: todayStr(),
+      moodEmoji: mood.emoji,
+      moodLabel: mood.label,
+      caregiverMoodEmoji: cgMood?.emoji,
+      caregiverMoodLabel: cgMood?.label,
+      tags: selectedTags,
+      content: content.trim(),
+      conversation: [],
+    });
     setEntryId(savedEntry.id);
     entryRef.current = savedEntry;
     setSubmitted(true);
@@ -463,6 +486,30 @@ export default function DiaryEditScreen() {
                     <View style={styles.tagsGrid}>
                       {TAGS.map((tag, i) => (
                         <TagOption key={i} tag={tag} selected={selectedTags.includes(tag)} onPress={() => toggleTag(tag)} />
+                      ))}
+                    </View>
+                  </View>
+
+                  <View style={styles.section}>
+                    <Text style={styles.label}>
+                      <Text style={{ color: '#A07858' }}>💜 </Text>
+                      {caregiverName}，您今天感觉怎么样？
+                    </Text>
+                    <Text style={styles.caregiverMoodHint}>照顾好自己也很重要</Text>
+                    <View style={styles.caregiverMoodRow}>
+                      {CAREGIVER_MOODS.map((m, i) => (
+                        <TouchableOpacity
+                          key={i}
+                          style={[styles.caregiverMoodChip, caregiverMoodIdx === i && styles.caregiverMoodChipSelected]}
+                          onPress={() => {
+                            setCaregiverMoodIdx(caregiverMoodIdx === i ? -1 : i);
+                            if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.caregiverMoodEmoji}>{m.emoji}</Text>
+                          <Text style={[styles.caregiverMoodLabel, caregiverMoodIdx === i && styles.caregiverMoodLabelSelected]}>{m.label}</Text>
+                        </TouchableOpacity>
                       ))}
                     </View>
                   </View>
@@ -702,6 +749,18 @@ const styles = StyleSheet.create({
   section: { marginBottom: 24 },
   label: { fontSize: 15, fontWeight: '700', color: '#2D1F14', marginBottom: 12 },
   moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  caregiverMoodHint: { fontSize: 12, color: '#9BA1A6', marginTop: -6, marginBottom: 10 },
+  caregiverMoodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  caregiverMoodChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: 999, borderWidth: 1.5, borderColor: '#E9D5FF',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+  },
+  caregiverMoodChipSelected: { borderColor: '#7C3AED', backgroundColor: '#F5F0FF' },
+  caregiverMoodEmoji: { fontSize: 18 },
+  caregiverMoodLabel: { fontSize: 13, color: '#6B5E52', fontWeight: '500' },
+  caregiverMoodLabelSelected: { color: '#7C3AED', fontWeight: '700' },
   moodOption: {
     alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8,
     borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#DDD7CE',
