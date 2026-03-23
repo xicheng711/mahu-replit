@@ -566,15 +566,25 @@ export default function OnboardingScreen() {
                   ) : (
                     <Text style={styles.avatarZodiacEmoji}>{elderZodiac.emoji}</Text>
                   )}
+                  <View style={styles.avatarEditBadge}>
+                    <Text style={styles.avatarEditIcon}>📷</Text>
+                  </View>
                 </TouchableOpacity>
-                <Text style={styles.avatarHint}>
-                  {elderPhotoUri ? '点击更换照片' : '点击上传头像'}
-                </Text>
-                {elderPhotoUri ? (
-                  <TouchableOpacity onPress={() => { setElderPhotoUri(undefined); setElderAvatarType('zodiac'); }} style={{ marginTop: 4 }}>
-                    <Text style={{ fontSize: 12, color: '#EF4444' }}>✕ 移除照片</Text>
+                <Text style={styles.avatarHint}>点击上传头像照片</Text>
+                <View style={styles.avatarToggleRow}>
+                  <TouchableOpacity
+                    style={[styles.avatarToggleBtn, elderAvatarType === 'zodiac' && styles.avatarToggleBtnActive]}
+                    onPress={() => { setElderPhotoUri(undefined); setElderAvatarType('zodiac'); }}
+                  >
+                    <Text style={[styles.avatarToggleText, elderAvatarType === 'zodiac' && styles.avatarToggleTextActive]}>十二生肖</Text>
                   </TouchableOpacity>
-                ) : null}
+                  <TouchableOpacity
+                    style={[styles.avatarToggleBtn, elderAvatarType === 'photo' && styles.avatarToggleBtnActive]}
+                    onPress={pickElderPhoto}
+                  >
+                    <Text style={[styles.avatarToggleText, elderAvatarType === 'photo' && styles.avatarToggleTextActive]}>上传照片</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
                <Text style={styles.title}>被照顾者信息</Text>
               <Text style={styles.subtitle}>让小马虎了解您照顾的家人</Text>
