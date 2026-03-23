@@ -174,19 +174,6 @@ export default function CreateFamilyModal() {
                 autoFocus
               />
 
-              <Text style={styles.fieldLabel}>与{elderName}的关系</Text>
-              <View style={styles.tagGrid}>
-                {RELATIONSHIPS.map(r => (
-                  <TouchableOpacity
-                    key={r}
-                    style={[styles.tag, myRelationship === r && styles.tagActive]}
-                    onPress={() => setMyRelationship(r)}
-                  >
-                    <Text style={[styles.tagText, myRelationship === r && styles.tagTextActive]}>{r}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
               <Text style={styles.fieldLabel}>身份</Text>
               {ROLES.map(r => (
                 <TouchableOpacity

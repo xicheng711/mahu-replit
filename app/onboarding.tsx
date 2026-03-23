@@ -970,22 +970,6 @@ export default function OnboardingScreen() {
                 />
               </View>
 
-              {/* Relationship – optional free text */}
-              <View style={[styles.inputGroup, { width: '100%' }]}>
-                <Text style={styles.label}>
-                  您和被照顾者的关系
-                  <Text style={{ fontWeight: '400', color: '#9BA1A6', fontSize: 12 }}> （可选）</Text>
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="如：女儿、儿子、朋友... 可以不填"
-                  value={joinerRelationship}
-                  onChangeText={setJoinerRelationship}
-                  placeholderTextColor="#9BA1A6"
-                  returnKeyType="done"
-                />
-              </View>
-
               {/* Emoji avatar grid (secondary option when no photo) */}
               {!joinerPhotoUri && (
                 <View style={[styles.inputGroup, { width: '100%' }]}>
