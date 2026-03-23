@@ -128,8 +128,7 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={20} color="#FF6B6B" />
-            <Text style={styles.backBtnText}>返回</Text>
+            <Text style={styles.backBtnText}>‹ 返回</Text>
           </TouchableOpacity>
           <Text style={styles.title}>个人信息</Text>
           <View style={{ width: 60 }} />

@@ -1,0 +1,33 @@
+ncaught Error
+Ionicons is not defined
+Call Stack
+
+Source Map
+This call stack is not symbolicated. Some features are unavailable such as viewing the function name or tapping to open files.
+ProfileScreen
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:251872:66
+react-stack-bottom-frame
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:16634:20
+renderWithHooks
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:6844:22
+updateFunctionComponent
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:8537:19
+beginWork
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:9123:18
+runWithFiberInDEV
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:4616:70
+performUnitOfWork
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:11196:95
+workLoopSync
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:11089:40
+renderRootSync
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:11073:9
+performWorkOnRoot
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:10837:44
+performSyncWorkOnRoot
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:11801:7
+flushSyncWorkAcrossRoots_impl
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:11720:308
+processRootScheduleInMicrotask
+https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev/node_modules/expo-router/entry.bundle:11740:7
+<unknown>
