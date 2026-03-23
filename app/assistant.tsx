@@ -267,6 +267,8 @@ export default function AssistantScreen() {
   const medTaken = ci?.medicationTaken;
   const mealLabel = ci?.mealOption ?? null;
   const sleepH = ci?.sleepHours ?? 0;
+  const napMins = ci?.napMinutes ?? (ci?.daytimeNap ? 30 : 0);
+  const napLabel = napMins === 0 ? '无小睡' : napMins >= 60 ? `${(napMins / 60).toFixed(1).replace('.0', '')}小时` : `${napMins}分钟`;
 
   return (
     <ScreenContainer containerClassName="bg-[#FAFAF8]">
@@ -330,6 +332,11 @@ export default function AssistantScreen() {
               <Text style={s.reviewEmoji}>🍚</Text>
               <Text style={s.reviewLabel}>饮食</Text>
               <Text style={s.reviewValue}>{mealLabel || '未记录'}</Text>
+            </View>
+            <View style={[s.reviewCard, { backgroundColor: '#FDF2F8' }]}>
+              <Text style={s.reviewEmoji}>{napMins > 0 ? '😴' : '☀️'}</Text>
+              <Text style={s.reviewLabel}>白天小睡</Text>
+              <Text style={s.reviewValue}>{napLabel}</Text>
             </View>
           </View>
 

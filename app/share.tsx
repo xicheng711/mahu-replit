@@ -382,7 +382,7 @@ export default function ShareScreen() {
 
       const today = await getTodayCheckIn();
       const yesterday = await getYesterdayCheckIn();
-      const ci = today || yesterday;
+      const ci = yesterday || today;
 
       if (!ci) {
         setError('请先完成今日打卡，再生成简报');
@@ -427,6 +427,7 @@ export default function ShareScreen() {
           sleepQuality: ci.sleepQuality ?? 'fair',
           moodScore: ci.moodScore ?? 5,
           medicationTaken: ci.medicationTaken ?? true,
+          napMinutes: ci.napMinutes ?? (ci.daytimeNap ? 30 : 0),
           notes: ci.eveningNotes || ci.morningNotes || undefined,
         },
         careScore: score,
@@ -454,15 +455,18 @@ export default function ShareScreen() {
     const sleepLabel = ci.sleepQuality === 'good' ? '良好' : ci.sleepQuality === 'fair' ? '一般' : '较差';
     const scoreLabel = score >= 80 ? '很好' : score >= 60 ? '良好' : score >= 40 ? '一般，需多关注' : '欠佳，需重点照护';
     const dateStr = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
+    const napMins = ci.napMinutes ?? (ci.daytimeNap ? 30 : 0);
+    const napStr = napMins > 0 ? (napMins >= 60 ? `${(napMins / 60).toFixed(1).replace('.0', '')}小时` : `${napMins}分钟`) : '';
     return {
-      summary: `${dateStr}，${nickname}今日整体状态${scoreLabel}。睡眠${ci.sleepHours ?? '--'}小时（${sleepLabel}），心情${ci.moodScore ?? '--'}/10，用药${ci.medicationTaken ? '按时完成' : '有漏服'}。`,
+      summary: `${dateStr}，${nickname}今日整体状态${scoreLabel}。睡眠${ci.sleepHours ?? '--'}小时（${sleepLabel}），心情${ci.moodScore ?? '--'}/10，用药${ci.medicationTaken ? '按时完成' : '有漏服'}。${napStr ? `白天小睡了${napStr}。` : ''}`,
       highlights: [
         ci.medicationTaken ? '今日按时服药 💊' : '注意：今日未按时服药 ⚠️',
         `睡眠${ci.sleepHours ?? '--'}小时，质量${sleepLabel}`,
+        napStr ? `白天小睡${napStr} 😴` : null,
         ci.eveningNotes || ci.morningNotes ? `备注：${(ci.eveningNotes || ci.morningNotes || '').slice(0, 30)}` : null,
       ].filter(Boolean) as string[],
       caregiverNote: `辛苦了，好好休息！`,
-      shareText: `🐴🐯【小马虎 · 每日护理简报】\n📅 ${dateStr}\n👴 ${nickname} 今日护理指数：${score}/100\n😴 睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）\n💊 用药：${ci.medicationTaken ? '已按时服药 ✅' : '未按时服药 ❌'}\n由 ${caregiver} 用心记录 💕`,
+      shareText: `🐴🐯【小马虎 · 每日护理简报】\n📅 ${dateStr}\n👴 ${nickname} 今日护理指数：${score}/100\n😴 睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）${napStr ? `\n☀️ 白天小睡：${napStr}` : ''}\n💊 用药：${ci.medicationTaken ? '已按时服药 ✅' : '未按时服药 ❌'}\n由 ${caregiver} 用心记录 💕`,
     };
   }
 

@@ -317,6 +317,7 @@ ${JSON.stringify(structuredInput, null, 2)}
         moodScore: z.number(),
         medicationTaken: z.boolean(),
         mealSituation: z.enum(["good", "fair", "poor"]).optional(),
+        napMinutes: z.number().optional(),
         notes: z.string().optional(),
       }),
       careScore: z.number(),
@@ -339,6 +340,7 @@ ${JSON.stringify(structuredInput, null, 2)}
 - 心情评分：${checkIn.moodScore}/10
 - 用药：${checkIn.medicationTaken ? "已按时服药" : "未按时服药"}
 - 饮食：${checkIn.mealSituation === "good" ? "进食良好" : checkIn.mealSituation === "fair" ? "进食一般" : "进食较差"}
+- 白天小睡：${checkIn.napMinutes != null && checkIn.napMinutes > 0 ? `${checkIn.napMinutes}分钟` : "无"}
 ${checkIn.notes ? `- 照顾者备注：${checkIn.notes}` : ""}
 
 要求：
