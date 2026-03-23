@@ -149,12 +149,12 @@ export function generateDailyAdvice(
         priority: 'high',
         color: '#6C9E6C',
         bgColor: '#F0F7EE',
-        advice: '每天坚持打卡，小马虎就能为你提供越来越精准的护理建议。',
+        advice: '每天坚持打卡，小马虎就能为您提供越来越精准的护理建议。',
         actionTips: ['完成今日打卡', '记录睡眠、心情和用药情况', '坚持每天记录，数据越多建议越准确'],
       }],
       nutritionAdvice: generateNutritionAdvice(50, weather),
       outdoorAdvice: weather?.advice ?? '请先完成打卡以获取个性化建议。',
-      encouragement: '你开始使用小马虎，是对老人最好的关爱！💕',
+      encouragement: '您开始使用小马虎，是对老人最好的关爱！💕',
       watchOut: '请先完成今日打卡以获取个性化建议。',
     };
   }
@@ -297,12 +297,12 @@ export function generateDailyAdvice(
   // ── 额外备注 ────────────────────────────────────────────────────────────────
   if (extraNotes && extraNotes.trim().length > 0) {
     cards.push({
-      title: '根据你的补充说明',
+      title: '根据您的补充说明',
       icon: '📝',
       priority: 'medium',
       color: '#7B1FA2',
       bgColor: '#F3E5F5',
-      advice: `你提到：「${extraNotes}」\n\n请密切关注这一情况，记录发生的时间、频率和诱因，这些信息对医生评估病情进展非常重要。`,
+      advice: `您提到：「${extraNotes}」\n\n请密切关注这一情况，记录发生的时间、频率和诱因，这些信息对医生评估病情进展非常重要。`,
       actionTips: [
         '将此情况记录在护理日记中，注明时间和具体表现',
         '观察是否有规律性（特定时间段发生）',
@@ -328,10 +328,10 @@ export function generateDailyAdvice(
   }
 
   const encouragements = [
-    '你每天的坚持记录，是给老人最好的礼物。小马虎为你加油！🐴🐯',
-    '专业的护理来自用心的观察。你做到了！💕',
-    '照顾老人不容易，但你每天的付出都有意义。今天也要照顾好自己哦！🌸',
-    '你是老人最好的守护者。小马虎和你一起守护！✨',
+    '您每天的坚持记录，是给老人最好的礼物。小马虎为您加油！🐴🐯',
+    '专业的护理来自用心的观察。您做到了！💕',
+    '照顾老人不容易，但您每天的付出都有意义。今天也要照顾好自己哦！🌸',
+    '您是老人最好的守护者。小马虎和您一起守护！✨',
     '每一天的记录，都是爱的证明。继续加油！🌈',
   ];
 

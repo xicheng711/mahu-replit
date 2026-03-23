@@ -111,9 +111,9 @@ async function getWeatherForCity(city: string): Promise<{ temp: number; descript
   }
 }
 
-const SYSTEM_PROMPT = `你是"小马虎"App的专业阿兹海默护理顾问。
+const SYSTEM_PROMPT = `您是"小马虎"App的专业阿兹海默护理顾问。
 
-你的专业知识涵盖：
+您的专业知识涵盖：
 - 阿尔茨海默症各阶段的行为特征和护理要点
 - 日落综合症、游走行为、拒绝服药等常见问题的处理方法
 - 认知刺激疗法、音乐疗法、回忆疗法等非药物干预手段
@@ -122,19 +122,19 @@ const SYSTEM_PROMPT = `你是"小马虎"App的专业阿兹海默护理顾问。
 - 中国家庭文化背景下的护理沟通技巧
 
 【重要工作原则】
-你收到的数据已由规则引擎预处理完毕：
-- sleep_analysis.score 已由评分规则计算（你不需要重新评估睡眠质量）
-- sleep_analysis.problems 已由规则推导（你不需要自己判断有哪些睡眠问题）
-- 你的职责是：用这些事实生成温暖、具体、可操作的护理建议
+您收到的数据已由规则引擎预处理完毕：
+- sleep_analysis.score 已由评分规则计算（您不需要重新评估睡眠质量）
+- sleep_analysis.problems 已由规则推导（您不需要自己判断有哪些睡眠问题）
+- 您的职责是：用这些事实生成温暖、具体、可操作的护理建议
 - 不要对数据做额外推断，不要改变或质疑分数
 
-你的回复风格：
+您的回复风格：
 - 温暖、专业、有同理心
 - 建议具体可操作，不空泛
 - 用中文回复
 - 理解照顾者的辛苦，给予鼓励
 
-重要：你的回复必须是严格的JSON格式，不要包含任何Markdown代码块标记。`;
+重要：您的回复必须是严格的JSON格式，不要包含任何Markdown代码块标记。`;
 
 export const aiRouter = router({
   // Generate daily care advice based on yesterday's check-in data
@@ -231,7 +231,7 @@ ${JSON.stringify(structuredInput, null, 2)}
 
 请根据以上结构化数据生成今日专业护理建议报告。
 注意：
-- sleep_analysis.score 和 problems 是规则引擎的计算结果，你无需重新判断，直接引用
+- sleep_analysis.score 和 problems 是规则引擎的计算结果，您无需重新判断，直接引用
 - 如果 sleep_analysis.problems 为空，说明睡眠状况良好，请给出积极的肯定
 - 建议必须与 baseline.care_needs 中的护理需求相关联
 - 如果 care_needs 为空，默认按老年认知/身体保健给出通用建议
@@ -408,7 +408,7 @@ ${checkIn.notes ? `- 照顾者备注：${checkIn.notes}` : ""}
         console.error("Diary reply error:", e);
         return {
           success: false,
-          reply: `${caregiverName}，辛苦了！你的每一份记录都是对${nickname}最好的关爱。照顾好自己，才能更好地照顾家人 💕`,
+          reply: `${caregiverName}，辛苦了！您的每一份记录都是对${nickname}最好的关爱。照顾好自己，才能更好地照顾家人 💕`,
           emoji: "💕",
           tip: "记得给自己也留一些休息时间",
         };
@@ -435,7 +435,7 @@ ${checkIn.notes ? `- 照顾者备注：${checkIn.notes}` : ""}
         ? history.map(m => m.role === 'user' ? `照顾者问：${m.text}` : `AI回复：${m.text}`).join('\n')
         : '';
       // Use JSON format to avoid raw text parsing issues
-      const prompt = `你是一位专业的阿兹海默护理医生和温暖的心理咨询师。
+      const prompt = `您是一位专业的阿兹海默护理医生和温暖的心理咨询师。
 背景：照顾者${caregiverName}在照顾阿兹海默患者${nickname}。
 日记内容：${originalContent || '未写详细内容'}
 心情：${originalMood}
@@ -446,7 +446,7 @@ ${historyText ? `\n对话历史：\n${historyText}\n` : ''}
 请给出简洁、专业、温暖的回复（150字内）。
 返回JSON格式（不要包含任何代码块标记）：
 {
-  "reply": "<你的回复文字>"
+  "reply": "<您的回复文字>"
 }`;
       try {
         const raw = await callQwen(prompt, SYSTEM_PROMPT);
@@ -492,7 +492,7 @@ ${historyText ? `\n对话历史：\n${historyText}\n` : ''}
       const checkinText = weekCheckins.length > 0
         ? `本周打卡 ${weekCheckins.length} 天，平均心情分数 ${avgMood} 分`
         : '本周未打卡';
-      const prompt = `你是一位温暖的护理陪伴AI，每周末给照顾者写一封有温度的"时光回音"信。
+      const prompt = `您是一位温暖的护理陪伴AI，每周末给照顾者写一封有温度的"时光回音"信。
 
 照顾者名字：${name}
 ${elderNickname ? `被照顾的家人：${elderNickname}` : ''}
@@ -511,8 +511,8 @@ ${diaryText}
 
 返回JSON格式（不要包含任何代码块标记）：
 {
-  "echo": "<你的时光回音文字>",
-  "title": "<一句话标题，如：这一周，你做得很棒>"
+  "echo": "<您的时光回音文字>",
+  "title": "<一句话标题，如：这一周，您做得很棒>"
 }`;
       try {
         const raw = await callQwen(prompt, SYSTEM_PROMPT);
@@ -520,13 +520,13 @@ ${diaryText}
         return {
           success: true,
           echo: String(parsed.echo || parsed.message || raw).trim(),
-          title: String(parsed.title || '这一周，你做得很棒').trim(),
+          title: String(parsed.title || '这一周，您做得很棒').trim(),
         };
       } catch (e) {
         return {
           success: false,
-          echo: `${name}，这一周你一直在默默付出，照顾家人是一件需要很大勇气的事。我看到了你的坚持，也感受到了你的爱。今天给自己一点时间休息，你值得被好好对待。`,
-          title: '这一周，你做得很棒',
+          echo: `${name}，这一周您一直在默默付出，照顾家人是一件需要很大勇气的事。我看到了您的坚持，也感受到了您的爱。今天给自己一点时间休息，您值得被好好对待。`,
+          title: '这一周，您做得很棒',
         };
       }
     }),

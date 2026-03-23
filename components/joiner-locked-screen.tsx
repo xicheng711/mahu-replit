@@ -54,7 +54,7 @@ export function JoinerLockedScreen({ icon, title, description }: Props) {
         <View style={styles.infoBox}>
           <Text style={styles.infoTitle}>💡 这是怎么回事？</Text>
           <Text style={styles.infoText}>
-            你目前是以「家庭成员」身份加入的。打卡、用药记录和日记是主要照顾者（创建者）的专属功能。
+            您目前是以「家庭成员」身份加入的。打卡、用药记录和日记是主要照顾者（创建者）的专属功能。
           </Text>
         </View>
 
@@ -72,7 +72,7 @@ export function JoinerLockedScreen({ icon, title, description }: Props) {
           </LinearGradient>
         </TouchableOpacity>
 
-        <Text style={styles.hint}>创建后你将成为新家庭的主要照顾者，{'\n'}同时仍可查看原来家庭的动态。</Text>
+        <Text style={styles.hint}>创建后您将成为新家庭的主要照顾者，{'\n'}同时仍可查看原来家庭的动态。</Text>
       </Animated.View>
     </View>
   );

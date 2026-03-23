@@ -300,7 +300,7 @@ function BriefingCard({ briefing, checkIn, careScore, elderNickname, caregiverNa
         <Text style={cardStyles.caregiverText}>
           {briefing.caregiverNote && briefing.caregiverNote.trim().length > 0
             ? briefing.caregiverNote
-            : `${caregiverName}，每一天的坚持都是对${elderNickname}最深的爱。感谢你的付出，好好休息！`}
+            : `${caregiverName}，每一天的坚持都是对${elderNickname}最深的爱。感谢您的付出，好好休息！`}
         </Text>
       </View>
 

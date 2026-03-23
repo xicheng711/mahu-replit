@@ -20,15 +20,15 @@ import { useFamilyContext } from '@/lib/family-context';
 const { width } = Dimensions.get('window');
 
 const DAILY_MOTIVATIONS = [
-  '今天也是充满爱的一天，你的用心大家都看得到 🌸',
-  '照顾家人是一件了不起的事，谢谢你每天的坚持 ✨',
-  '小进步也是进步，今天的你已经很棒了 🌟',
-  '爱是最好的药，你每天的陪伴就是最大的治愈 💜',
-  '不必完美，只需在场。你的存在就是最大的安慰 🌼',
+  '今天也是充满爱的一天，您的用心大家都看得到 🌸',
+  '照顾家人是一件了不起的事，谢谢您每天的坚持 ✨',
+  '小进步也是进步，今天的您已经很棒了 🌟',
+  '爱是最好的药，您每天的陪伴就是最大的治愈 💜',
+  '不必完美，只需在场。您的存在就是最大的安慰 🌼',
   '每一天的记录，都是对家人最深的爱 📝',
-  '你的笑容是家人最大的力量，记得也照顾好自己 😊',
+  '您的笑容是家人最大的力量，记得也照顾好自己 😊',
   '今天的天气适合出门散步，带着家人多晒晒太阳 ☀️',
-  '你不是一个人在战斗，我们都在这里 🤝',
+  '您不是一个人在战斗，我们都在这里 🤝',
   '每一天都是新的开始，加油！ 🚀',
 ];
 
@@ -416,7 +416,7 @@ function getPersonalizedAISuggestion(checkIn: DailyCheckIn): string {
     return `今天心情有些低落，没关系，这很正常 💜 可以听听音乐或和家人聊聊天，心情会好起来的`;
   if (!medicationTaken)
     return `今天用药还没记录，记得按时服药哦 💊 规律用药是护理的重要一环`;
-  return `今天的护理记录已完成 ${moodEmoji || '😊'} 你的用心大家都看得到，加油！`;
+  return `今天的护理记录已完成 ${moodEmoji || '😊'} 您的用心大家都看得到，加油！`;
 }
 
 // ─── 主页面 ─────────────────────────────────────────────────────────────
@@ -514,7 +514,7 @@ function CreatorHomeScreen() {
 
   const encouragement = morningDone
     ? getPersonalizedAISuggestion(todayCheckIn!)
-    : '先完成今天的早间打卡，我再为你生成更贴合今天情况的建议 🌸';
+    : '先完成今天的早间打卡，我再为您生成更贴合今天情况的建议 🌸';
 
   const quickActions = [
     { emoji: '💊', decorEmoji: '✨', label: '用药提醒', route: '/medication', gradientStart: '#F472B6', gradientEnd: '#EC4899', bgColor: '#FFF0F6' },

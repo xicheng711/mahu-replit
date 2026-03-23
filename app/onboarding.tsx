@@ -401,9 +401,9 @@ export default function OnboardingScreen() {
         {step === 0 && (
           <View style={styles.stepContainer}>
             <Image source={require('../assets/images/icon.png')} style={styles.mascotImg} />
-            <Text style={styles.title}>你好，我是小马虎！</Text>
+            <Text style={styles.title}>您好，我是小马虎！</Text>
             <Text style={styles.subtitle}>
-              我是你的专业护理记录小助手{'\n'}
+              我是您的专业护理记录小助手{'\n'}
               记录每一天的护理时光{'\n\n'}
               让我们先认识一下吧 😊
             </Text>
@@ -457,8 +457,8 @@ export default function OnboardingScreen() {
             </View>
 
             {/* ── Title + subtitle ── */}
-            <Text style={styles.title}>你是哪种用户？</Text>
-            <Text style={[styles.subtitle, { marginBottom: 32 }]}>请选择你的身份，{'\n'}我们会为你提供合适的功能</Text>
+            <Text style={styles.title}>您是哪种用户？</Text>
+            <Text style={[styles.subtitle, { marginBottom: 32 }]}>请选择您的身份，{'\n'}我们会为您提供合适的功能</Text>
 
             {/* ── Cards ── */}
             <View style={{ width: '100%', gap: 16 }}>
@@ -529,7 +529,7 @@ export default function OnboardingScreen() {
             <View style={styles.stepContainer}>
               <Text style={styles.zodiacBig}>{elderZodiac.emoji}</Text>
                <Text style={styles.title}>被照顾者信息</Text>
-              <Text style={styles.subtitle}>让小马虎了解你照顾的家人</Text>
+              <Text style={styles.subtitle}>让小马虎了解您照顾的家人</Text>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>姓名</Text>
@@ -616,7 +616,7 @@ export default function OnboardingScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-              <Text style={styles.title}>你的信息</Text>
+              <Text style={styles.title}>您的信息</Text>
               <Text style={styles.subtitle}>照顾者的信息</Text>
 
               <View style={styles.inputGroup}>
@@ -630,7 +630,7 @@ export default function OnboardingScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>你的出生年份</Text>
+                <Text style={styles.label}>您的出生年份</Text>
                 <Text style={styles.zodiacHint}>
                   {caregiverZodiac.emoji} 属{caregiverZodiac.name} · {caregiverBirthYear}年
                 </Text>
@@ -689,7 +689,7 @@ export default function OnboardingScreen() {
               <Text style={styles.title}>添加常用药物</Text>
               <Text style={styles.subtitle}>
                 记录日常用药{'\n'}
-                小马虎会帮你设置提醒（可跳过）            </Text>
+                小马虎会帮您设置提醒（可跳过）            </Text>
 
               {/* Medication list */}
               {medications.length > 0 && (
@@ -841,7 +841,7 @@ export default function OnboardingScreen() {
           <View style={styles.stepContainer}>
             <Text style={styles.mascot}>🔗</Text>
             <Text style={styles.title}>输入共享码</Text>
-            <Text style={styles.subtitle}>请输入主要照顾者分享给你的{'\n'}6位共享码</Text>
+            <Text style={styles.subtitle}>请输入主要照顾者分享给您的{'\n'}6位共享码</Text>
 
             <View style={[styles.inputGroup, { width: '100%', marginTop: 16 }]}>
               <Text style={styles.label}>共享码</Text>
@@ -892,7 +892,7 @@ export default function OnboardingScreen() {
           <View style={styles.stepContainer}>
             <Text style={styles.mascot}>🏡</Text>
             <Text style={styles.title}>确认加入</Text>
-            <Text style={styles.subtitle}>请确认你要加入的家庭</Text>
+            <Text style={styles.subtitle}>请确认您要加入的家庭</Text>
 
             <View style={{ width: '100%', padding: 20, backgroundColor: '#FFF7ED', borderRadius: 16, borderWidth: 1, borderColor: '#FED7AA', marginTop: 16, alignItems: 'center', gap: 8 }}>
               <Text style={{ fontSize: 32 }}>👨‍👩‍👧‍👦</Text>
@@ -902,7 +902,7 @@ export default function OnboardingScreen() {
                     {joinerFoundRoom.elderName} 的照护家庭
                   </Text>
                   <Text style={{ fontSize: 13, color: '#B45309', textAlign: 'center', lineHeight: 20 }}>
-                    加入后你可以查看家庭公告{'\n'}和每日护理简报
+                    加入后您可以查看家庭公告{'\n'}和每日护理简报
                   </Text>
                 </>
               ) : (
@@ -942,14 +942,14 @@ export default function OnboardingScreen() {
                   <Text style={{ fontSize: 14 }}>📷</Text>
                 </View>
               </TouchableOpacity>
-              <Text style={[styles.avatarHint, { marginTop: 8, marginBottom: 24 }]}>点击上传你的照片</Text>
+              <Text style={[styles.avatarHint, { marginTop: 8, marginBottom: 24 }]}>点击上传您的照片</Text>
 
-              <Text style={styles.title}>告诉我们你是谁</Text>
-              <Text style={[styles.subtitle, { marginBottom: 24 }]}>方便家庭成员认识你</Text>
+              <Text style={styles.title}>告诉我们您是谁</Text>
+              <Text style={[styles.subtitle, { marginBottom: 24 }]}>方便家庭成员认识您</Text>
 
               {/* Name */}
               <View style={[styles.inputGroup, { width: '100%' }]}>
-                <Text style={styles.label}>你的昵称</Text>
+                <Text style={styles.label}>您的昵称</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="如：小红、大明..."
@@ -962,7 +962,7 @@ export default function OnboardingScreen() {
               {/* Relationship – optional free text */}
               <View style={[styles.inputGroup, { width: '100%' }]}>
                 <Text style={styles.label}>
-                  你和被照顾者的关系
+                  您和被照顾者的关系
                   <Text style={{ fontWeight: '400', color: '#9BA1A6', fontSize: 12 }}> （可选）</Text>
                 </Text>
                 <TextInput
@@ -1016,7 +1016,7 @@ export default function OnboardingScreen() {
               小马虎已经了解了{'\n'}
               {elderNickname || elderName || '宝贝'} {elderZodiac.emoji} 和 {caregiverName} {caregiverZodiac.emoji}{'\n\n'}
               每天只需几分钟打卡{'\n'}
-              小马虎为你提供专业护理建议 💕
+              小马虎为您提供专业护理建议 💕
             </Text>
 
             {/* Invite Code Banner */}
@@ -1057,7 +1057,7 @@ export default function OnboardingScreen() {
             {/* Reminder time picker */}
             <View style={styles.reminderCard}>
               <Text style={styles.reminderTitle}>⏰ 每日打卡提醒时间</Text>
-              <Text style={styles.reminderSubtitle}>可以根据你们的作息调整</Text>
+              <Text style={styles.reminderSubtitle}>可以根据您们的作息调整</Text>
               <View style={styles.reminderRow}>
                 <View style={styles.reminderItem}>
                   <Text style={styles.reminderLabel}>🌅 早上打卡</Text>

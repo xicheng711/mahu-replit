@@ -298,7 +298,7 @@ export default function ExportImageScreen() {
   const [checkIn, setCheckIn] = useState<DailyCheckIn | null>(null);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
-  const [encouragement, setEncouragement] = useState('你的坚持和付出，是最温暖的守护 💕');
+  const [encouragement, setEncouragement] = useState('您的坚持和付出，是最温暖的守护 💕');
   const [briefing, setBriefing] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const cardRef = useRef<View | null>(null);
@@ -357,10 +357,10 @@ export default function ExportImageScreen() {
       } catch {
         // Use fallback encouragement
         const fallbacks = [
-          '每一天的陪伴，都是最珍贵的礼物。你做得很好！',
+          '每一天的陪伴，都是最珍贵的礼物。您做得很好！',
           '照顾者也需要被照顾，记得今天也给自己一个拥抱 🤗',
-          '你的爱和耐心，是最好的良药。加油！💪',
-          '今天也辛苦了，你的付出家人都看在眼里 ❤️',
+          '您的爱和耐心，是最好的良药。加油！💪',
+          '今天也辛苦了，您的付出家人都看在眼里 ❤️',
           '坚持记录每一天，这份用心就是最大的力量 ✨',
         ];
         setEncouragement(fallbacks[new Date().getDate() % fallbacks.length]);

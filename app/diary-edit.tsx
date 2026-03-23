@@ -296,7 +296,7 @@ export default function DiaryEditScreen() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200);
 
     setAiLoading(true);
-    let aiText = `${caregiverName}，辛苦了！你的每一份记录都是对${elderNickname}最好的关爱。照顾好自己，才能更好地照顾家人 💕`;
+    let aiText = `${caregiverName}，辛苦了！您的每一份记录都是对${elderNickname}最好的关爱。照顾好自己，才能更好地照顾家人 💕`;
     let aiTip = '';
     try {
       const result = await replyMutation.mutateAsync({ elderNickname, caregiverName, moodEmoji: mood.emoji, moodLabel: mood.label, tags: selectedTags, content: content.trim() });
@@ -430,7 +430,7 @@ export default function DiaryEditScreen() {
                         <Text style={styles.motiveTitle}>每一天都值得被记住</Text>
                         <Text style={styles.motiveSubtitle}>
                           {diaryCount > 0
-                            ? `你已经记录了 ${diaryCount} 篇日记，继续加油 🌱`
+                            ? `您已经记录了 ${diaryCount} 篇日记，继续加油 🌱`
                             : `今天写下第一篇护理日记，从现在开始 💛`}
                         </Text>
                       </View>
@@ -477,7 +477,7 @@ export default function DiaryEditScreen() {
                     </View>
                     <TextInput
                       style={styles.noteInput}
-                      placeholder={`${elderNickname}今天有什么特别的时刻？\n你有什么感受或担心想记下来？\n哪怕只有一两句话，都很有意义 💛`}
+                      placeholder={`${elderNickname}今天有什么特别的时刻？\n您有什么感受或担心想记下来？\n哪怕只有一两句话，都很有意义 💛`}
                       value={content}
                       onChangeText={setContent}
                       multiline

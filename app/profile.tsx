@@ -158,7 +158,7 @@ export default function ProfileScreen() {
                   value={caregiverNameDraft}
                   onChangeText={setCaregiverNameDraft}
                   autoFocus
-                  placeholder="输入你的名字"
+                  placeholder="输入您的名字"
                   placeholderTextColor="#9BA1A6"
                   returnKeyType="done"
                   onSubmitEditing={saveCaregiverName}

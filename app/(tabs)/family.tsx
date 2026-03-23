@@ -142,7 +142,7 @@ function FamilySetupScreen({ onSetupComplete }: { onSetupComplete: () => void })
       )}
 
       <View style={setup.inputGroup}>
-        <Text style={setup.label}>你的名字</Text>
+        <Text style={setup.label}>您的名字</Text>
         <TextInput
           style={setup.input}
           placeholder="如：小红、大明..."

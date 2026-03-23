@@ -167,8 +167,8 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
       setEcho({ title: result.title, echo: result.echo });
     } catch (e) {
       setEcho({
-        title: '这一周，你做得很棒',
-        echo: `${caregiverName || '亲爱的你'}，这一周你一直在默默付出，照顾家人是一件需要很大勇气的事。我看到了你的坚持，也感受到了你的爱。今天给自己一点时间休息，你值得被好好对待。`,
+        title: '这一周，您做得很棒',
+        echo: `${caregiverName || '亲爱的您'}，这一周您一直在默默付出，照顾家人是一件需要很大勇气的事。我看到了您的坚持，也感受到了您的爱。今天给自己一点时间休息，您值得被好好对待。`,
       });
     } finally {
       setLoading(false);
@@ -228,7 +228,7 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
         {!echo && !loading && (
           <View style={styles.promptArea}>
             <Text style={styles.promptText}>
-              ✨ 这一周辛苦了，让我帮你回顾一下这段护理旅程吧
+              ✨ 这一周辛苦了，让我帮您回顾一下这段护理旅程吧
             </Text>
             <TouchableOpacity style={styles.generateBtn} onPress={generateEcho}>
               <Text style={styles.generateBtnText}>生成时光回音</Text>
@@ -251,7 +251,7 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
               <Text style={styles.echoText}>{echo.echo}</Text>
             </View>
             <View style={styles.echoFooter}>
-              <Text style={styles.echoFrom}>— 来自你的护理伙伴 💜</Text>
+              <Text style={styles.echoFrom}>— 来自您的护理伙伴 💜</Text>
             </View>
             {/* Save as image button */}
             <TouchableOpacity

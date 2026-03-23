@@ -160,13 +160,13 @@ export default function CreateFamilyModal() {
           {step === 1 && (
             <View>
               <Text style={styles.stepLabel}>Step 2</Text>
-              <Text style={styles.stepTitle}>你是谁？</Text>
-              <Text style={styles.stepDesc}>告诉我们你与{elderName}的关系</Text>
+              <Text style={styles.stepTitle}>您是谁？</Text>
+              <Text style={styles.stepDesc}>告诉我们您与{elderName}的关系</Text>
 
-              <Text style={styles.fieldLabel}>你的名字</Text>
+              <Text style={styles.fieldLabel}>您的名字</Text>
               <TextInput
                 style={styles.input}
-                placeholder="你的名字"
+                placeholder="您的名字"
                 value={myName}
                 onChangeText={setMyName}
                 placeholderTextColor="#B0B8C1"

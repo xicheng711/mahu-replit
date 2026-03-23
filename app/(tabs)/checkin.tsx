@@ -570,7 +570,7 @@ function CheckinScreenContent() {
   const [done, setDone] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [elderNickname, setElderNickname] = useState('家人');
-  const [caregiverName, setCaregiverName] = useState('你');
+  const [caregiverName, setCaregiverName] = useState('您');
   const [streak, setStreak] = useState(1);
 
   // Morning fields — v4.0 睡眠范围（智能默认 = 最常见的好状态）
@@ -645,7 +645,7 @@ function CheckinScreenContent() {
     getProfile().then(profile => {
       if (profile) {
         setElderNickname(profile.nickname || profile.name || '家人');
-        setCaregiverName(profile.caregiverName || '你');
+        setCaregiverName(profile.caregiverName || '您');
       }
     });
 
@@ -904,7 +904,7 @@ function CheckinScreenContent() {
           </View>
           <Text style={styles.doneTitle}>早间打卡完成！</Text>
           <Text style={styles.doneSub}>
-            {`今天也辛苦了！\n小马虎已根据${elderNickname}的状态和你的心情\n整理好了今日个性化护理摘要 🌿`}
+            {`今天也辛苦了！\n小马虎已根据${elderNickname}的状态和您的心情\n整理好了今日个性化护理摘要 🌿`}
           </Text>
           <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/assistant' as any)}>
             <Text style={styles.doneBtnText}>查看今日护理简报 ✨</Text>
@@ -944,7 +944,7 @@ function CheckinScreenContent() {
       roleLabel: `【${elderNickname}】的状态`,
       q: `${elderNickname}昨晚一共睡了多久？`,
       emoji: '🌙',
-      hint: '已为你预选最常见的情况，如实际不同请修改 👆',
+      hint: '已为您预选最常见的情况，如实际不同请修改 👆',
       content: (
         <View style={styles.pillList}>
           {SLEEP_RANGES.map((label, i) => (
@@ -1049,8 +1049,8 @@ function CheckinScreenContent() {
     {
       // Q5: Caregiver's own mood
       role: 'caregiver' as const,
-      roleLabel: `【${caregiverName}】你的状态`,
-      q: `${caregiverName}，你今天心情怎么样？`,
+      roleLabel: `【${caregiverName}】您的状态`,
+      q: `${caregiverName}，您今天心情怎么样？`,
       emoji: '💛',
       hint: '照顾好自己也很重要，别忘了关心一下自己 💜',
       content: (
@@ -1072,7 +1072,7 @@ function CheckinScreenContent() {
           {caregiverMoodIdx >= 0 && (
             <View style={styles.moodScoreContainer}>
               <Text style={styles.moodScoreEmoji}>{selectedCaregiverMood.emoji}</Text>
-              <Text style={styles.moodScore}>你的心情：{selectedCaregiverMood.label}</Text>
+              <Text style={styles.moodScore}>您的心情：{selectedCaregiverMood.label}</Text>
             </View>
           )}
           <View style={styles.caregiverSupportNote}>
