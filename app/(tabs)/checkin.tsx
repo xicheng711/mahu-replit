@@ -232,12 +232,12 @@ function RoleBadge({ label, color, bgColor }: { label: string; color: string; bg
 
 // ─── Moods ───────────────────────────────────────────────────────────────────
 const MOODS = [
-  { emoji: '😄', label: '很开心', score: 9 },
-  { emoji: '😊', label: '还不错', score: 7 },
-  { emoji: '😌', label: '平静', score: 5 },
-  { emoji: '😕', label: '有点累', score: 4 },
-  { emoji: '😢', label: '不太好', score: 2 },
-  { emoji: '😤', label: '烦躁', score: 3 },
+  { emoji: '😄', label: '很开心', score: 10 },
+  { emoji: '😊', label: '还不错', score: 9 },
+  { emoji: '😌', label: '平静', score: 8 },
+  { emoji: '😕', label: '有点累', score: 5 },
+  { emoji: '😢', label: '不太好', score: 3 },
+  { emoji: '😤', label: '烦躁', score: 2 },
 ];
 
 // ─── Month Calendar ────────────────────────────────────────────────────────
