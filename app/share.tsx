@@ -650,19 +650,21 @@ export default function ShareScreen() {
       const yesterday = await getYesterdayCheckIn();
       setTodayCi(today);
       setYesterdayCi(yesterday);
-      const ci = viewMode === 'today' ? today : yesterday;
-      if (ci && checkIn && !checkIn.eveningDone && ci.eveningDone) {
-        setCheckIn(ci);
-        const { calculateCareScore } = await import('@/lib/ai-advice');
-        const newScore = calculateCareScore(ci, null);
-        setCareScore(newScore);
-        setBackfillNotice('昨晚记录已补充，今日简报已更新');
-        setTimeout(() => setBackfillNotice(null), 4000);
-        const profile = await getProfile();
-        const nickname = profile?.nickname || profile?.name || '家人';
-        const caregiver = profile?.caregiverName || '照顾者';
-        if (newScore != null) {
-          await doGenerate(nickname, caregiver, ci, newScore);
+      if (careScore == null && yesterday?.eveningDone) {
+        const ci = viewMode === 'today' ? (today || yesterday) : yesterday;
+        if (ci) {
+          setCheckIn(ci);
+          const { calculateCareScore } = await import('@/lib/ai-advice');
+          const newScore = calculateCareScore(yesterday, null);
+          setCareScore(newScore);
+          setBackfillNotice('昨晚记录已补充，今日简报已更新');
+          setTimeout(() => setBackfillNotice(null), 4000);
+          const profile = await getProfile();
+          const nickname = profile?.nickname || profile?.name || '家人';
+          const caregiver = profile?.caregiverName || '照顾者';
+          if (newScore != null) {
+            await doGenerate(nickname, caregiver, ci, newScore);
+          }
         }
       }
     } catch {}
@@ -678,7 +680,7 @@ export default function ShareScreen() {
         setShareText(memCached.shareText);
         if (memCached.checkIn) {
           setCheckIn(memCached.checkIn);
-          setCareScore(memCached.checkIn.eveningDone ? (memCached.checkIn.careScore ?? null) : null);
+          setCareScore(memCached.checkIn.careScore ?? null);
         }
         setLoading(false);
         loadSupplementaryData();
@@ -695,7 +697,7 @@ export default function ShareScreen() {
           setShareText(persisted.shareText);
           if (persisted.checkIn) {
             setCheckIn(persisted.checkIn);
-            setCareScore(persisted.checkIn.eveningDone ? (persisted.checkIn.careScore ?? null) : null);
+            setCareScore(persisted.checkIn.careScore ?? null);
           }
           setLoading(false);
           loadSupplementaryData();
@@ -725,7 +727,8 @@ export default function ShareScreen() {
       }
 
       setCheckIn(ci);
-      const score = ci.eveningDone ? (ci.careScore ?? null) : null;
+      const yesterdayEveningDone = yesterday?.eveningDone ?? false;
+      const score = yesterdayEveningDone ? (ci.careScore ?? null) : null;
       setCareScore(score);
 
       loadSupplementaryData();
@@ -733,7 +736,7 @@ export default function ShareScreen() {
         await doGenerate(nickname, caregiver, ci, score);
       } else {
         const incompleteBriefing = {
-          summary: `${nickname}的部分记录已完成。缺少昨晚打卡数据，暂无法生成完整评分。`,
+          summary: `${nickname}的部分记录已完成。缺少昨晚（${yesterday ? yesterday.date : '昨日'}）打卡数据，暂无法生成完整评分。`,
           attention: '',
           shareText: '',
         };
@@ -905,7 +908,7 @@ ${careScore != null ? `整体状态指数：${careScore}/100` : '整体状态：
             <TouchableOpacity
               style={[styles.dateSwitchBtn, viewMode === 'today' && styles.dateSwitchBtnActive]}
               onPress={() => {
-                if (todayCi) { setViewMode('today'); setCheckIn(todayCi); setCareScore(todayCi.eveningDone ? (todayCi.careScore ?? null) : null); }
+                if (todayCi) { setViewMode('today'); setCheckIn(todayCi); setCareScore((yesterdayCi?.eveningDone) ? (todayCi.careScore ?? null) : null); }
               }}
               disabled={!todayCi}
             >
@@ -914,7 +917,7 @@ ${careScore != null ? `整体状态指数：${careScore}/100` : '整体状态：
             <TouchableOpacity
               style={[styles.dateSwitchBtn, viewMode === 'yesterday' && styles.dateSwitchBtnActive]}
               onPress={() => {
-                if (yesterdayCi) { setViewMode('yesterday'); setCheckIn(yesterdayCi); setCareScore(yesterdayCi.eveningDone ? (yesterdayCi.careScore ?? null) : null); }
+                if (yesterdayCi) { setViewMode('yesterday'); setCheckIn(yesterdayCi); setCareScore((yesterdayCi?.eveningDone) ? (yesterdayCi.careScore ?? null) : null); }
               }}
               disabled={!yesterdayCi}
             >
@@ -951,7 +954,7 @@ ${careScore != null ? `整体状态指数：${careScore}/100` : '整体状态：
               />
             </View>
 
-            {careScore == null && checkIn && !checkIn.eveningDone && (
+            {careScore == null && !(yesterdayCi?.eveningDone) && (
               <View style={styles.backfillNotice}>
                 <Text style={styles.backfillText}>缺少昨晚记录</Text>
                 <TouchableOpacity onPress={() => router.push('/(tabs)/checkin' as any)}>

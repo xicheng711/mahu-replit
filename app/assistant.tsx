@@ -262,8 +262,8 @@ export default function AssistantScreen() {
   }
 
   const ci = yesterdayCheckIn ?? todayCheckIn;
-  const hasCompleteEvening = ci?.eveningDone ?? false;
-  const score = hasCompleteEvening ? (advice.careScore ?? null) : null;
+  const hasYesterdayEvening = yesterdayCheckIn?.eveningDone ?? false;
+  const score = hasYesterdayEvening ? (advice.careScore ?? null) : null;
   const sd = getScoreDisplay(score ?? 50);
   const todayLabel = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
