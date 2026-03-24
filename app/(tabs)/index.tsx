@@ -8,7 +8,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getWeatherByGPS, buildGreetingWithWeather, fetchWeather, GpsWeatherInfo, WeatherData } from '@/lib/weather';
 import { getLunarDate, getFormattedDate } from '@/lib/lunar';
-import { getTodayCheckIn, getYesterdayCheckIn, getProfile, getAllCheckIns, DailyCheckIn, getCurrentUserIsCreator, joinFamilyRoom } from '@/lib/storage';
+import { getTodayCheckIn, getYesterdayCheckIn, getProfile, getAllCheckIns, DailyCheckIn, getCurrentUserIsCreator, joinFamilyRoom, getDiaryEntries, DiaryEntry } from '@/lib/storage';
 import { TrendChart } from '@/components/trend-chart';
 import { COLORS, SHADOWS, fadeInUp, pressAnimation } from '@/lib/animations';
 import { AppColors, Gradients } from '@/lib/design-tokens';
@@ -456,6 +456,7 @@ function CreatorHomeScreen() {
   const [greeting, setGreeting] = useState('');
   const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
   const [allCheckIns, setAllCheckIns] = useState<DailyCheckIn[]>([]);
+  const [allDiaryEntries, setAllDiaryEntries] = useState<DiaryEntry[]>([]);
   const [elderNickname, setElderNickname] = useState('家人');
   const [caregiverName, setCaregiverName] = useState('');
   const [memberPhotoUri, setMemberPhotoUri] = useState<string | null>(null);
@@ -504,6 +505,8 @@ function CreatorHomeScreen() {
     setLatestCheckIn(today ?? yesterday);
     const all = await getAllCheckIns();
     setAllCheckIns(all);
+    const diaries = await getDiaryEntries();
+    setAllDiaryEntries(diaries);
   }, []);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
@@ -646,7 +649,7 @@ function CreatorHomeScreen() {
         />
 
         {/* ── 趋势图 ── */}
-        {allCheckIns.length > 0 && <TrendChart checkIns={allCheckIns} patientNickname={elderNickname} caregiverName={caregiverName} />}
+        {allCheckIns.length > 0 && <TrendChart checkIns={allCheckIns} diaryEntries={allDiaryEntries} patientNickname={elderNickname} caregiverName={caregiverName} />}
 
         {/* ── 快捷入口 ── */}
         <View style={{ marginBottom: 4 }}>

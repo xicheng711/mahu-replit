@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { DailyCheckIn } from '@/lib/storage';
+import { DailyCheckIn, DiaryEntry } from '@/lib/storage';
 import { AppColors, Gradients } from '@/lib/design-tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -9,8 +9,18 @@ const CHART_W = SCREEN_WIDTH - 80;
 
 type Period = '7d' | 'year';
 
+// emoji → 数字分数（5=最好，1=最难）
+const CAREGIVER_MOOD_SCORE: Record<string, number> = {
+  '😊': 5,
+  '😌': 4,
+  '😕': 3,
+  '😢': 2,
+  '😤': 1,
+};
+
 interface TrendChartProps {
   checkIns: DailyCheckIn[];
+  diaryEntries?: DiaryEntry[];
   patientNickname?: string;
   caregiverName?: string;
 }
@@ -465,7 +475,17 @@ const medStyles = StyleSheet.create({
   legendText: { fontSize: 12, color: AppColors.text.secondary },
 });
 
-export function TrendChart({ checkIns, patientNickname = '家人', caregiverName = '照顾者' }: TrendChartProps) {
+export function TrendChart({ checkIns, diaryEntries = [], patientNickname = '家人', caregiverName = '照顾者' }: TrendChartProps) {
+  // 用日记的 caregiverMoodEmoji 建立 date → score 映射
+  const diaryMoodMap = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of diaryEntries) {
+      if (e.caregiverMoodEmoji && CAREGIVER_MOOD_SCORE[e.caregiverMoodEmoji]) {
+        map[e.date] = CAREGIVER_MOOD_SCORE[e.caregiverMoodEmoji];
+      }
+    }
+    return map;
+  }, [diaryEntries]);
   const [period, setPeriod] = useState<Period>('7d');
   const [offset, setOffset] = useState(0);
 
@@ -530,15 +550,16 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
   const medTaken = medWithData.filter(c => c.medicationTaken === true).length;
   const medRate = medWithData.length > 0 ? Math.round((medTaken / medWithData.length) * 100) : null;
 
-  const cgMoodCheckIns = periodCheckIns.filter(c => (c.caregiverMoodScore ?? 0) > 0);
-  const avgCaregiverMood = cgMoodCheckIns.length > 0
-    ? cgMoodCheckIns.reduce((s, c) => s + (c.caregiverMoodScore || 0), 0) / cgMoodCheckIns.length : 0;
+  // 心情分数：优先用日记里的 caregiverMoodEmoji，已废弃的 caregiverMoodScore 作为兜底
+  const cgMoodDates = dateRange.filter(d => (diaryMoodMap[d] ?? (checkInMap.get(d)?.caregiverMoodScore ?? 0)) > 0);
+  const avgCaregiverMood = cgMoodDates.length > 0
+    ? cgMoodDates.reduce((s, d) => s + (diaryMoodMap[d] ?? checkInMap.get(d)?.caregiverMoodScore ?? 0), 0) / cgMoodDates.length : 0;
+
   const prevRange = getWeekRange(offset - 1);
   const prevDateRange = buildDateRange(prevRange.start, prevRange.end);
-  const prevCheckIns = prevDateRange.map(d => checkInMap.get(d)).filter(Boolean) as DailyCheckIn[];
-  const prevCgMoodCheckIns = prevCheckIns.filter(c => (c.caregiverMoodScore ?? 0) > 0);
-  const prevAvgCaregiverMood = prevCgMoodCheckIns.length > 0
-    ? prevCgMoodCheckIns.reduce((s, c) => s + (c.caregiverMoodScore || 0), 0) / prevCgMoodCheckIns.length : null;
+  const prevCgMoodDates = prevDateRange.filter(d => (diaryMoodMap[d] ?? (checkInMap.get(d)?.caregiverMoodScore ?? 0)) > 0);
+  const prevAvgCaregiverMood = prevCgMoodDates.length > 0
+    ? prevCgMoodDates.reduce((s, d) => s + (diaryMoodMap[d] ?? checkInMap.get(d)?.caregiverMoodScore ?? 0), 0) / prevCgMoodDates.length : null;
 
   return (
     <View style={styles.container}>
