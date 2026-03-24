@@ -4,6 +4,7 @@ import { HapticTab } from "@/components/haptic-tab";
 import { Platform, View, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { AppColors, Gradients, Shadows } from "@/lib/design-tokens";
+import { useFamilyContext } from "@/lib/family-context";
 
 const INACTIVE_LABEL = AppColors.nav.inactive;
 
@@ -12,21 +13,35 @@ const TAB_CONFIG: Record<string, {
   gradient: readonly [string, string];
   label: string;
 }> = {
-  index:      { emoji: "🏠", gradient: Gradients.coral,   label: "首页" },
-  checkin:    { emoji: "✨", gradient: Gradients.green,   label: "每日打卡" },
-  medication: { emoji: "💊", gradient: Gradients.peach,   label: "用药记录" },
-  diary:      { emoji: "📔", gradient: Gradients.purple,  label: "日记" },
-  family:     { emoji: "👥", gradient: Gradients.navActive, label: "家人共享" },
+  index:      { emoji: "🏠", gradient: Gradients.coral,      label: "首页" },
+  checkin:    { emoji: "✨", gradient: Gradients.green,       label: "每日打卡" },
+  medication: { emoji: "💊", gradient: Gradients.peach,       label: "用药记录" },
+  diary:      { emoji: "📔", gradient: Gradients.purple,      label: "日记" },
+  family:     { emoji: "👥", gradient: Gradients.navActive,   label: "家人共享" },
 };
 
-function TabIcon({ route, focused }: { route: string; focused: boolean }) {
+const JOINER_TABS = new Set(["index", "family"]);
+
+function TabIcon({
+  route,
+  focused,
+  isJoiner,
+}: {
+  route: string;
+  focused: boolean;
+  isJoiner: boolean;
+}) {
   const cfg = TAB_CONFIG[route] ?? {
     emoji: "⭕", gradient: ["#ccc", "#aaa"] as readonly [string, string], label: "",
   };
 
+  const accessible = !isJoiner || JOINER_TABS.has(route);
+  // joiner 可访问的标签始终显示渐变高亮
+  const showActive = focused || (isJoiner && JOINER_TABS.has(route));
+
   return (
-    <View style={styles.tabItem}>
-      {focused ? (
+    <View style={[styles.tabItem, !accessible && styles.tabItemFaded]}>
+      {showActive ? (
         <LinearGradient
           colors={cfg.gradient as any}
           start={{ x: 0, y: 0 }}
@@ -40,7 +55,11 @@ function TabIcon({ route, focused }: { route: string; focused: boolean }) {
           <Text style={styles.inactiveEmoji}>{cfg.emoji}</Text>
         </View>
       )}
-      <Text style={[styles.tabLabel, focused && { color: cfg.gradient[0], fontWeight: "700" as const }]}>
+      <Text style={[
+        styles.tabLabel,
+        showActive && { color: cfg.gradient[0], fontWeight: "700" as const },
+        !accessible && styles.tabLabelFaded,
+      ]}>
         {cfg.label}
       </Text>
     </View>
@@ -51,6 +70,9 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const safeBottom = Platform.OS === "web" ? 0 : insets.bottom;
   const tabBarHeight = 68 + safeBottom;
+
+  const { activeMembership } = useFamilyContext();
+  const isJoiner = activeMembership?.role === "joiner";
 
   return (
     <Tabs
@@ -79,11 +101,11 @@ export default function TabLayout() {
         },
       }}
     >
-      <Tabs.Screen name="index"      options={{ title: "首页",    tabBarIcon: ({ focused }) => <TabIcon route="index"      focused={focused} /> }} />
-      <Tabs.Screen name="checkin"    options={{ title: "每日打卡", tabBarIcon: ({ focused }) => <TabIcon route="checkin"    focused={focused} /> }} />
-      <Tabs.Screen name="medication" options={{ title: "用药记录", tabBarIcon: ({ focused }) => <TabIcon route="medication" focused={focused} /> }} />
-      <Tabs.Screen name="diary"      options={{ title: "日记",    tabBarIcon: ({ focused }) => <TabIcon route="diary"      focused={focused} /> }} />
-      <Tabs.Screen name="family"     options={{ title: "家人共享", tabBarIcon: ({ focused }) => <TabIcon route="family"     focused={focused} /> }} />
+      <Tabs.Screen name="index"      options={{ title: "首页",    tabBarIcon: ({ focused }) => <TabIcon route="index"      focused={focused} isJoiner={isJoiner} /> }} />
+      <Tabs.Screen name="checkin"    options={{ title: "每日打卡", tabBarIcon: ({ focused }) => <TabIcon route="checkin"    focused={focused} isJoiner={isJoiner} /> }} />
+      <Tabs.Screen name="medication" options={{ title: "用药记录", tabBarIcon: ({ focused }) => <TabIcon route="medication" focused={focused} isJoiner={isJoiner} /> }} />
+      <Tabs.Screen name="diary"      options={{ title: "日记",    tabBarIcon: ({ focused }) => <TabIcon route="diary"      focused={focused} isJoiner={isJoiner} /> }} />
+      <Tabs.Screen name="family"     options={{ title: "家人共享", tabBarIcon: ({ focused }) => <TabIcon route="family"     focused={focused} isJoiner={isJoiner} /> }} />
     </Tabs>
   );
 }
@@ -96,6 +118,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 3,
     paddingTop: 2,
+  },
+  tabItemFaded: {
+    opacity: 0.22,
   },
   iconCircle: {
     width: CIRCLE,
@@ -121,5 +146,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: INACTIVE_LABEL,
     letterSpacing: 0.2,
+  },
+  tabLabelFaded: {
+    color: INACTIVE_LABEL,
   },
 });
