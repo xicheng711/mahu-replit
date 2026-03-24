@@ -584,7 +584,19 @@ export default function ShareScreen() {
 
   const generateBriefingMutation = trpc.ai.generateBriefing.useMutation();
 
-  useFocusEffect(useCallback(() => { loadAndGenerate(false); }, []));
+  const loadedRef = useRef(false);
+  useEffect(() => {
+    if (!loadedRef.current) {
+      loadedRef.current = true;
+      loadAndGenerate(false);
+    }
+  }, []);
+  useFocusEffect(useCallback(() => {
+    if (!loadedRef.current) {
+      loadedRef.current = true;
+      loadAndGenerate(false);
+    }
+  }, []));
 
   async function loadAndGenerate(forceRefresh = false) {
     setError(null);
@@ -672,7 +684,7 @@ export default function ShareScreen() {
     setBriefing(null);
     try {
       const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
-      const result = await generateBriefingMutation.mutateAsync({
+      const aiPromise = generateBriefingMutation.mutateAsync({
         elderNickname: nickname,
         caregiverName: caregiver,
         date: dateStr,
@@ -686,6 +698,8 @@ export default function ShareScreen() {
         },
         careScore: score,
       });
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('AI timeout')), 15000));
+      const result = await Promise.race([aiPromise, timeout]) as any;
       if (result.success && result.briefing) {
         setBriefing(result.briefing);
         setShareText(result.briefing.shareText ?? '');
@@ -868,7 +882,15 @@ ${new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekda
               <Text style={styles.disclaimerText}>由小马虎整理 · 仅供参考</Text>
             </View>
           </>
-        ) : null}
+        ) : (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorEmoji}>📋</Text>
+            <Text style={styles.errorText}>暂无分析数据</Text>
+            <TouchableOpacity style={styles.checkinBtn} onPress={() => loadAndGenerate(true)}>
+              <Text style={styles.checkinBtnText}>重新加载</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </ScreenContainer>
   );

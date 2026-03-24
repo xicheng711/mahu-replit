@@ -248,7 +248,8 @@ export function generateId(): string {
 }
 
 export function todayStr(): string {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export function formatDate(dateStr: string): string {
@@ -286,7 +287,7 @@ export async function getYesterdayCheckIn(): Promise<DailyCheckIn | null> {
   const all = await getAllCheckIns();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yStr = yesterday.toISOString().split('T')[0];
+  const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
   return all.find(c => c.date === yStr) ?? null;
 }
 
