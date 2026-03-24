@@ -264,7 +264,7 @@ function EnhancedAICard({
         <Animated.View style={[styles.aiGlow1, { transform: [{ scale: glowAnim1 }] }]} />
         <Animated.View style={[styles.aiGlow2, { transform: [{ scale: glowAnim2 }] }]} />
 
-        <Text style={styles.aiDecorFigure}>🩺</Text>
+        <Text style={styles.aiDecorFigure}>📋</Text>
 
         <View style={styles.aiHeader}>
           <Animated.View style={{ transform: [{ scale: iconScale }, { rotate: iconRotation }] }}>
@@ -273,12 +273,12 @@ function EnhancedAICard({
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={styles.aiIconBox}
             >
-              <Text style={{ fontSize: 20, lineHeight: 24 }}>✨</Text>
+              <Text style={{ fontSize: 20, lineHeight: 24 }}>📊</Text>
             </LinearGradient>
           </Animated.View>
           <View style={{ flex: 1 }}>
             <Text style={styles.aiLabel}>今日状态分析</Text>
-            <Text style={styles.aiSubLabel} numberOfLines={1}>基于打卡数据自动生成</Text>
+            <Text style={styles.aiSubLabel} numberOfLines={1}>基于打卡数据整理</Text>
           </View>
         </View>
 
@@ -298,7 +298,7 @@ function EnhancedAICard({
                 <View style={styles.aiSkeletonLockBox}>
                   <Text style={{ fontSize: 20 }}>📋</Text>
                   <Text style={styles.aiSkeletonLockText}>完成打卡后生成分析</Text>
-                  <Text style={styles.aiSkeletonLockSub}>记录今日状态，自动整理变化趋势</Text>
+                  <Text style={styles.aiSkeletonLockSub}>记录今日数据，整理变化趋势</Text>
                 </View>
               </View>
             </View>
@@ -527,7 +527,7 @@ function CreatorHomeScreen() {
 
   const encouragement = morningDone
     ? getPersonalizedAISuggestion(todayCheckIn!)
-    : '完成打卡后，为您整理今日照护情况';
+    : '完成打卡后，自动整理今日照护数据';
 
   const quickActions = [
     { emoji: '💊', decorEmoji: '', label: '用药记录', route: '/medication', gradientStart: Gradients.coral[0], gradientEnd: Gradients.coral[1], bgColor: AppColors.coral.soft },
@@ -585,7 +585,7 @@ function CreatorHomeScreen() {
 
             {/* 标题 + 问候 */}
             <View style={styles.appNameRow}>
-              <Text style={styles.appName}>一起照顾好每一天</Text>
+              <Text style={styles.appName}>今日照护总览</Text>
             </View>
             {memberships.length > 0 && (
               <TouchableOpacity

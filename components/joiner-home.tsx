@@ -250,8 +250,8 @@ function PostAnnouncementModal({ visible, onClose, onPosted, member }: {
           <View style={styles.modalHandle} />
           {done ? (
             <View style={styles.modalDone}>
-              <Text style={{ fontSize: 44, marginBottom: 12 }}>🎉</Text>
-              <Text style={styles.modalDoneTitle}>公告已发布！</Text>
+              <Text style={{ fontSize: 44, marginBottom: 12 }}>✅</Text>
+              <Text style={styles.modalDoneTitle}>公告已发布</Text>
               <Text style={styles.modalDoneSubtitle}>所有家庭成员都能看到</Text>
               <TouchableOpacity style={styles.modalDoneBtn} onPress={() => { handleClose(); onPosted(); }}>
                 <Text style={styles.modalDoneBtnText}>好的</Text>

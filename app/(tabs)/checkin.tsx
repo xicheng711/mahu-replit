@@ -529,7 +529,7 @@ function CheckinLanding({
       {/* Tip */}
       <View style={styles.landingTip}>
         <Text style={styles.landingTipText}>
-          💡 每天两次打卡，帮助小马虎更准确地了解{elderNickname}的状态，生成更贴心的护理建议。
+          💡 每天两次记录，帮助掌握{elderNickname}的状态变化，及时发现需要关注的情况。
         </Text>
       </View>
 
@@ -864,14 +864,14 @@ function CheckinScreenContent() {
 
             {/* White card */}
             <View style={styles.nightCard}>
-              <Text style={styles.nightTitle}>晚间记录完成！</Text>
+              <Text style={styles.nightTitle}>晚间记录已保存</Text>
 
               <View style={styles.nightSparkleRow}>
-                <Text style={styles.nightSparkle}>✨ 今天辛苦啦 💛</Text>
+                <Text style={styles.nightSparkle}>今日照护记录完整</Text>
               </View>
 
               <Text style={styles.nightSub}>
-                {'晚上是记录美好时光的好时机\n把今天的点滴写进日记吧 📔'}
+                {'今天的数据已整理完毕\n可以写一篇护理日记，记录详细情况'}
               </Text>
 
               {/* Streak badge */}
@@ -896,7 +896,7 @@ function CheckinScreenContent() {
                   style={styles.nightDiaryBtnInner}
                 >
                   <Text style={styles.nightDiaryIcon}>📖</Text>
-                  <Text style={styles.nightDiaryBtnText}>去写今天的日记 ✍️</Text>
+                  <Text style={styles.nightDiaryBtnText}>写今天的护理日记 →</Text>
                 </LinearGradient>
               </TouchableOpacity>
 
@@ -906,7 +906,7 @@ function CheckinScreenContent() {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.nightFooter}>每一天的记录都是珍贵的回忆 ✨</Text>
+            <Text style={styles.nightFooter}>持续记录有助于掌握长期变化趋势</Text>
           </Animated.View>
         </LinearGradient>
       );
@@ -919,12 +919,12 @@ function CheckinScreenContent() {
           <View style={styles.doneEmojiCircle}>
             <Text style={styles.doneEmoji}>🌅</Text>
           </View>
-          <Text style={styles.doneTitle}>早间打卡完成！</Text>
+          <Text style={styles.doneTitle}>早间记录已保存</Text>
           <Text style={styles.doneSub}>
-            {`今天也辛苦了！\n小马虎已根据${elderNickname}的状态和您的心情\n整理好了今日个性化护理摘要 🌿`}
+            {`${elderNickname}今日照护数据已整理完毕\n可查看详细分析报告`}
           </Text>
           <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/share' as any)}>
-            <Text style={styles.doneBtnText}>查看今日记录分析 ✨</Text>
+            <Text style={styles.doneBtnText}>查看今日分析报告 →</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.doneBtnSecondary} onPress={() => {
             setDone(false);
@@ -1202,7 +1202,7 @@ function CheckinScreenContent() {
               </TouchableOpacity>
             </View>
             {nightWakings === 0 && (
-              <Text style={{ fontSize: 13, color: '#9BA1A6', textAlign: 'center', marginTop: 6 }}>很好！一夜无醒 🎉</Text>
+              <Text style={{ fontSize: 13, color: '#9BA1A6', textAlign: 'center', marginTop: 6 }}>一夜无中断，睡眠连续性良好</Text>
             )}
             {nightWakings >= 3 && (
               <Text style={{ fontSize: 13, color: '#E67E22', textAlign: 'center', marginTop: 6 }}>频繁醒来需关注 ⚠️</Text>

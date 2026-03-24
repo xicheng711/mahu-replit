@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Animated, ActivityIndicator, Share, Dimensions, Platform, Easing, Alert,
+  Animated, ActivityIndicator, Share, Dimensions, Platform, Easing, Alert, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -143,8 +143,8 @@ function ShareLoadingScreen() {
         </View>
 
         <Animated.View style={[slStyles.textBlock, { opacity: titleOpacity, transform: [{ translateY: titleY }] }]}>
-          <Text style={slStyles.title}>正在整理今日数据...</Text>
-          <Text style={slStyles.subtitle}>分析照护记录，生成简报</Text>
+          <Text style={slStyles.title}>正在整理今日数据</Text>
+          <Text style={slStyles.subtitle}>汇总照护记录，生成状态报告</Text>
         </Animated.View>
 
         <Animated.View style={[slStyles.progressWrap, { opacity: titleOpacity }]}>
@@ -279,7 +279,10 @@ function BriefingCard({ briefing, checkIn, careScore, elderNickname, caregiverNa
       {/* ── Header ribbon ── */}
       <LinearGradient colors={[AppColors.green.soft, '#F0F7F2']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={cardStyles.headerRibbon}>
         <View style={cardStyles.headerLeft}>
-          <Text style={cardStyles.appName}>🐴🐯 小马虎 · 每日护理简报</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Image source={require('@/assets/images/app-icon.png')} style={{ width: 24, height: 24, borderRadius: 6 }} />
+            <Text style={cardStyles.appName}>小马虎 · 每日护理简报</Text>
+          </View>
           <Text style={cardStyles.date}>{today}</Text>
         </View>
       </LinearGradient>
@@ -332,7 +335,10 @@ function BriefingCard({ briefing, checkIn, careScore, elderNickname, caregiverNa
       {/* ── Footer ── */}
       <View style={cardStyles.footer}>
         <Text style={cardStyles.footerLeft}>记录人：{caregiverName}</Text>
-        <Text style={cardStyles.footerRight}>小马虎</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Image source={require('@/assets/images/app-icon.png')} style={{ width: 14, height: 14, borderRadius: 3 }} />
+          <Text style={cardStyles.footerRight}>小马虎</Text>
+        </View>
       </View>
     </Animated.View>
   );
