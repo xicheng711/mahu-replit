@@ -8,13 +8,13 @@ const CHART_W = SCREEN_WIDTH - 80;
 
 type Period = '7d' | 'year';
 
-// emoji → 数字分数（5=最好，1=最难）
+// emoji → 数字分数（满分10，对应日记里的5档心情）
 const CAREGIVER_MOOD_SCORE: Record<string, number> = {
-  '😊': 5,
-  '😌': 4,
-  '😕': 3,
-  '😢': 2,
-  '😤': 1,
+  '😊': 10, // 挺好的
+  '😌': 8,  // 还行
+  '😕': 7,  // 有点累
+  '😢': 5,  // 不太好
+  '😤': 2,  // 快撑不住了
 };
 
 interface TrendChartProps {
