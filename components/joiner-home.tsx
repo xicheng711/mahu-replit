@@ -365,16 +365,24 @@ export function JoinerHomeScreen() {
     return '晚上好';
   })();
 
-  const TIPS = [
-    '每天关注家人的状态，是最温暖的守护 💛',
-    '一个微笑、一声问候，都是爱的传递 🌸',
-    '陪伴是最长情的告白，感谢您的坚持 ✨',
-    '记录下每一个美好的瞬间 📝',
-    '家人的健康，从日常的点滴开始 🌿',
-  ];
-  const today = new Date();
-  const localDay = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-  const dailyTip = TIPS[localDay % TIPS.length];
+  const statusSummary = (() => {
+    if (!latestCheckIn) return '今日尚无照护记录';
+    const parts: string[] = [];
+    if (latestCheckIn.sleepHours != null) {
+      parts.push(`睡眠${latestCheckIn.sleepHours}小时`);
+    }
+    if (latestCheckIn.medicationTaken === false) {
+      parts.push('用药未完成');
+    } else if (latestCheckIn.medicationTaken) {
+      parts.push('用药已完成');
+    }
+    if (latestCheckIn.moodScore != null) {
+      if (latestCheckIn.moodScore >= 7) parts.push('心情稳定');
+      else if (latestCheckIn.moodScore >= 4) parts.push('心情一般');
+      else parts.push('情绪需关注');
+    }
+    return parts.length > 0 ? parts.join('，') : '今日记录已更新';
+  })();
 
   return (
     <View style={{ flex: 1 }}>
@@ -401,7 +409,7 @@ export function JoinerHomeScreen() {
               activeOpacity={memberships.length > 1 ? 0.7 : 1}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
             >
-              <Text style={styles.pageTitle}>{greetingText} 👋</Text>
+              <Text style={styles.pageTitle}>{greetingText}</Text>
               {memberships.length > 1 && <Text style={styles.switcher}>▼</Text>}
             </TouchableOpacity>
           </View>
@@ -422,12 +430,12 @@ export function JoinerHomeScreen() {
 
         <View style={styles.tipBanner}>
           <LinearGradient
-            colors={[AppColors.peach.soft, AppColors.bg.warmCream]}
+            colors={[AppColors.green.soft, AppColors.bg.warmCream]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={styles.tipBannerInner}
           >
-            <Text style={styles.tipIcon}>🌱</Text>
-            <Text style={styles.tipText}>{dailyTip}</Text>
+            <Text style={styles.tipIcon}>📋</Text>
+            <Text style={styles.tipText}>{statusSummary}</Text>
           </LinearGradient>
         </View>
 
@@ -451,8 +459,8 @@ export function JoinerHomeScreen() {
                 <Text style={styles.elderNameNew}>{elderNickname}</Text>
                 <Text style={styles.elderStatusNew}>
                   {latestCheckIn
-                    ? (latestCheckIn.moodScore >= 7 ? '😊 今天状态不错' : latestCheckIn.moodScore >= 5 ? '😌 今天还好' : '💜 需要多关注')
-                    : '📋 暂无今日记录'}
+                    ? (latestCheckIn.moodScore >= 7 ? '当前状态稳定' : latestCheckIn.moodScore >= 5 ? '状态一般' : '需要重点关注')
+                    : '暂无今日记录'}
                 </Text>
               </View>
               {latestCheckIn?.careScore != null && (
@@ -464,7 +472,7 @@ export function JoinerHomeScreen() {
             </View>
             <View style={styles.metricsRowNew}>
               {[
-                { emoji: latestCheckIn?.moodEmoji || '😊', label: '心情', val: latestCheckIn ? (latestCheckIn.moodScore >= 7 ? '好' : latestCheckIn.moodScore >= 5 ? '还好' : '需关注') : '—', color: AppColors.peach.primary, bg: AppColors.peach.soft },
+                { emoji: latestCheckIn?.moodEmoji || '😊', label: '心情', val: latestCheckIn ? (latestCheckIn.moodScore >= 7 ? '稳定' : latestCheckIn.moodScore >= 5 ? '一般' : '需关注') : '—', color: AppColors.peach.primary, bg: AppColors.peach.soft },
                 { emoji: '💤', label: '睡眠', val: latestCheckIn ? `${latestCheckIn.sleepHours}h` : '—', color: AppColors.purple.strong, bg: AppColors.purple.soft },
                 { emoji: latestCheckIn?.medicationTaken ? '✅' : (latestCheckIn ? '⚠️' : '💊'), label: '用药', val: latestCheckIn ? (latestCheckIn.medicationTaken ? '已服' : '未服') : '—', color: latestCheckIn?.medicationTaken ? AppColors.green.strong : AppColors.status.error, bg: latestCheckIn?.medicationTaken ? AppColors.green.soft : AppColors.coral.soft },
               ].map((m) => (
@@ -498,9 +506,9 @@ export function JoinerHomeScreen() {
 
         {feed.length === 0 && (
           <View style={styles.emptyFeed}>
-            <Text style={styles.emptyFeedEmoji}>🌤️</Text>
-            <Text style={styles.emptyFeedTitle}>今天还没有新动态</Text>
-            <Text style={styles.emptyFeedSub}>主要照顾者完成打卡后，{'\n'}这里会显示{elderNickname}的最新状态</Text>
+            <Text style={styles.emptyFeedEmoji}>📋</Text>
+            <Text style={styles.emptyFeedTitle}>今日暂无更新</Text>
+            <Text style={styles.emptyFeedSub}>主要照顾者完成打卡后，{'\n'}这里会显示{elderNickname}的最新状况</Text>
           </View>
         )}
 

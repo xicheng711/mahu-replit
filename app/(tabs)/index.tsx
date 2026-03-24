@@ -20,22 +20,22 @@ import { useFamilyContext } from '@/lib/family-context';
 
 const { width } = Dimensions.get('window');
 
-const DAILY_MOTIVATIONS = [
-  '今天也是充满爱的一天，您的用心大家都看得到 🌸',
-  '照顾家人是一件了不起的事，谢谢您每天的坚持 ✨',
-  '小进步也是进步，今天的您已经很棒了 🌟',
-  '爱是最好的药，您每天的陪伴就是最大的治愈 💜',
-  '不必完美，只需在场。您的存在就是最大的安慰 🌼',
-  '每一天的记录，都是对家人最深的爱 📝',
-  '您的笑容是家人最大的力量，记得也照顾好自己 😊',
-  '今天的天气适合出门散步，带着家人多晒晒太阳 ☀️',
-  '您不是一个人在战斗，我们都在这里 🤝',
-  '每一天都是新的开始，加油！ 🚀',
-];
-
-function getDailyMotivation(): string {
-  const dayOfYear = Math.floor(Date.now() / 86400000);
-  return DAILY_MOTIVATIONS[dayOfYear % DAILY_MOTIVATIONS.length];
+function getDailyStatusHint(checkIn: DailyCheckIn | null): string {
+  if (!checkIn) return '今日尚未打卡，完成记录后为您整理情况';
+  const parts: string[] = [];
+  if (checkIn.sleepHours != null) {
+    if (checkIn.sleepHours >= 7) parts.push('睡眠时长正常');
+    else if (checkIn.sleepHours >= 5) parts.push('睡眠时长偏短');
+    else parts.push('睡眠严重不足，建议安排补觉');
+  }
+  if (checkIn.moodScore != null) {
+    if (checkIn.moodScore >= 7) parts.push('心情状态稳定');
+    else if (checkIn.moodScore >= 4) parts.push('心情一般');
+    else parts.push('情绪需要关注');
+  }
+  if (checkIn.medicationTaken === false) parts.push('用药未完成');
+  if (parts.length === 0) return '今日记录已整理完毕';
+  return parts.join('，');
 }
 
 
@@ -176,8 +176,8 @@ function EnhancedCheckinBanner({
                   <Text style={{ fontSize: 26 }}>📋</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.checkinTitle}>开始今日打卡</Text>
-                  <Text style={styles.checkinSub}>记录{elderNickname}的状态，解锁今日小马虎分析 ✨</Text>
+                  <Text style={styles.checkinTitle}>开始今日记录</Text>
+                  <Text style={styles.checkinSub}>记录{elderNickname}的状态，1分钟即可完成</Text>
                 </View>
               </View>
               <View style={styles.chevronCircle}>
@@ -278,8 +278,8 @@ function EnhancedAICard({
             </LinearGradient>
           </Animated.View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.aiLabel}>小马虎 今日记录分析</Text>
-            <Text style={styles.aiSubLabel}>{motivation}</Text>
+            <Text style={styles.aiLabel}>今日状态分析</Text>
+            <Text style={styles.aiSubLabel} numberOfLines={1}>基于打卡数据自动生成</Text>
           </View>
         </View>
 
@@ -297,9 +297,9 @@ function EnhancedAICard({
               </View>
               <View style={styles.aiSkeletonOverlay}>
                 <View style={styles.aiSkeletonLockBox}>
-                  <Text style={{ fontSize: 20 }}>🌅</Text>
-                  <Text style={styles.aiSkeletonLockText}>早安！记录昨晚的状态吧</Text>
-                  <Text style={styles.aiSkeletonLockSub}>每天花1分钟打卡，小马虎帮你追踪变化 🌿</Text>
+                  <Text style={{ fontSize: 20 }}>📋</Text>
+                  <Text style={styles.aiSkeletonLockText}>完成打卡后生成分析</Text>
+                  <Text style={styles.aiSkeletonLockSub}>记录今日状态，自动整理变化趋势</Text>
                 </View>
               </View>
             </View>
@@ -310,7 +310,7 @@ function EnhancedAICard({
 
         {morningDone && (
           <View style={styles.aiBadgeRow}>
-            {[{ emoji: '🧠', text: '护理指数' }, { emoji: '💬', text: '营养建议' }, { emoji: '☀️', text: '天气组合' }].map((b, i) => (
+            {[{ emoji: '📋', text: '状态总结' }, { emoji: '📈', text: '趋势变化' }, { emoji: '⚠️', text: '异常提醒' }].map((b, i) => (
               <View key={i} style={styles.aiBadge}>
                 <Text style={styles.aiBadgeEmoji}>{b.emoji}</Text>
                 <Text style={styles.aiBadgeText}>{b.text}</Text>
@@ -321,11 +321,11 @@ function EnhancedAICard({
 
         {morningDone ? (
           <TouchableOpacity onPress={onPress} style={styles.aiDetailLink}>
-            <Text style={styles.aiDetailLinkText}>查看详细建议 ›</Text>
+            <Text style={styles.aiDetailLinkText}>查看完整分析 ›</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={onCheckinPress} style={styles.aiDetailLink}>
-            <Text style={[styles.aiDetailLinkText, { color: AppColors.coral.primary }]}>开始早间打卡 →</Text>
+            <Text style={[styles.aiDetailLinkText, { color: AppColors.coral.primary }]}>去完成打卡 →</Text>
           </TouchableOpacity>
         )}
       </Animated.View>
@@ -406,18 +406,34 @@ function getMoodLabel(score: number): string {
 }
 
 function getPersonalizedAISuggestion(checkIn: DailyCheckIn): string {
-  const { moodScore, sleepHours, medicationTaken, moodEmoji } = checkIn;
-  if (moodScore >= 8 && sleepHours >= 7)
-    return `今天状态很棒！${moodEmoji || '😊'} 心情好、睡眠充足，适合带家人出门散步或做点轻松的活动 🌳`;
-  if (moodScore >= 6 && sleepHours >= 6)
-    return `今天整体状态不错，保持轻松的心情是最好的护理 🌸 记得多喝水、多休息哦`;
-  if (sleepHours < 6)
-    return `昨晚睡眠时间较短，今天可以安排小憩 💤 充足的休息是最好的护理基础`;
-  if (moodScore < 5)
-    return `今天心情有些低落，没关系，这很正常 💜 可以听听音乐或和家人聊聊天，心情会好起来的`;
-  if (!medicationTaken)
-    return `今天用药还没记录，记得按时服药哦 💊 规律用药是护理的重要一环`;
-  return `今天的护理记录已完成 ${moodEmoji || '😊'} 您的用心大家都看得到，加油！`;
+  const { moodScore, sleepHours, medicationTaken, nightWakings } = checkIn;
+  const observations: string[] = [];
+
+  if (sleepHours >= 7) {
+    observations.push('睡眠时长正常');
+  } else if (sleepHours >= 5) {
+    observations.push(`睡眠${sleepHours}小时，略偏短`);
+  } else {
+    observations.push(`睡眠仅${sleepHours}小时，建议今天安排午休补充`);
+  }
+
+  if (nightWakings && nightWakings >= 2) {
+    observations.push(`夜间中断${nightWakings}次，建议今晚继续观察是否重复出现`);
+  }
+
+  if (moodScore >= 7) {
+    observations.push('心情状态稳定');
+  } else if (moodScore >= 4) {
+    observations.push('情绪一般，可留意是否有诱因');
+  } else {
+    observations.push('情绪偏低，建议安排轻松活动或陪伴聊天');
+  }
+
+  if (!medicationTaken) {
+    observations.push('用药尚未完成，请确认是否已服用');
+  }
+
+  return observations.join('。') + '。';
 }
 
 // ─── 主页面 ─────────────────────────────────────────────────────────────
@@ -459,8 +475,7 @@ function CreatorHomeScreen() {
   const headerFade = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-15)).current;
   const avatarScale = useRef(new Animated.Value(0)).current;
-  // 标题 🚀 摇摆 — 在 hook 顶层调用
-  const rocketRot = useShakeAnim();
+  const _unusedShake = useShakeAnim();
 
   const loadData = useCallback(async () => {
     const profile = await getProfile();
@@ -515,13 +530,13 @@ function CreatorHomeScreen() {
 
   const encouragement = morningDone
     ? getPersonalizedAISuggestion(todayCheckIn!)
-    : '先完成今天的早间打卡，我再为您生成更贴合今天情况的建议 🌸';
+    : '完成打卡后，为您整理今日照护情况';
 
   const quickActions = [
-    { emoji: '💊', decorEmoji: '✨', label: '用药提醒', route: '/medication', gradientStart: Gradients.coral[0], gradientEnd: Gradients.coral[1], bgColor: AppColors.coral.soft },
-    { emoji: '📔', decorEmoji: '🌸', label: '护理日记', route: '/diary',      gradientStart: Gradients.peach[0], gradientEnd: Gradients.peach[1], bgColor: AppColors.peach.soft },
-    { emoji: '👥', decorEmoji: '💜', label: '家庭共享', route: '/family',     gradientStart: Gradients.purple[0], gradientEnd: Gradients.purple[1], bgColor: AppColors.purple.soft },
-    { emoji: '🤖', decorEmoji: '🧠', label: '小马虎分析',  route: '/share',  gradientStart: Gradients.green[0], gradientEnd: Gradients.green[1], bgColor: AppColors.green.soft },
+    { emoji: '💊', decorEmoji: '', label: '用药记录', route: '/medication', gradientStart: Gradients.coral[0], gradientEnd: Gradients.coral[1], bgColor: AppColors.coral.soft },
+    { emoji: '📔', decorEmoji: '', label: '护理日记', route: '/diary',      gradientStart: Gradients.peach[0], gradientEnd: Gradients.peach[1], bgColor: AppColors.peach.soft },
+    { emoji: '👥', decorEmoji: '', label: '家庭同步', route: '/family',     gradientStart: Gradients.purple[0], gradientEnd: Gradients.purple[1], bgColor: AppColors.purple.soft },
+    { emoji: '📊', decorEmoji: '', label: '数据分析',  route: '/share',  gradientStart: Gradients.green[0], gradientEnd: Gradients.green[1], bgColor: AppColors.green.soft },
   ];
 
   return (
@@ -573,8 +588,7 @@ function CreatorHomeScreen() {
 
             {/* 标题 + 问候 */}
             <View style={styles.appNameRow}>
-              <Text style={styles.appName}>我们一起照顾好今天</Text>
-              <Text style={styles.headerSparkle}>✨</Text>
+              <Text style={styles.appName}>今日照护总览</Text>
             </View>
             {memberships.length > 0 && (
               <TouchableOpacity
@@ -623,7 +637,7 @@ function CreatorHomeScreen() {
         <EnhancedAICard
           morningDone={morningDone}
           encouragement={encouragement}
-          motivation={getDailyMotivation()}
+          motivation={getDailyStatusHint(todayCheckIn)}
           onPress={() => router.push('/share' as any)}
           onCheckinPress={() => router.push('/checkin' as any)}
         />
@@ -647,7 +661,6 @@ function CreatorHomeScreen() {
         {/* ── 快捷入口 ── */}
         <View style={{ marginBottom: 4 }}>
           <View style={styles.sectionHeader}>
-            <Animated.Text style={[styles.sectionTitleEmoji, { transform: [{ rotate: rocketRot }] }]}>🚀</Animated.Text>
             <Text style={styles.sectionTitle}>快捷入口</Text>
           </View>
           <View style={styles.quickGrid}>
@@ -669,7 +682,7 @@ function CreatorHomeScreen() {
           <View style={styles.summaryCard}>
             <View style={styles.summaryCardHeader}>
               <Text style={styles.summaryCardTitle}>
-                ✨ {todayCheckIn ? '今日' : '昨日'}数据摘要
+                {todayCheckIn ? '今日' : '昨日'}数据摘要
               </Text>
               <TouchableOpacity onPress={() => router.push('/share' as any)}>
                 <Text style={styles.summaryCardEdit}>查看分析 →</Text>
@@ -785,8 +798,7 @@ const styles = StyleSheet.create({
   weatherDesc: { fontSize: 11, color: AppColors.text.tertiary, lineHeight: 14 },
   // 标题行
   appNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
-  appName: { fontSize: 26, fontWeight: '900', color: AppColors.coral.primary, letterSpacing: -0.8 },
-  headerSparkle: { fontSize: 20 },
+  appName: { fontSize: 24, fontWeight: '800', color: AppColors.text.primary, letterSpacing: -0.5 },
   greeting: { fontSize: 15, color: AppColors.text.tertiary, fontWeight: '500', lineHeight: 22 },
   profileBtn: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...SHADOWS.md },
   profileGradient: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },

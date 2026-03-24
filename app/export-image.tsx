@@ -61,7 +61,7 @@ function LongImageCard({
           </View>
           <View style={imgStyles.elderInfo}>
             <Text style={imgStyles.elderName}>{elderName}</Text>
-            <Text style={imgStyles.elderSub}>由 {caregiverName} 用心记录</Text>
+            <Text style={imgStyles.elderSub}>记录人：{caregiverName}</Text>
           </View>
         </View>
       </View>
@@ -181,13 +181,13 @@ function LongImageCard({
       <View style={imgStyles.divider} />
       <View style={imgStyles.encourageBox}>
         <Text style={imgStyles.encourageIcon}>💪</Text>
-        <Text style={imgStyles.encourageTitle}>今日加油</Text>
+        <Text style={imgStyles.encourageTitle}>今日小结</Text>
         <Text style={imgStyles.encourageText}>{encouragement}</Text>
       </View>
 
       <View style={imgStyles.footer}>
         <View style={imgStyles.footerDivider} />
-        <Text style={imgStyles.footerText}>🐴🐯 小马虎 · 用爱守护每一天</Text>
+        <Text style={imgStyles.footerText}>小马虎 · 家庭照护助手</Text>
         <Text style={imgStyles.footerSub}>{dateStr} {timeStr} · 小马虎生成</Text>
       </View>
     </View>
@@ -283,7 +283,7 @@ export default function ExportImageScreen() {
   const [checkIn, setCheckIn] = useState<DailyCheckIn | null>(null);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
-  const [encouragement, setEncouragement] = useState('您的坚持和付出，是最温暖的守护 💕');
+  const [encouragement, setEncouragement] = useState('今日照护记录已整理完毕');
   const [briefing, setBriefing] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const cardRef = useRef<View | null>(null);
@@ -332,21 +332,14 @@ export default function ExportImageScreen() {
         });
         if (result.success && result.briefing) {
           setBriefing(result.briefing);
-          if (result.briefing.encouragement) {
-            setEncouragement(result.briefing.encouragement);
-          } else if (result.briefing.caregiverNote) {
-            setEncouragement(result.briefing.caregiverNote);
+          if (result.briefing.suggestion) {
+            setEncouragement(result.briefing.suggestion);
+          } else if (result.briefing.summary) {
+            setEncouragement(result.briefing.summary);
           }
         }
       } catch {
-        const fallbacks = [
-          '每一天的陪伴，都是最珍贵的礼物。您做得很好！',
-          '照顾者也需要被照顾，记得今天也给自己一个拥抱 🤗',
-          '您的爱和耐心，是最好的良药。加油！💪',
-          '今天也辛苦了，您的付出家人都看在眼里 ❤️',
-          '坚持记录每一天，这份用心就是最大的力量 ✨',
-        ];
-        setEncouragement(fallbacks[new Date().getDate() % fallbacks.length]);
+        setEncouragement('当前整体状态已整理，详情请查看打卡记录');
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : '加载失败');

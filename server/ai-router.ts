@@ -111,30 +111,28 @@ async function getWeatherForCity(city: string): Promise<{ temp: number; descript
   }
 }
 
-const SYSTEM_PROMPT = `您是"小马虎"App的专业阿兹海默护理顾问。
+const SYSTEM_PROMPT = `您是"小马虎"App的照护数据分析助手。
 
-您的专业知识涵盖：
-- 阿尔茨海默症各阶段的行为特征和护理要点
-- 日落综合症、游走行为、拒绝服药等常见问题的处理方法
-- 认知刺激疗法、音乐疗法、回忆疗法等非药物干预手段
-- 老年人营养需求和饮食安全（防呛咳）
-- 照顾者心理健康和防止照顾者倦怠
-- 中国家庭文化背景下的护理沟通技巧
+【核心职责】
+您的任务是帮助主照顾人"省脑子"——快速看清今天的情况，知道该关注什么。
 
-【重要工作原则】
-您收到的数据已由规则引擎预处理完毕：
-- sleep_analysis.score 已由评分规则计算（您不需要重新评估睡眠质量）
-- sleep_analysis.problems 已由规则推导（您不需要自己判断有哪些睡眠问题）
-- 您的职责是：用这些事实生成温暖、具体、可操作的护理建议
-- 不要对数据做额外推断，不要改变或质疑分数
+【工作原则】
+- sleep_analysis.score 和 problems 已由规则引擎预处理，直接使用
+- 您的回复必须基于数据事实，不做额外推断
+- 每句话都要有依据：说清"是什么、和之前比有没有变化、建议做什么"
+- 不说空话、不说套话、不过度鼓励
 
-您的回复风格：
-- 温暖、专业、有同理心
-- 建议具体可操作，不空泛
+【回复风格】
+- 温和但专业，像一个可信赖的助手
+- 语气：温柔、安心、清楚、可信
+- 避免：太萌、太拟人、太儿童化的表达
+- 避免："加油"、"你很棒"、"我们一起"之类的泛泛鼓励
+- 正确示例：
+  · "今天睡眠时长正常，但夜间中断较多，建议今晚继续观察是否重复出现"
+  · "饮食较昨天略少，但心情和活动正常，可先继续记录"
+  · "用药已完成，当前整体状态稳定，适合按平常节奏照护"
 - 用中文回复
-- 理解照顾者的辛苦，给予鼓励
-
-重要：您的回复必须是严格的JSON格式，不要包含任何Markdown代码块标记。`;
+- 回复必须是严格的JSON格式，不要包含任何Markdown代码块标记`;
 
 export const aiRouter = router({
   // Generate daily care advice based on yesterday's check-in data
@@ -229,24 +227,25 @@ export const aiRouter = router({
 
 ${JSON.stringify(structuredInput, null, 2)}
 
-请根据以上数据快速生成极简护理简报。
+请根据以上数据生成简洁的照护分析。
 注意：
 - sleep_analysis.score 是规则引擎的计算结果，直接使用
-- 只需要三个字段，不要多余内容
+- summary 必须基于数据事实，指出值得注意的变化或异常
+- suggestion 必须给出具体可执行的下一步动作
 
 返回以下JSON格式（不包含任何代码块标记，直接返回JSON）：
 {
-  "careScore": <1-100整数，综合护理关注指数，100=状态极佳，sleep_analysis.score可作为重要参考>,
-  "summary": "<一句客观的昨日情况小结，20-40字，直接描述数据事实>",
-  "encouragement": "<给照顾者的温暖鼓励，必须20字以内>"
+  "careScore": <1-100整数，综合状态指数，100=状态极佳，sleep_analysis.score可作为重要参考>,
+  "summary": "<基于数据的客观情况描述，指出哪些指标正常、哪些值得注意，30-50字>",
+  "suggestion": "<具体的下一步建议，基于数据给出可执行动作，20字以内>"
 }`;
 
       try {
         const raw = await callQwen(prompt, SYSTEM_PROMPT, 1, 500);
         const advice = JSON.parse(raw);
-        if (advice.encouragement && advice.encouragement.length > 20) {
-          const first = advice.encouragement.split(/[。！？!?]/)[0];
-          advice.encouragement = first.slice(0, 20);
+        if (advice.suggestion && advice.suggestion.length > 25) {
+          const first = advice.suggestion.split(/[。！？!?]/)[0];
+          advice.suggestion = first.slice(0, 25);
         }
         return { success: true, advice, weather: weatherData };
       } catch (e) {
@@ -344,26 +343,24 @@ ${JSON.stringify(structuredInput, null, 2)}
 ${checkIn.notes ? `- 照顾者备注：${checkIn.notes}` : ""}
 
 要求：
-- summary：基于以上数据，用1-2句客观描述今日状态，直接说数据，不要过度渲染情感，不超过60字
-- highlights：2-3条今日关键事项，每条15字以内，直接描述事实
-- caregiverNote：鼓励照顾者的一句话，必须15字以内，只说温暖正能量，绝对不超过15个字
-- shareText：适合发微信的简报全文，包含主要数据，150字以内
+- summary：客观描述今日整体状态，指出正常和异常指标，不超过60字
+- highlights：2-3条值得关注的事项，每条15字以内，基于数据事实
+- attention：如有异常指标（如睡眠不足、漏药、情绪低落），用一句话指出，无异常则留空字符串
+- shareText：适合直接发送到家人微信群的今日简报，格式清晰好读，包含：睡眠、心情、用药、饮食、是否有异常，语气温和可信，150字以内
 
 返回JSON格式（不要包含任何代码块标记）：
 {
-  "summary": "<基于数据的客观简洁描述>",
+  "summary": "<基于数据的客观描述>",
   "highlights": ["<关键事项1>", "<关键事项2>"],
-  "caregiverNote": "<简短真诚鼓励>",
-  "shareText": "<微信分享文字>"
+  "attention": "<需要关注的异常，无则为空字符串>",
+  "shareText": "<微信分享简报>"
 }`;
 
       try {
         const raw = await callQwen(prompt, SYSTEM_PROMPT, 1, 4000);
         const briefing = JSON.parse(raw);
-        // 截断 caregiverNote 超长内容，最多保留第一句话（15字）
-        if (briefing.caregiverNote && briefing.caregiverNote.length > 20) {
-          const firstSentence = briefing.caregiverNote.split(/[。！？!?]/)[0];
-          briefing.caregiverNote = firstSentence.slice(0, 20);
+        if (briefing.attention && briefing.attention.length > 40) {
+          briefing.attention = briefing.attention.slice(0, 40);
         }
         return { success: true, briefing };
       } catch (e) {

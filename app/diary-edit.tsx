@@ -454,7 +454,7 @@ export default function DiaryEditScreen() {
                         <Text style={styles.motiveTitle}>每一天都值得被记住</Text>
                         <Text style={styles.motiveSubtitle}>
                           {diaryCount > 0
-                            ? `您已经记录了 ${diaryCount} 篇日记，继续加油 🌱`
+                            ? `已记录 ${diaryCount} 篇日记`
                             : `今天写下第一篇护理日记，从现在开始 💛`}
                         </Text>
                       </View>

@@ -192,23 +192,19 @@ export function buildGreetingWithWeather(
   weather: GpsWeatherInfo | null
 ): string {
   const hour = new Date().getHours();
-  const name = caregiverName || '亲爱的照顾者';
+  const name = caregiverName || '';
+  const prefix = name ? `${name}，` : '';
 
   let base = '';
-  if (hour >= 5 && hour < 9) base = `早上好，${name}！`;
-  else if (hour >= 9 && hour < 12) base = `上午好，${name}！`;
-  else if (hour >= 12 && hour < 14) base = `中午好，${name}！`;
-  else if (hour >= 14 && hour < 18) base = `下午好，${name}！`;
-  else if (hour >= 18 && hour < 21) base = `晚上好，${name}！`;
-  else base = `夜深了，${name}`;
+  if (hour >= 5 && hour < 9) base = `${prefix}早上好`;
+  else if (hour >= 9 && hour < 12) base = `${prefix}上午好`;
+  else if (hour >= 12 && hour < 14) base = `${prefix}中午好`;
+  else if (hour >= 14 && hour < 18) base = `${prefix}下午好`;
+  else if (hour >= 18 && hour < 21) base = `${prefix}晚上好`;
+  else base = `${prefix}夜深了，注意休息`;
 
   if (!weather) {
-    if (hour >= 5 && hour < 9) return `${base}新的一天开始了 🌅`;
-    if (hour >= 9 && hour < 12) return `${base}今天也要加油哦 ☀️`;
-    if (hour >= 12 && hour < 14) return `${base}记得吃午饭休息一下 🍱`;
-    if (hour >= 14 && hour < 18) return `${base}辛苦了，喝杯水吧 🍵`;
-    if (hour >= 18 && hour < 21) return `${base}今天也辛苦了 🌙`;
-    return `${base}，记得早点休息 💤`;
+    return base;
   }
 
   const cityStr = weather.city ? `${weather.city} ` : '';

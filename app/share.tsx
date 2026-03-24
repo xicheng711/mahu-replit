@@ -16,23 +16,6 @@ import { AppColors, Gradients, Shadows } from '@/lib/design-tokens';
 
 const { width: SW } = Dimensions.get('window');
 
-const CAREGIVER_ENCOURAGEMENTS = [
-  '{caregiver}，你温柔又尽心，{elder}很幸福有你在身边',
-  '{caregiver}，每一天的坚持都是对{elder}最深的爱，辛苦了',
-  '{caregiver}，照顾好自己才能更好地陪伴{elder}，今天也要好好休息哦',
-  '{caregiver}，你的付出让{elder}的每一天都更温暖',
-  '{caregiver}，坚持记录本身就很了不起，为你点赞',
-  '{caregiver}，{elder}的每一点进步都有你的功劳',
-  '{caregiver}，今天也很棒！记得留点时间给自己',
-  '{caregiver}，陪伴是最长情的告白，你做得很好',
-  '{caregiver}，{elder}身边有你，是最大的幸运',
-  '{caregiver}，照顾家人的路上你不孤单，小马虎一直陪着你',
-  '{caregiver}，你的温柔和耐心，{elder}都感受得到',
-  '{caregiver}，日复一日的陪伴就是最好的爱',
-  '{caregiver}，不要忘了，你自己也值得被好好对待',
-  '{caregiver}，你的用心记录让{elder}的健康更有保障',
-  '{caregiver}，每一次打卡都是爱的证明，继续加油',
-];
 
 // ─── 当日简报缓存（避免返回后重新生成）────────────────────────────────────────
 let _briefingCache: { date: string; briefing: any; shareText: string } | null = null;
@@ -112,9 +95,9 @@ function ShareLoadingScreen() {
   const shimmerLeft = shimmerX.interpolate({ inputRange: [-1, 2], outputRange: ['-30%', '130%'] });
 
   const STATUS = [
-    { emoji: '📋', label: '今日打卡', bg: AppColors.green.soft, pulse: pulse1 },
-    { emoji: '🤖', label: 'AI 撰写', bg: AppColors.purple.soft, pulse: pulse2 },
-    { emoji: '📰', label: '生成简报', bg: AppColors.coral.soft, pulse: pulse3 },
+    { emoji: '📋', label: '整理数据', bg: AppColors.green.soft, pulse: pulse1 },
+    { emoji: '📊', label: '分析趋势', bg: AppColors.purple.soft, pulse: pulse2 },
+    { emoji: '📝', label: '生成简报', bg: AppColors.coral.soft, pulse: pulse3 },
   ];
 
   return (
@@ -143,8 +126,8 @@ function ShareLoadingScreen() {
         </View>
 
         <Animated.View style={[slStyles.textBlock, { opacity: titleOpacity, transform: [{ translateY: titleY }] }]}>
-          <Text style={slStyles.title}>小马虎正在生成简报...</Text>
-          <Text style={slStyles.subtitle}>AI 正在整理今日记录，请稍候</Text>
+          <Text style={slStyles.title}>正在整理今日数据...</Text>
+          <Text style={slStyles.subtitle}>分析照护记录，生成简报</Text>
         </Animated.View>
 
         <Animated.View style={[slStyles.progressWrap, { opacity: titleOpacity }]}>
@@ -318,19 +301,17 @@ function BriefingCard({ briefing, checkIn, careScore, elderNickname, caregiverNa
         </Text>
       </View>
 
-      {/* ── Caregiver Note ── */}
-      <View style={cardStyles.caregiverBox}>
-        <Text style={cardStyles.caregiverIcon}>💕</Text>
-        <Text style={cardStyles.caregiverText}>
-          {briefing.caregiverNote && briefing.caregiverNote.trim().length > 0
-            ? briefing.caregiverNote
-            : CAREGIVER_ENCOURAGEMENTS[new Date().getDate() % CAREGIVER_ENCOURAGEMENTS.length].replace('{caregiver}', caregiverName).replace('{elder}', elderNickname)}
-        </Text>
-      </View>
+      {/* ── Attention Note ── */}
+      {briefing.attention && briefing.attention.trim().length > 0 && (
+        <View style={cardStyles.attentionBox}>
+          <Text style={cardStyles.attentionIcon}>⚠️</Text>
+          <Text style={cardStyles.attentionText}>{briefing.attention}</Text>
+        </View>
+      )}
 
       {/* ── Footer ── */}
       <View style={cardStyles.footer}>
-        <Text style={cardStyles.footerLeft}>由 {caregiverName} 用心记录</Text>
+        <Text style={cardStyles.footerLeft}>记录人：{caregiverName}</Text>
         <Text style={cardStyles.footerRight}>✨ 小马虎</Text>
       </View>
     </Animated.View>
@@ -357,12 +338,12 @@ const cardStyles = StyleSheet.create({
   summaryIcon: { fontSize: 18, marginBottom: 6 },
   summaryTitle: { fontSize: 14, fontWeight: '700', color: AppColors.green.strong, marginBottom: 8 },
   summaryText: { fontSize: 14, color: AppColors.text.primary, lineHeight: 22 },
-  caregiverBox: {
-    flexDirection: 'row', gap: 10, backgroundColor: AppColors.coral.soft, borderRadius: 14, padding: 14,
-    marginBottom: 16, alignItems: 'center',
+  attentionBox: {
+    flexDirection: 'row', gap: 10, backgroundColor: '#FEF3C7', borderRadius: 14, padding: 14,
+    marginBottom: 16, alignItems: 'center', borderWidth: 1, borderColor: '#FDE68A',
   },
-  caregiverIcon: { fontSize: 20 },
-  caregiverText: { flex: 1, fontSize: 13, color: AppColors.coral.primary, lineHeight: 20, fontStyle: 'italic' },
+  attentionIcon: { fontSize: 18 },
+  attentionText: { flex: 1, fontSize: 13, color: '#92400E', lineHeight: 20, fontWeight: '600' },
   footer: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: AppColors.border.soft, paddingTop: 14 },
   footerLeft: { fontSize: 12, color: AppColors.text.tertiary },
   footerRight: { fontSize: 12, color: AppColors.green.muted, fontWeight: '600' },
@@ -669,8 +650,8 @@ export default function ShareScreen() {
         napStr ? `白天小睡${napStr} 😴` : null,
         ci.eveningNotes || ci.morningNotes ? `备注：${(ci.eveningNotes || ci.morningNotes || '').slice(0, 30)}` : null,
       ].filter(Boolean) as string[],
-      caregiverNote: `辛苦了，好好休息！`,
-      shareText: `🐴🐯【小马虎 · 每日护理简报】\n📅 ${dateStr}\n👴 ${nickname} 今日护理指数：${score}/100\n😴 睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）${napStr ? `\n☀️ 白天小睡：${napStr}` : ''}\n💊 用药：${ci.medicationTaken ? '已按时服药 ✅' : '未按时服药 ❌'}\n由 ${caregiver} 用心记录 💕`,
+      attention: !ci.medicationTaken ? '今日用药未完成，请确认是否已服用' : (ci.sleepHours != null && ci.sleepHours < 5 ? '睡眠不足5小时，建议安排补觉' : ''),
+      shareText: `【${nickname}今日照护简报】\n${dateStr}\n\n睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）${napStr ? `\n午休：${napStr}` : ''}\n心情：${ci.moodScore ?? '--'}/10\n用药：${ci.medicationTaken ? '已完成' : '未完成'}\n整体状态：${scoreLabel}\n\n记录人：${caregiver}`,
     };
   }
 
@@ -716,18 +697,17 @@ export default function ShareScreen() {
   function buildFallbackShareText(): string {
     if (!checkIn) return `【小马虎护理日报】${elderNickname}今日护理指数：${careScore}/100`;
     const sleepLabel = checkIn.sleepQuality === 'good' ? '良好' : checkIn.sleepQuality === 'fair' ? '一般' : '较差';
-    return `🐴🐯【小马虎 · 每日护理简报】
+    return `【${elderNickname}今日照护简报】
 
-📅 ${new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}
-👴 ${elderNickname} 今日护理指数：${careScore}/100
+${new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}
 
-😴 睡眠：${checkIn.sleepHours}小时（${sleepLabel}）
-${checkIn.moodEmoji} 心情：${checkIn.moodScore}/10
-💊 用药：${checkIn.medicationTaken ? '已按时服药 ✅' : '未按时服药 ❌'}
-🍽️ 饮食：${checkIn.mealNotes || '已记录'}
+睡眠：${checkIn.sleepHours}小时（${sleepLabel}）
+心情：${checkIn.moodScore}/10
+用药：${checkIn.medicationTaken ? '已完成' : '未完成'}
+饮食：${checkIn.mealNotes || '已记录'}
+整体状态指数：${careScore}/100
 
-由 ${caregiverName} 用心记录 💕
-—— 小马虎 · 用爱守护每一天`;
+记录人：${caregiverName}`;
   }
 
   function handleCopy() {
@@ -767,7 +747,7 @@ ${checkIn.moodEmoji} 心情：${checkIn.moodScore}/10
         ) : generating ? (
           <View style={styles.generatingBox}>
             <ActivityIndicator color={AppColors.green.muted} />
-            <Text style={styles.generatingText}>✨ 小马虎正在生成精美简报...</Text>
+            <Text style={styles.generatingText}>正在整理数据，生成简报...</Text>
           </View>
         ) : briefing && checkIn ? (
           <>
@@ -814,10 +794,10 @@ ${checkIn.moodEmoji} 心情：${checkIn.moodScore}/10
             </TouchableOpacity>
 
             {/* ── Family Sync Notice ── */}
-            <Text style={styles.familySyncNotice}>🏠 今日记录已自动同步到家庭共享</Text>
+            <Text style={styles.familySyncNotice}>今日记录已自动同步到家庭空间</Text>
 
             <View style={styles.disclaimer}>
-              <Text style={styles.disclaimerText}>✨ 由小马虎生成 · 仅供参考</Text>
+              <Text style={styles.disclaimerText}>由小马虎整理 · 仅供参考</Text>
             </View>
           </>
         ) : null}

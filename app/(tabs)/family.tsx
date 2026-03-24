@@ -725,7 +725,7 @@ export default function FamilyScreen() {
 
                 {/* ── Footer ── */}
                 <View style={styles.briefingCardFooter}>
-                  <Text style={styles.briefingFooterLeft}>由 {briefingData?.profile?.caregiverName || '照顾者'} 用心记录</Text>
+                  <Text style={styles.briefingFooterLeft}>记录人：{briefingData?.profile?.caregiverName || '照顾者'}</Text>
                   <Text style={styles.briefingFooterRight}>✨ 小马虎</Text>
                 </View>
 

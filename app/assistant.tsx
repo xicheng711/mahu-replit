@@ -139,7 +139,7 @@ export default function AssistantScreen() {
       const briefingIsFresh = savedBriefing && (!latestCheckInTime || savedBriefing.generatedAt >= latestCheckInTime);
 
       if (briefingIsFresh) {
-        setAdvice({ careScore: savedBriefing.careScore, summary: savedBriefing.summary, encouragement: savedBriefing.encouragement });
+        setAdvice({ careScore: savedBriefing.careScore, summary: savedBriefing.summary, suggestion: savedBriefing.encouragement });
         setLoading(false);
         Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
         return;
@@ -149,7 +149,7 @@ export default function AssistantScreen() {
       if (!hasNewCheckIn) {
         const fallback = savedBriefing ?? await getLatestBriefing();
         if (fallback) {
-          setAdvice({ careScore: fallback.careScore, summary: fallback.summary, encouragement: fallback.encouragement });
+          setAdvice({ careScore: fallback.careScore, summary: fallback.summary, suggestion: fallback.encouragement });
           setLoading(false);
           Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }).start();
           return;
@@ -186,7 +186,7 @@ export default function AssistantScreen() {
           date: dateStr,
           careScore: result.advice.careScore ?? 50,
           summary: result.advice.summary ?? '',
-          encouragement: result.advice.encouragement ?? '',
+          encouragement: result.advice.suggestion ?? '',
           generatedAt: new Date().toISOString(),
           checkInDate: yesterday?.date ?? today?.date ?? dateStr,
         };
@@ -310,8 +310,8 @@ export default function AssistantScreen() {
               </View>
             </View>
             <View style={s.encourageRow}>
-              <Text style={{ fontSize: 18 }}>💛</Text>
-              <Text style={s.encourageText}>{advice.encouragement || `${caregiverName}，辛苦了！`}</Text>
+              <Text style={{ fontSize: 18 }}>📋</Text>
+              <Text style={s.encourageText}>{advice.suggestion || '查看详细照护分析'}</Text>
             </View>
           </LinearGradient>
 
@@ -393,7 +393,7 @@ export default function AssistantScreen() {
               <View style={s.emptyChart}>
                 <Text style={{ fontSize: 36, marginBottom: 8 }}>📊</Text>
                 <Text style={s.emptyText}>还没有足够的睡眠数据</Text>
-                <Text style={s.emptySubtext}>坚持打卡，数据会越来越丰富</Text>
+                <Text style={s.emptySubtext}>完成打卡后，这里会显示数据分析</Text>
               </View>
             )}
             {totalWakings > 0 && (

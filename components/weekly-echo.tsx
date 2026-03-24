@@ -155,7 +155,7 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
         }));
 
       const result = await weeklyEchoMutation.mutateAsync({
-        caregiverName: caregiverName || '亲爱的照顾者',
+        caregiverName: caregiverName || '照顾者',
         elderNickname: elderNickname || undefined,
         weekDiaries,
         weekCheckins,
@@ -164,8 +164,8 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
       setEcho({ title: result.title, echo: result.echo });
     } catch (e) {
       setEcho({
-        title: '这一周，您做得很棒',
-        echo: `${caregiverName || '亲爱的您'}，这一周您一直在默默付出，照顾家人是一件需要很大勇气的事。我看到了您的坚持，也感受到了您的爱。今天给自己一点时间休息，您值得被好好对待。`,
+        title: '本周照护总结',
+        echo: `本周照护数据暂时无法生成分析，请确保网络连接正常后重试。`,
       });
     } finally {
       setLoading(false);

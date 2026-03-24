@@ -70,11 +70,11 @@ export async function scheduleMorningReminder(elderNickname?: string): Promise<s
   }
 
   const morningMessages = [
-    { title: "🌅 早安，辛苦的守护者", body: `新的一天开始了，来记录一下${name}昨晚的睡眠情况吧` },
-    { title: "☀️ 早上好！", body: "花30秒记录睡眠情况，小马虎帮您生成今日护理建议" },
-    { title: "🌻 守护者早安", body: "记录昨晚睡眠，获取今日专属护理指南" },
-    { title: "🐴 小马虎提醒您", body: "早上好！快来完成今日晨间打卡吧" },
-    { title: "🌈 美好的一天", body: `记录一下${name}的睡眠，让今天的照护更有方向` },
+    { title: "晨间打卡提醒", body: `请记录${name}昨晚的睡眠情况` },
+    { title: "晨间记录", body: "花30秒记录睡眠情况，生成今日照护建议" },
+    { title: "打卡提醒", body: "记录昨晚睡眠，查看今日照护分析" },
+    { title: "小马虎提醒", body: "请完成今日晨间打卡" },
+    { title: "晨间打卡", body: `记录${name}的睡眠情况，获取照护分析` },
   ];
 
   const msg = morningMessages[Math.floor(Math.random() * morningMessages.length)];
@@ -113,11 +113,11 @@ export async function scheduleEveningReminder(elderNickname?: string): Promise<s
   }
 
   const eveningMessages = [
-    { title: "🌙 晚安打卡时间", body: `记录今天${name}的饮食、心情和用药情况吧` },
-    { title: "🌛 辛苦了一天", body: "花一分钟记录今日情况，小马虎陪您回顾这一天" },
-    { title: "✨ 今日小结", body: `来记录${name}今天的状态，为明天做更好的准备` },
-    { title: "🐯 小马虎晚间提醒", body: "别忘了记录今天的照护日志哦" },
-    { title: "🌜 睡前打卡", body: "记录今日饮食和心情，AI 助手为您总结一天" },
+    { title: "晚间打卡提醒", body: `请记录${name}今日的饮食、心情和用药情况` },
+    { title: "今日小结", body: "花一分钟记录今日情况，生成照护分析" },
+    { title: "晚间记录", body: `记录${name}今天的状态，便于追踪趋势` },
+    { title: "小马虎提醒", body: "请完成今日晚间打卡" },
+    { title: "晚间打卡", body: "记录今日饮食和心情，查看照护分析" },
   ];
 
   const msg = eveningMessages[Math.floor(Math.random() * eveningMessages.length)];

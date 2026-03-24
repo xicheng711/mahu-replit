@@ -156,7 +156,8 @@ The `users` table stores authentication data. The schema is in `drizzle/schema.t
 - **`getWeeklySleepData(days)`**: returns 7 days of sleep data for chart visualization
 
 ### Backend Simplification (server/ai-router.ts)
-- `getDailyAdvice` AI response simplified to 3 fields: `careScore`, `summary` (1 sentence), `encouragement` (≤20 chars)
+- `getDailyAdvice` AI response simplified to 3 fields: `careScore`, `summary` (1 sentence), `suggestion` (specific next step, ≤20 chars)
+- `generateBriefing` returns `attention` (anomaly alert string, empty if none) instead of `caregiverNote`
 - 500 token limit for fast responses
 - `getWeeklySleepData` tRPC query endpoint added
 
@@ -228,3 +229,36 @@ The `users` table stores authentication data. The schema is in `drizzle/schema.t
 ### Color Migration (`lib/animations.ts`)
 - COLORS updated from old coral/cream palette to new premium warm palette
 - bg=#F7F1F3, primary=#F28C7C, secondary=#8EB89A, text=#2F2A2E, shadow=rgba(88,64,78,0.08)
+
+## v7.0 — Tone Overhaul: "Practical Caregiver Assistant"
+
+### Product Direction
+- Transformed from "cute companion" (鸡汤/萌宠) to **practical caregiver assistant** (实用照护助手)
+- Core philosophy: help caregivers save mental energy through specific insights, anomaly detection, easy family sharing
+- Tone: warm but trustworthy, data-driven, actionable — no 加油/很棒/守护者/亲爱的
+
+### Copy Changes
+- **Greetings** (`lib/weather.ts`, `lib/care-knowledge.ts`): simplified to "早上好"/"下午好" without emoji decorations or "亲爱的照顾者"
+- **Notifications** (`lib/notifications.ts`): professional titles like "晨间打卡提醒" instead of "🌅 早安，辛苦的守护者"
+- **ENCOURAGEMENTS** (`lib/care-knowledge.ts`): replaced motivational quotes with actionable status assessments (e.g. "今日状态良好，适合安排户外活动")
+- **Check-in complete** messages: "打卡完成，数据已同步" instead of "您对老人的用心，都藏在这些小小的记录里🐾"
+- **AI advice** (`lib/ai-advice.ts`): encouragements → data-focused ("持续记录有助于发现长期趋势和变化")
+- **Weekly echo** (`components/weekly-echo.tsx`): fallback title "本周照护总结" instead of "这一周，您做得很棒"
+- **Share page** (`app/share.tsx`): "记录人：" instead of "用心记录"
+- **Family page** (`app/(tabs)/family.tsx`): "记录人：" footer instead of "由XX用心记录"
+
+### API Field Renames
+- `getDailyAdvice` response: `encouragement` → `suggestion` (specific actionable next step)
+- `generateBriefing` response: `caregiverNote` → `attention` (anomaly alert, empty string if none)
+- `CareBriefing` storage still uses `encouragement` field for backward compatibility; mapped from `suggestion` in assistant.tsx
+
+### Home Page Changes (`app/(tabs)/index.tsx`)
+- Heading: "我们一起照顾好今天" → "今日照护总览"
+- AI card badges: 状态总结/趋势变化/异常提醒 (data-oriented)
+- `getPersonalizedAISuggestion()`: specific observations like "睡眠时长正常，但夜间中断较多"
+- `getDailyStatusHint()`: replaces DAILY_MOTIVATIONS with data-driven status messages
+
+### Joiner Home Changes (`components/joiner-home.tsx`)
+- Status banner: live data summary ("睡眠7小时，用药已完成，心情稳定")
+- Empty state: "今日暂无更新" with professional explanation
+- Mood values: "稳定/一般/需关注" instead of "好/还好"
