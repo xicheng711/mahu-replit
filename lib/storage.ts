@@ -353,7 +353,7 @@ export async function getWeeklySleepData(days = 7): Promise<Array<{
     const dateStr = d.toISOString().split('T')[0];
     const checkin = all.find(c => c.date === dateStr);
     const sleepHours = checkin?.sleepHours ?? 0;
-    const awakeHours = checkin?.awakeHours ?? (sleepHours > 0 ? Math.max(0, 8 - sleepHours) : 0);
+    const awakeHours = checkin?.awakeHours ?? 0;
     result.push({
       date: dateStr,
       sleepHours,

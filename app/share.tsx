@@ -427,36 +427,38 @@ function SleepDetailSection({ checkIn }: { checkIn: DailyCheckIn }) {
 }
 
 function WeeklySleepChart({ weeklyData }: { weeklyData: Array<{ date: string; sleepHours: number; awakeHours: number; nightWakings: number }> }) {
-  const stackData = useMemo(() => {
+  const { stackData, chartMax } = useMemo(() => {
     const reversed = [...weeklyData].reverse();
-    return reversed.map((d) => {
+    let peak = 0;
+    const data = reversed.map((d) => {
       const dayOfWeek = new Date(d.date + 'T00:00:00').getDay();
       const label = WEEKDAY_LABELS[dayOfWeek];
       const sleep = d.sleepHours || 0;
       const awake = d.awakeHours || 0;
       const hasData = sleep > 0;
+      const total = sleep + awake;
+      if (total > peak) peak = total;
       const sleepColor = hasData
         ? (sleep >= 7 ? '#6EE7B7' : sleep >= 5 ? '#F59E0B' : '#FCA5A5')
         : AppColors.bg.secondary;
       const stacks = hasData
         ? [
             { value: sleep, color: sleepColor },
-            ...(awake > 0 ? [{ value: awake, color: '#FCD34D', marginBottom: 0 }] : []),
+            ...(awake > 0 ? [{ value: awake, color: '#FCD34D' }] : []),
           ]
         : [{ value: 0.15, color: AppColors.bg.secondary }];
       return {
         stacks,
         label,
-        topLabelComponent: () => (
-          <Text style={{ fontSize: 10, color: AppColors.text.secondary, marginBottom: 2 }}>
-            {hasData ? `${sleep}h` : ''}
-          </Text>
-        ),
       };
     });
+    const chartMax = Math.max(12, Math.ceil(peak / 2) * 2 + 2);
+    return { stackData: data, chartMax };
   }, [weeklyData]);
 
   if (weeklyData.length === 0) return null;
+
+  const hasAwakeData = weeklyData.some(d => d.awakeHours > 0);
 
   return (
     <View style={sleepStyles.card}>
@@ -464,31 +466,33 @@ function WeeklySleepChart({ weeklyData }: { weeklyData: Array<{ date: string; sl
       <View style={sleepStyles.chartLegend}>
         <View style={sleepStyles.legendItem}>
           <View style={[sleepStyles.legendDot, { backgroundColor: '#6EE7B7' }]} />
-          <Text style={sleepStyles.legendText}>睡眠 7h+</Text>
+          <Text style={sleepStyles.legendText}>7h+</Text>
         </View>
         <View style={sleepStyles.legendItem}>
           <View style={[sleepStyles.legendDot, { backgroundColor: '#F59E0B' }]} />
-          <Text style={sleepStyles.legendText}>睡眠 5-7h</Text>
+          <Text style={sleepStyles.legendText}>5-7h</Text>
         </View>
         <View style={sleepStyles.legendItem}>
           <View style={[sleepStyles.legendDot, { backgroundColor: '#FCA5A5' }]} />
-          <Text style={sleepStyles.legendText}>睡眠 &lt;5h</Text>
+          <Text style={sleepStyles.legendText}>&lt;5h</Text>
         </View>
-        <View style={sleepStyles.legendItem}>
-          <View style={[sleepStyles.legendDot, { backgroundColor: '#FCD34D' }]} />
-          <Text style={sleepStyles.legendText}>清醒</Text>
-        </View>
+        {hasAwakeData && (
+          <View style={sleepStyles.legendItem}>
+            <View style={[sleepStyles.legendDot, { backgroundColor: '#FCD34D' }]} />
+            <Text style={sleepStyles.legendText}>清醒</Text>
+          </View>
+        )}
       </View>
-      <View style={{ paddingRight: 20, paddingBottom: 10, width: '100%' }}>
+      <View style={{ paddingRight: 10, paddingBottom: 10, width: '100%' }}>
         <BarChart
           stackData={stackData}
           adjustToWidth
           width={CHART_W}
-          height={130}
+          height={150}
           barBorderTopLeftRadius={6}
           barBorderTopRightRadius={6}
           noOfSections={4}
-          maxValue={12}
+          maxValue={chartMax}
           yAxisThickness={0}
           yAxisLabelWidth={30}
           xAxisThickness={1}
@@ -496,7 +500,7 @@ function WeeklySleepChart({ weeklyData }: { weeklyData: Array<{ date: string; sl
           rulesColor={AppColors.bg.secondary}
           rulesType="solid"
           initialSpacing={10}
-          endSpacing={30}
+          endSpacing={40}
           yAxisTextStyle={{ fontSize: 10, color: AppColors.text.tertiary }}
           xAxisLabelTextStyle={{ fontSize: 11, color: AppColors.text.secondary, fontWeight: '500' }}
           isAnimated
