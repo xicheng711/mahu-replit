@@ -12,6 +12,7 @@ import { PageHeader, PAGE_THEMES } from '@/components/page-header';
 import { upsertCheckIn, getTodayCheckIn, getAllCheckIns, getProfile, DailyCheckIn, SleepInput, todayStr, getCurrentUserIsCreator } from '@/lib/storage';
 import { scoreSleepInput } from '@/lib/sleep-scoring';
 import { COLORS, SHADOWS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import * as Haptics from 'expo-haptics';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
@@ -152,7 +153,7 @@ function CelebrationEffect() {
         fadeOut
         explosionSpeed={400}
         fallSpeed={3000}
-        colors={['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#FF922B', '#CC5DE8', '#F06595', '#74C0FC']}
+        colors={[AppColors.coral.primary, '#FFD93D', '#6BCB77', '#4D96FF', '#FF922B', '#CC5DE8', '#F06595', '#74C0FC']}
       />
     </View>
   );
@@ -473,7 +474,7 @@ function CheckinLanding({
       {/* Evening block */}
       <View style={[styles.checkinBlock, eveningDone && styles.checkinBlockDone]}>
         <View style={styles.checkinBlockHeader}>
-          <View style={[styles.checkinBlockIcon, { backgroundColor: eveningDone ? '#EDE9FE' : '#F5F0FF' }]}>
+          <View style={[styles.checkinBlockIcon, { backgroundColor: eveningDone ? AppColors.purple.soft : '#F5F0FF' }]}>
             <Text style={styles.checkinBlockIconText}>🌙</Text>
           </View>
           <View style={styles.checkinBlockInfo}>
@@ -487,7 +488,7 @@ function CheckinLanding({
             )}
           </View>
           {eveningDone && (
-            <View style={[styles.doneCheckCircle, { backgroundColor: '#7C3AED' }]}>
+            <View style={[styles.doneCheckCircle, { backgroundColor: AppColors.purple.strong }]}>
               <Text style={styles.doneCheckText}>✓</Text>
             </View>
           )}
@@ -825,7 +826,7 @@ function CheckinScreenContent() {
     if (!isMorning) {
       const streakDots = Math.min(streak, 7);
       return (
-        <LinearGradient colors={['#3B0D7A', '#5B21B6', '#7C3AED', '#8B5CF6']} style={{ flex: 1 }}>
+        <LinearGradient colors={['#3B0D7A', AppColors.purple.strong, AppColors.purple.strong, '#8B5CF6']} style={{ flex: 1 }}>
           {showCelebration && <CelebrationEffect />}
           {/* Star field */}
           <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
@@ -906,7 +907,7 @@ function CheckinScreenContent() {
     }
 
     return (
-      <ScreenContainer containerClassName="bg-[#FFF7ED]">
+      <ScreenContainer containerClassName="bg-[#F7F1F3]">
         <Animated.View style={[styles.doneContainer, { opacity: doneFade, transform: [{ scale: doneScale }] }]}>
           {showCelebration && <CelebrationEffect />}
           <View style={styles.doneEmojiCircle}>
@@ -933,7 +934,7 @@ function CheckinScreenContent() {
   // ── Landing ──
   if (mode === 'landing') {
     return (
-      <ScreenContainer containerClassName="bg-[#FFF7ED]">
+      <ScreenContainer containerClassName="bg-[#F7F1F3]">
         <CheckinLanding
           checkIn={checkIn}
           elderNickname={elderNickname}
@@ -1158,7 +1159,7 @@ function CheckinScreenContent() {
             </View>
           )}
 
-          <View style={{ marginTop: 8, backgroundColor: '#F9FAFB', borderRadius: 16, padding: 16 }}>
+          <View style={{ marginTop: 8, backgroundColor: AppColors.bg.secondary, borderRadius: 16, padding: 16 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 10 }}>夜间醒来次数</Text>
             <View style={styles.counterRow}>
               <TouchableOpacity
@@ -1299,7 +1300,7 @@ function CheckinScreenContent() {
       hint: '选择小睡时长（30分钟为单位）',
       content: (
         <View style={{ gap: 16 }}>
-          <View style={{ backgroundColor: '#F9FAFB', borderRadius: 16, padding: 16, alignItems: 'center' }}>
+          <View style={{ backgroundColor: AppColors.bg.secondary, borderRadius: 16, padding: 16, alignItems: 'center' }}>
             <View style={styles.napScrollRow}>
               <TouchableOpacity
                 style={[styles.counterBtn, napMinutes === 0 && styles.counterBtnDisabled]}
@@ -1377,11 +1378,11 @@ function CheckinScreenContent() {
   const roleBadgeProps = (currentStep as any).role === 'elder'
     ? { label: currentStep.roleLabel, color: '#2563EB', bgColor: '#EFF6FF' }
     : (currentStep as any).role === 'caregiver'
-    ? { label: currentStep.roleLabel, color: '#7C3AED', bgColor: '#F5F0FF' }
+    ? { label: currentStep.roleLabel, color: AppColors.purple.strong, bgColor: AppColors.purple.soft }
     : { label: currentStep.roleLabel, color: '#059669', bgColor: '#ECFDF5' };
 
   return (
-    <ScreenContainer containerClassName="bg-[#FFF7ED]">
+    <ScreenContainer containerClassName="bg-[#F7F1F3]">
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
@@ -1457,7 +1458,7 @@ const styles = StyleSheet.create({
   },
   progressPillText: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
   checkinBlock: {
-    backgroundColor: '#fff', borderRadius: RADIUS.xxl, padding: 20, marginBottom: 16,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: RADIUS.xxl, padding: 20, marginBottom: 16,
     borderWidth: 1.5, borderColor: '#F0F0F0',
     ...SHADOWS.md,
   },
@@ -1486,9 +1487,9 @@ const styles = StyleSheet.create({
     paddingVertical: 13, alignItems: 'center',
     ...SHADOWS.glow(COLORS.primary),
   },
-  checkinBlockBtnEvening: { backgroundColor: '#7C3AED', ...SHADOWS.glow('#7C3AED') },
+  checkinBlockBtnEvening: { backgroundColor: AppColors.purple.strong, ...SHADOWS.glow(AppColors.purple.strong) },
   checkinBlockBtnSecondary: {
-    backgroundColor: '#F8F9FA', borderWidth: 1, borderColor: '#EBEBEB',
+    backgroundColor: AppColors.bg.secondary, borderWidth: 1, borderColor: '#EBEBEB',
     shadowOpacity: 0,
   },
   checkinBlockBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
@@ -1507,7 +1508,7 @@ const styles = StyleSheet.create({
   appName: { fontSize: 22, fontWeight: '800', color: COLORS.text, letterSpacing: -0.3 },
   date: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
   backToLanding: {
-    backgroundColor: '#F8F9FA', borderRadius: RADIUS.pill,
+    backgroundColor: AppColors.bg.secondary, borderRadius: RADIUS.pill,
     paddingHorizontal: 14, paddingVertical: 7,
     borderWidth: 1, borderColor: '#EBEBEB',
   },
@@ -1534,7 +1535,7 @@ const styles = StyleSheet.create({
 
   // Question card
   questionCard: {
-    backgroundColor: '#fff', borderRadius: RADIUS.xxl, padding: 24, marginBottom: 20,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: RADIUS.xxl, padding: 24, marginBottom: 20,
     borderWidth: 1, borderColor: '#F0F0F0',
     ...SHADOWS.lg,
   },
@@ -1551,7 +1552,7 @@ const styles = StyleSheet.create({
   answerArea: { minHeight: 120 },
 
   // Picker
-  pickerWrap: { backgroundColor: '#F8F9FA', borderRadius: RADIUS.lg, overflow: 'hidden', position: 'relative' },
+  pickerWrap: { backgroundColor: AppColors.bg.secondary, borderRadius: RADIUS.lg, overflow: 'hidden', position: 'relative' },
   pickerHighlight: {
     position: 'absolute', left: 0, right: 0,
     backgroundColor: 'rgba(255,107,107,0.1)', borderRadius: RADIUS.sm, zIndex: 1, pointerEvents: 'none',
@@ -1567,7 +1568,7 @@ const styles = StyleSheet.create({
   pillItem: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 18, paddingVertical: 16,
-    borderRadius: RADIUS.lg, backgroundColor: '#F8F9FA',
+    borderRadius: RADIUS.lg, backgroundColor: AppColors.bg.secondary,
     borderWidth: 1.5, borderColor: '#EBEBEB',
   },
   pillItemSelected: {
@@ -1583,7 +1584,7 @@ const styles = StyleSheet.create({
   gridPill: {
     width: '48%', flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: 14, paddingVertical: 14,
-    borderRadius: RADIUS.lg, backgroundColor: '#F8F9FA',
+    borderRadius: RADIUS.lg, backgroundColor: AppColors.bg.secondary,
     borderWidth: 1.5, borderColor: '#EBEBEB',
   },
   gridPillSelected: {
@@ -1596,7 +1597,7 @@ const styles = StyleSheet.create({
   optionRow: { flexDirection: 'row', gap: 10 },
   optionCard: {
     alignItems: 'center', padding: 18, borderRadius: RADIUS.lg,
-    backgroundColor: '#F8F9FA', borderWidth: 1.5, borderColor: '#EBEBEB', gap: 8,
+    backgroundColor: AppColors.bg.secondary, borderWidth: 1.5, borderColor: '#EBEBEB', gap: 8,
   },
   optionCardSelected: { backgroundColor: COLORS.primaryBg, borderColor: COLORS.primary },
   optionIcon: { fontSize: 32 },
@@ -1612,7 +1613,7 @@ const styles = StyleSheet.create({
   moodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
   moodCard: {
     alignItems: 'center', padding: 14, borderRadius: RADIUS.lg,
-    backgroundColor: '#F8F9FA', borderWidth: 1.5, borderColor: '#EBEBEB', gap: 6,
+    backgroundColor: AppColors.bg.secondary, borderWidth: 1.5, borderColor: '#EBEBEB', gap: 6,
   },
   moodCardSelected: { backgroundColor: COLORS.primaryBg, borderColor: COLORS.primary },
   moodEmoji: { fontSize: 32 },
@@ -1632,18 +1633,18 @@ const styles = StyleSheet.create({
     padding: 12, borderWidth: 1, borderColor: '#E9D5FF',
   },
   caregiverSupportText: {
-    fontSize: 13, color: '#7C3AED', textAlign: 'center', lineHeight: 20, fontWeight: '500',
+    fontSize: 13, color: AppColors.purple.strong, textAlign: 'center', lineHeight: 20, fontWeight: '500',
   },
 
   // Notes
   noteInput: {
-    backgroundColor: '#F8F9FA', borderRadius: RADIUS.lg, padding: 16,
+    backgroundColor: AppColors.bg.secondary, borderRadius: RADIUS.lg, padding: 16,
     fontSize: 15, color: COLORS.text, borderWidth: 1.5, borderColor: '#EBEBEB',
     minHeight: 110, textAlignVertical: 'top', lineHeight: 22,
   },
   mealCustomInput: {
-    backgroundColor: '#F8F9FA', borderRadius: RADIUS.lg, padding: 14,
-    fontSize: 14, color: COLORS.text, borderWidth: 1.5, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.bg.secondary, borderRadius: RADIUS.lg, padding: 14,
+    fontSize: 14, color: COLORS.text, borderWidth: 1.5, borderColor: AppColors.border.soft,
     marginTop: 4, lineHeight: 20,
   },
   noteHint: {
@@ -1655,7 +1656,7 @@ const styles = StyleSheet.create({
   },
   sleepToggleBtn: {
     flex: 1, paddingVertical: 10, borderRadius: RADIUS.lg,
-    backgroundColor: '#F3F4F6', alignItems: 'center',
+    backgroundColor: AppColors.bg.secondary, alignItems: 'center',
     borderWidth: 1.5, borderColor: 'transparent',
   },
   sleepToggleBtnActive: {
@@ -1671,8 +1672,8 @@ const styles = StyleSheet.create({
   segmentTotalText: { fontSize: 15, fontWeight: '700', color: '#059669' },
 
   segmentCard: {
-    backgroundColor: '#F8F9FA', borderRadius: RADIUS.lg,
-    padding: 14, borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.bg.secondary, borderRadius: RADIUS.lg,
+    padding: 14, borderWidth: 1, borderColor: AppColors.border.soft,
   },
   segmentHeader: {
     flexDirection: 'row', justifyContent: 'space-between',
@@ -1691,7 +1692,7 @@ const styles = StyleSheet.create({
   timePickerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   timeAdjustBtn: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: AppColors.border.soft, alignItems: 'center', justifyContent: 'center',
   },
   timeAdjustText: { fontSize: 18, fontWeight: '700', color: '#374151' },
   timeDisplay: {
@@ -1700,9 +1701,9 @@ const styles = StyleSheet.create({
   },
   timeAdjustBtnSmall: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: AppColors.bg.secondary,
   },
-  timeAdjustTextSmall: { fontSize: 11, fontWeight: '600', color: '#6B7280' },
+  timeAdjustTextSmall: { fontSize: 11, fontWeight: '600', color: AppColors.text.secondary },
 
   addSegmentBtn: {
     borderRadius: RADIUS.lg, padding: 12,
@@ -1720,7 +1721,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: COLORS.primary,
   },
   counterBtnDisabled: {
-    backgroundColor: '#F3F4F6', borderColor: '#E5E7EB',
+    backgroundColor: AppColors.bg.secondary, borderColor: AppColors.border.soft,
   },
   counterBtnText: { fontSize: 24, fontWeight: '700', color: COLORS.primary },
   counterDisplay: { alignItems: 'center' },
@@ -1738,19 +1739,19 @@ const styles = StyleSheet.create({
   },
   napQuickBtn: {
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.bg.secondary, borderWidth: 1, borderColor: AppColors.border.soft,
   },
   napQuickBtnActive: {
     backgroundColor: COLORS.primaryBg, borderColor: COLORS.primary,
   },
-  napQuickText: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
+  napQuickText: { fontSize: 13, fontWeight: '600', color: AppColors.text.secondary },
   napQuickTextActive: { color: COLORS.primary },
 
   // Nav
   navRow: { flexDirection: 'row', gap: 12 },
   backBtn: {
     flex: 1, padding: 16, borderRadius: RADIUS.xl,
-    backgroundColor: '#F8F9FA', alignItems: 'center',
+    backgroundColor: AppColors.bg.secondary, alignItems: 'center',
     borderWidth: 1, borderColor: '#EBEBEB',
   },
   backBtnText: { fontSize: 15, fontWeight: '600', color: COLORS.textSecondary },
@@ -1760,7 +1761,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.glow(COLORS.primary),
   },
   nextBtnFinish: { backgroundColor: COLORS.secondary, ...SHADOWS.glow(COLORS.secondary) },
-  nextBtnDisabled: { backgroundColor: '#E5E7EB' },
+  nextBtnDisabled: { backgroundColor: AppColors.border.soft },
   nextBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
   // Done
@@ -1814,7 +1815,7 @@ const styles = StyleSheet.create({
     borderRadius: 32, padding: 28,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
   },
-  nightTitle: { fontSize: 28, fontWeight: '800', color: '#FFFFFF', textAlign: 'center', marginBottom: 10 },
+  nightTitle: { fontSize: 28, fontWeight: '800', color: AppColors.surface.whiteStrong, textAlign: 'center', marginBottom: 10 },
   nightSparkleRow: { alignItems: 'center', marginBottom: 8 },
   nightSparkle: { fontSize: 17, color: '#FCD34D', fontWeight: '700' },
   nightSub: { fontSize: 15, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 24, marginBottom: 20 },
@@ -1852,7 +1853,7 @@ const calStyles = StyleSheet.create({
   sectionSub: { fontSize: 12, color: COLORS.textMuted },
 
   wrapper: {
-    backgroundColor: '#fff',
+    backgroundColor: AppColors.surface.whiteStrong,
     borderRadius: RADIUS.xxl,
     padding: 16,
     borderWidth: 1,
@@ -1882,7 +1883,7 @@ const calStyles = StyleSheet.create({
   dot: { width: 5, height: 5, borderRadius: 3, marginTop: 1 },
   dotBoth: { backgroundColor: '#059669' },
   dotMorning: { backgroundColor: '#F59E0B' },
-  dotEvening: { backgroundColor: '#7C3AED' },
+  dotEvening: { backgroundColor: AppColors.purple.strong },
 
   legendRow: { flexDirection: 'row', gap: 16, marginTop: 12, justifyContent: 'center' },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
@@ -1891,7 +1892,7 @@ const calStyles = StyleSheet.create({
 
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   popup: {
-    backgroundColor: '#fff', borderRadius: RADIUS.xxl, padding: 20,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: RADIUS.xxl, padding: 20,
     width: '100%', maxWidth: 340,
     ...SHADOWS.lg,
   },

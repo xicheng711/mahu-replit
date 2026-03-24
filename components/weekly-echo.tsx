@@ -13,13 +13,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { trpc } from '@/lib/trpc';
 import { getDiaryEntries, getRecentCheckIns, DiaryEntry, DailyCheckIn } from '@/lib/storage';
 import { SHADOWS, RADIUS } from '@/lib/animations';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import ViewShot from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
 
 interface WeeklyEchoProps {
   caregiverName: string;
   elderNickname: string;
-  /** Force show even if not Sunday evening (for testing) */
   forceShow?: boolean;
 }
 
@@ -55,7 +55,6 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
 
   const weeklyEchoMutation = trpc.ai.weeklyEcho.useMutation();
 
-  // Floating animation for the postcard
   useEffect(() => {
     const floatLoop = Animated.loop(
       Animated.sequence([
@@ -77,7 +76,6 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
     return () => floatLoop.stop();
   }, []);
 
-  // Shimmer loop on the gradient
   useEffect(() => {
     const shimmerLoop = Animated.loop(
       Animated.sequence([
@@ -97,7 +95,6 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
   useEffect(() => {
     if (!forceShow && !isSundayEvening()) return;
     setVisible(true);
-    // Entrance animation
     Animated.spring(cardAnim, {
       toValue: 1,
       speed: 6,
@@ -195,18 +192,16 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
     >
       <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 0.95 }}>
       <LinearGradient
-        colors={['#7C3AED', '#A855F7', '#EC4899']}
+        colors={[AppColors.purple.strong, Gradients.purple[0], Gradients.coral[1]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
       >
-        {/* Decorative dots */}
         <View style={[styles.decorDot, { top: 12, right: 40, width: 6, height: 6, opacity: 0.4 }]} />
         <View style={[styles.decorDot, { top: 28, right: 20, width: 4, height: 4, opacity: 0.3 }]} />
         <View style={[styles.decorDot, { bottom: 20, left: 30, width: 8, height: 8, opacity: 0.25 }]} />
         <View style={[styles.decorDot, { bottom: 40, left: 16, width: 5, height: 5, opacity: 0.2 }]} />
 
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.iconBox}>
             <MaterialCommunityIcons name="postage-stamp" size={20} color="#fff" />
@@ -224,7 +219,6 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
           </TouchableOpacity>
         </View>
 
-        {/* Content area */}
         {!echo && !loading && (
           <View style={styles.promptArea}>
             <Text style={styles.promptText}>
@@ -232,7 +226,7 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
             </Text>
             <TouchableOpacity style={styles.generateBtn} onPress={generateEcho}>
               <Text style={styles.generateBtnText}>生成时光回音</Text>
-              <MaterialCommunityIcons name="star-four-points" size={16} color="#7C3AED" />
+              <MaterialCommunityIcons name="star-four-points" size={16} color={AppColors.purple.strong} />
             </TouchableOpacity>
           </View>
         )}
@@ -253,14 +247,13 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
             <View style={styles.echoFooter}>
               <Text style={styles.echoFrom}>— 来自您的护理伙伴 💜</Text>
             </View>
-            {/* Save as image button */}
             <TouchableOpacity
               style={styles.saveImageBtn}
               onPress={saveAsImage}
               disabled={saving}
               activeOpacity={0.85}
             >
-              <MaterialCommunityIcons name="image-outline" size={16} color="#7C3AED" />
+              <MaterialCommunityIcons name="image-outline" size={16} color={AppColors.purple.strong} />
               <Text style={styles.saveImageBtnText}>
                 {saving ? '保存中...' : '保存为图片'}
               </Text>
@@ -337,7 +330,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#fff',
+    backgroundColor: AppColors.surface.whiteStrong,
     borderRadius: 20,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -346,7 +339,7 @@ const styles = StyleSheet.create({
   generateBtnText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#7C3AED',
+    color: AppColors.purple.strong,
   },
   loadingArea: {
     flexDirection: 'row',
@@ -395,7 +388,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#fff',
+    backgroundColor: AppColors.surface.whiteStrong,
     borderRadius: 20,
     paddingVertical: 9,
     paddingHorizontal: 18,
@@ -405,6 +398,6 @@ const styles = StyleSheet.create({
   saveImageBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#7C3AED',
+    color: AppColors.purple.strong,
   },
 });

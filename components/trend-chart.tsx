@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { DailyCheckIn } from '@/lib/storage';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CHART_W = SCREEN_WIDTH - 80;
@@ -14,7 +15,6 @@ interface TrendChartProps {
   caregiverName?: string;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 function getWeekRange(offset: number): { start: Date; end: Date; label: string } {
   const now = new Date();
   const dayOfWeek = now.getDay();
@@ -48,14 +48,12 @@ function buildDateRange(start: Date, end: Date): string[] {
   return range;
 }
 
-// ─── Mood Gauge (thermometer-style — Figma redesign) ─────────────────────────
 function MoodGauge({ avgMood, prevAvg }: { avgMood: number; prevAvg: number | null }) {
   const pct = Math.min(1, Math.max(0, avgMood / 10));
-  // Always orange/amber for the Figma look; green only at very high scores
   const gradStart = avgMood >= 8 ? '#4ADE80' : avgMood >= 5 ? '#FBBF24' : '#F97316';
   const gradEnd   = avgMood >= 8 ? '#16A34A' : avgMood >= 5 ? '#F59E0B' : '#EF4444';
   const accentColor = avgMood >= 8 ? '#16A34A' : avgMood >= 5 ? '#F59E0B' : '#F97316';
-  const bgColor = '#FFF8EE';
+  const bgColor = AppColors.peach.soft;
   const emoji = avgMood >= 8 ? '😄' : avgMood >= 6 ? '😊' : avgMood >= 4 ? '😌' : avgMood >= 2 ? '😕' : '😢';
   const statusLabel = avgMood >= 8 ? '本周心情很好' : avgMood >= 6 ? '本周心情不错' : avgMood >= 4 ? '本周心情平稳' : avgMood >= 2 ? '本周心情一般' : '本周需要关注';
 
@@ -78,11 +76,8 @@ function MoodGauge({ avgMood, prevAvg }: { avgMood: number; prevAvg: number | nu
         <Text style={gaugeStyles.titleEmoji}>😊</Text>
       </View>
       <View style={gaugeStyles.row}>
-        {/* Thermometer — wider, orange gradient */}
         <View style={gaugeStyles.thermoOuter}>
-          {/* Track */}
           <View style={gaugeStyles.thermoTrack}>
-            {/* Animated fill from bottom */}
             <Animated.View style={[gaugeStyles.thermoFillWrapper, { height: fillHeight }]}>
               <LinearGradient
                 colors={[gradEnd, gradStart]}
@@ -91,27 +86,21 @@ function MoodGauge({ avgMood, prevAvg }: { avgMood: number; prevAvg: number | nu
               />
             </Animated.View>
           </View>
-          {/* Bulb — large circle with emoji + white highlight */}
           <View style={[gaugeStyles.thermoBulb, { backgroundColor: accentColor }]}>
             <Text style={gaugeStyles.thermoBulbEmoji}>{emoji}</Text>
-            {/* White highlight */}
             <View style={gaugeStyles.bulbHighlight} />
           </View>
         </View>
 
-        {/* Stats column */}
         <View style={gaugeStyles.stats}>
-          {/* Big number */}
           <View style={gaugeStyles.numRow}>
             <Text style={[gaugeStyles.avgNum, { color: accentColor }]}>{avgMood.toFixed(1)}</Text>
             <Text style={gaugeStyles.avgLabel}> / 10</Text>
           </View>
-          {/* Status label pill */}
-          <View style={[gaugeStyles.statusPill, { backgroundColor: '#fff' }]}>
+          <View style={[gaugeStyles.statusPill, { backgroundColor: AppColors.surface.whiteStrong }]}>
             <Text style={gaugeStyles.statusEmoji}>{emoji}</Text>
             <Text style={[gaugeStyles.statusText, { color: accentColor }]}>{statusLabel}</Text>
           </View>
-          {/* Progress bar */}
           <View style={gaugeStyles.progressSection}>
             <View style={gaugeStyles.progressLabelRow}>
               <Text style={gaugeStyles.progressLabel}>心情健康度</Text>
@@ -130,20 +119,19 @@ function MoodGauge({ avgMood, prevAvg }: { avgMood: number; prevAvg: number | nu
 const gaugeStyles = StyleSheet.create({
   card: { borderRadius: 20, padding: 18, marginBottom: 12 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
-  title: { fontSize: 15, fontWeight: '800', color: '#374151' },
+  title: { fontSize: 15, fontWeight: '800', color: AppColors.text.primary },
   titleEmoji: { fontSize: 16 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 24 },
-  // Thermometer
   thermoOuter: { alignItems: 'center', width: 52 },
   thermoTrack: {
-    width: 22, height: 140, backgroundColor: '#E5E7EB', borderRadius: 11,
+    width: 22, height: 140, backgroundColor: AppColors.border.soft, borderRadius: 11,
     overflow: 'hidden', justifyContent: 'flex-end',
   },
   thermoFillWrapper: { width: '100%', overflow: 'hidden', borderRadius: 11 },
   thermoBulb: {
     width: 52, height: 52, borderRadius: 26, marginTop: -10,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2, shadowRadius: 8, elevation: 6,
   },
   thermoBulbEmoji: { fontSize: 26 },
@@ -152,32 +140,29 @@ const gaugeStyles = StyleSheet.create({
     width: 12, height: 8, borderRadius: 6,
     backgroundColor: 'rgba(255,255,255,0.45)',
   },
-  // Stats
   stats: { flex: 1 },
   numRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
   avgNum: { fontSize: 52, fontWeight: '900', lineHeight: 56 },
-  avgLabel: { fontSize: 16, color: '#9B9B9B', marginBottom: 8 },
+  avgLabel: { fontSize: 16, color: AppColors.text.tertiary, marginBottom: 8 },
   statusPill: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8,
     marginBottom: 14, alignSelf: 'flex-start',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
   },
   statusEmoji: { fontSize: 16 },
   statusText: { fontSize: 14, fontWeight: '700' },
-  // Progress bar
   progressSection: {},
   progressLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  progressLabel: { fontSize: 12, color: '#9B9B9B', fontWeight: '500' },
+  progressLabel: { fontSize: 12, color: AppColors.text.tertiary, fontWeight: '500' },
   progressPct: { fontSize: 12, fontWeight: '700' },
   progressTrack: {
-    height: 8, backgroundColor: '#E5E7EB', borderRadius: 4, overflow: 'hidden',
+    height: 8, backgroundColor: AppColors.border.soft, borderRadius: 4, overflow: 'hidden',
   },
   progressFill: { height: '100%', borderRadius: 4 },
 });
 
-// ─── Mood Distribution ───────────────────────────────────────────────────────
 const MOOD_EMOJIS: Record<string, { emoji: string; label: string }> = {
   '😄': { emoji: '😄', label: '很开心' },
   '😊': { emoji: '😊', label: '还不错' },
@@ -188,7 +173,6 @@ const MOOD_EMOJIS: Record<string, { emoji: string; label: string }> = {
 };
 
 function MoodDistribution({ checkIns }: { checkIns: DailyCheckIn[] }) {
-  // Count mood emojis
   const counts: Record<string, number> = {};
   checkIns.forEach(c => {
     if (c.moodEmoji) {
@@ -236,25 +220,24 @@ function MoodDistribution({ checkIns }: { checkIns: DailyCheckIn[] }) {
 }
 
 const distStyles = StyleSheet.create({
-  card: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#F0F0EE' },
-  title: { fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 14 },
-  empty: { fontSize: 13, color: '#9B9B9B', textAlign: 'center', paddingVertical: 16 },
+  card: { backgroundColor: AppColors.surface.whiteStrong, borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: AppColors.border.soft },
+  title: { fontSize: 14, fontWeight: '700', color: AppColors.text.primary, marginBottom: 14 },
+  empty: { fontSize: 13, color: AppColors.text.tertiary, textAlign: 'center', paddingVertical: 16 },
   emojiRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 14 },
   emojiItem: { alignItems: 'center', gap: 4 },
   emojiCircle: { position: 'relative' },
   emoji: { fontSize: 32 },
   countBadge: {
     position: 'absolute', top: -4, right: -8,
-    backgroundColor: '#FF6B6B', borderRadius: 10, minWidth: 18, height: 18,
+    backgroundColor: AppColors.coral.primary, borderRadius: 10, minWidth: 18, height: 18,
     alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
   },
   countText: { fontSize: 10, fontWeight: '800', color: '#fff' },
-  emojiLabel: { fontSize: 11, color: '#9B9B9B', fontWeight: '500' },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 10 },
-  summaryText: { fontSize: 12, color: '#9B9B9B' },
+  emojiLabel: { fontSize: 11, color: AppColors.text.tertiary, fontWeight: '500' },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: AppColors.bg.secondary, paddingTop: 10 },
+  summaryText: { fontSize: 12, color: AppColors.text.tertiary },
 });
 
-// ─── Smooth Curve Chart (SVG-like with RN Views) ────────────────────────────
 function SmoothCurveChart({ data, color }: {
   data: { label: string; value: number; hasData: boolean }[];
   color: string;
@@ -271,7 +254,6 @@ function SmoothCurveChart({ data, color }: {
     );
   }
 
-  // Calculate points
   const points = data.map((d, i) => ({
     x: (i / (data.length - 1)) * CHART_W,
     y: d.hasData ? chartH - (d.value / maxVal) * chartH : -1,
@@ -280,36 +262,29 @@ function SmoothCurveChart({ data, color }: {
     label: d.label,
   }));
 
-  // Y-axis emoji labels
   const yLabels = ['😄', '😊', '😐', '😕', '😢'];
 
   return (
     <View>
       <View style={curveStyles.chartContainer}>
-        {/* Y-axis emojis */}
         <View style={curveStyles.yAxis}>
           {yLabels.map((e, i) => (
             <Text key={i} style={curveStyles.yEmoji}>{e}</Text>
           ))}
         </View>
-        {/* Chart area */}
         <View style={[curveStyles.chartArea, { height: chartH }]}>
-          {/* Grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
             <View key={i} style={[curveStyles.gridLine, { bottom: `${pct * 100}%` }]} />
           ))}
-          {/* Data points and connecting lines */}
           {points.map((p, i) => {
             if (!p.hasData) return null;
             return (
               <View key={i}>
-                {/* Point */}
                 <View style={[curveStyles.dot, {
                   left: p.x - 5,
                   bottom: (p.value / maxVal) * chartH - 5,
                   backgroundColor: color,
                 }]} />
-                {/* Value label */}
                 <View style={[curveStyles.valueLabel, {
                   left: p.x - 12,
                   bottom: (p.value / maxVal) * chartH + 8,
@@ -319,7 +294,6 @@ function SmoothCurveChart({ data, color }: {
               </View>
             );
           })}
-          {/* Connecting line segments */}
           {points.reduce<React.ReactNode[]>((acc, p, i) => {
             if (i === 0 || !p.hasData) return acc;
             const prev = points.slice(0, i).reverse().find(pp => pp.hasData);
@@ -345,7 +319,6 @@ function SmoothCurveChart({ data, color }: {
           }, [])}
         </View>
       </View>
-      {/* X-axis labels */}
       <View style={curveStyles.xAxis}>
         {data.map((d, i) => (
           <Text key={i} style={curveStyles.xLabel} numberOfLines={1}>{d.label}</Text>
@@ -360,18 +333,17 @@ const curveStyles = StyleSheet.create({
   yAxis: { width: 24, justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
   yEmoji: { fontSize: 14 },
   chartArea: { flex: 1, position: 'relative', marginLeft: 8 },
-  gridLine: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: '#F0F0EE' },
-  dot: { position: 'absolute', width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: '#fff' },
+  gridLine: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: AppColors.border.soft },
+  dot: { position: 'absolute', width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: AppColors.surface.whiteStrong },
   valueLabel: { position: 'absolute' },
   valueLabelText: { fontSize: 10, fontWeight: '700', textAlign: 'center', width: 24 },
   line: { position: 'absolute', height: 2.5, borderRadius: 1.5 },
-  emptyChart: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#FAFAF8', borderRadius: 12 },
-  emptyText: { fontSize: 13, color: '#BBBBB8' },
+  emptyChart: { alignItems: 'center', justifyContent: 'center', backgroundColor: AppColors.bg.secondary, borderRadius: 12 },
+  emptyText: { fontSize: 13, color: AppColors.text.tertiary },
   xAxis: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingLeft: 32 },
-  xLabel: { fontSize: 10, color: '#BBBBB8', textAlign: 'center', flex: 1 },
+  xLabel: { fontSize: 10, color: AppColors.text.tertiary, textAlign: 'center', flex: 1 },
 });
 
-// ─── Sleep Bar Chart ─────────────────────────────────────────────────────────
 function SleepChart({ data }: { data: { label: string; value: number; hasData: boolean }[] }) {
   const chartH = 100;
   const maxVal = 12;
@@ -421,19 +393,18 @@ function SleepChart({ data }: { data: { label: string; value: number; hasData: b
 const sleepStyles = StyleSheet.create({
   chartArea: { flexDirection: 'row' },
   yAxis: { width: 28, justifyContent: 'space-between', alignItems: 'flex-end', paddingRight: 4, height: 100 },
-  yLabel: { fontSize: 10, color: '#BBBBB8' },
+  yLabel: { fontSize: 10, color: AppColors.text.tertiary },
   barsContainer: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', position: 'relative' },
-  gridLine: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: '#F0F0EE' },
+  gridLine: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: AppColors.border.soft },
   barCol: { alignItems: 'center', flex: 1 },
   barWrapper: { height: 100, justifyContent: 'flex-end', alignItems: 'center' },
   bar: { minHeight: 4 },
-  barEmpty: { height: 4, backgroundColor: '#EBEBEB' },
-  barValue: { fontSize: 9, color: '#9B9B9B', marginBottom: 2 },
+  barEmpty: { height: 4, backgroundColor: AppColors.border.soft },
+  barValue: { fontSize: 9, color: AppColors.text.tertiary, marginBottom: 2 },
   xAxis: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 4 },
-  xLabel: { fontSize: 10, color: '#BBBBB8', textAlign: 'center', flex: 1 },
+  xLabel: { fontSize: 10, color: AppColors.text.tertiary, textAlign: 'center', flex: 1 },
 });
 
-// ─── Medication Compliance ───────────────────────────────────────────────────
 function MedicationChart({ data }: { data: { label: string; taken: boolean | null }[] }) {
   const takenCount = data.filter(d => d.taken === true).length;
   const missedCount = data.filter(d => d.taken === false).length;
@@ -442,7 +413,6 @@ function MedicationChart({ data }: { data: { label: string; taken: boolean | nul
 
   return (
     <View>
-      {/* Rate bar */}
       <View style={medStyles.rateRow}>
         <Text style={medStyles.rateLabel}>服药率</Text>
         <Text style={[medStyles.rateNum, { color: rate >= 80 ? '#16A34A' : rate >= 50 ? '#F0A500' : '#DC2626' }]}>{rate}%</Text>
@@ -450,7 +420,6 @@ function MedicationChart({ data }: { data: { label: string; taken: boolean | nul
       <View style={medStyles.rateBar}>
         <View style={[medStyles.rateFill, { width: `${rate}%`, backgroundColor: rate >= 80 ? '#16A34A' : rate >= 50 ? '#F0A500' : '#DC2626' }]} />
       </View>
-      {/* Dot grid */}
       <View style={medStyles.dotGrid}>
         {data.map((d, i) => (
           <View key={i} style={medStyles.dotCol}>
@@ -466,14 +435,13 @@ function MedicationChart({ data }: { data: { label: string; taken: boolean | nul
           </View>
         ))}
       </View>
-      {/* Legend */}
       <View style={medStyles.legend}>
         <View style={medStyles.legendItem}>
-          <View style={[medStyles.legendDot, { backgroundColor: '#DCFCE7' }]} />
+          <View style={[medStyles.legendDot, { backgroundColor: AppColors.green.soft }]} />
           <Text style={medStyles.legendText}>按时 {takenCount}天</Text>
         </View>
         <View style={medStyles.legendItem}>
-          <View style={[medStyles.legendDot, { backgroundColor: '#FEE2E2' }]} />
+          <View style={[medStyles.legendDot, { backgroundColor: AppColors.coral.soft }]} />
           <Text style={medStyles.legendText}>漏药 {missedCount}天</Text>
         </View>
       </View>
@@ -483,32 +451,30 @@ function MedicationChart({ data }: { data: { label: string; taken: boolean | nul
 
 const medStyles = StyleSheet.create({
   rateRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  rateLabel: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
+  rateLabel: { fontSize: 13, color: AppColors.text.secondary, fontWeight: '500' },
   rateNum: { fontSize: 24, fontWeight: '900' },
-  rateBar: { height: 8, backgroundColor: '#F0F0EE', borderRadius: 4, overflow: 'hidden', marginBottom: 14 },
+  rateBar: { height: 8, backgroundColor: AppColors.border.soft, borderRadius: 4, overflow: 'hidden', marginBottom: 14 },
   rateFill: { height: '100%', borderRadius: 4 },
   dotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginBottom: 12 },
   dotCol: { alignItems: 'center', minWidth: 30 },
   dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
-  dotEmpty: { backgroundColor: '#F0F0EE' },
-  dotGreen: { backgroundColor: '#DCFCE7' },
-  dotRed: { backgroundColor: '#FEE2E2' },
+  dotEmpty: { backgroundColor: AppColors.border.soft },
+  dotGreen: { backgroundColor: AppColors.green.soft },
+  dotRed: { backgroundColor: AppColors.coral.soft },
   dotText: { fontSize: 12, fontWeight: '700' },
-  dotLabel: { fontSize: 9, color: '#BBBBB8' },
+  dotLabel: { fontSize: 9, color: AppColors.text.tertiary },
   legend: { flexDirection: 'row', gap: 16, justifyContent: 'center' },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendDot: { width: 12, height: 12, borderRadius: 6 },
-  legendText: { fontSize: 12, color: '#6B7280' },
+  legendText: { fontSize: 12, color: AppColors.text.secondary },
 });
 
-// ─── Main Component ──────────────────────────────────────────────────────────
 export function TrendChart({ checkIns, patientNickname = '家人', caregiverName = '照顾者' }: TrendChartProps) {
   const [period, setPeriod] = useState<Period>('7d');
   const [offset, setOffset] = useState(0);
 
   const checkInMap = new Map(checkIns.map(c => [c.date, c]));
 
-  // ── Year mode: 12 monthly buckets for current year ──────────────────────────
   const currentYear = new Date().getFullYear();
   const yearLabel = `${currentYear}年`;
 
@@ -536,7 +502,6 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
     return { label, taken: total > 0 ? taken >= total / 2 : null };
   });
 
-  // ── Weekly mode: single week range with offset ───────────────────────────────
   const range = getWeekRange(offset);
   const dateRange = buildDateRange(range.start, range.end);
   const periodLabel = offset === 0 ? '本周' : offset === -1 ? '上周' : `${Math.abs(offset)}周前`;
@@ -555,7 +520,6 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
     return { label: ['日', '一', '二', '三', '四', '五', '六'][d.getDay()], taken: c ? c.medicationTaken : null };
   });
 
-  // Sleep subtitle
   const relevantCheckIns = period === 'year'
     ? checkIns.filter(c => new Date(c.date).getFullYear() === currentYear)
     : periodCheckIns;
@@ -566,12 +530,10 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
     ? `${period === 'year' ? yearLabel : periodLabel}平均 ${avgSleep.toFixed(1)}h · ${avgSleep >= 7 ? '睡眠充足 ✅' : '睡眠不足 ⚠️'}`
     : `${period === 'year' ? yearLabel : periodLabel}暂无睡眠记录`;
 
-  // Medication stats
   const medWithData = relevantCheckIns.filter(c => c.medicationTaken !== null);
   const medTaken = medWithData.filter(c => c.medicationTaken === true).length;
   const medRate = medWithData.length > 0 ? Math.round((medTaken / medWithData.length) * 100) : null;
 
-  // Caregiver mood
   const cgMoodCheckIns = periodCheckIns.filter(c => (c.caregiverMoodScore ?? 0) > 0);
   const avgCaregiverMood = cgMoodCheckIns.length > 0
     ? cgMoodCheckIns.reduce((s, c) => s + (c.caregiverMoodScore || 0), 0) / cgMoodCheckIns.length : 0;
@@ -584,7 +546,6 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
 
   return (
     <View style={styles.container}>
-      {/* ── Period Toggle ── */}
       <View style={styles.toggleRow}>
         <View style={styles.periodToggle}>
           {(['7d', 'year'] as Period[]).map(p => (
@@ -601,7 +562,6 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
         </View>
       </View>
 
-      {/* ── Date Navigation ── */}
       <View style={styles.dateNav}>
         <View>
           <Text style={styles.dateNavPeriod}>{period === 'year' ? yearLabel : periodLabel}</Text>
@@ -623,7 +583,6 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
         )}
       </View>
 
-      {/* ── Sleep Chart ── */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionIconWrap}>
@@ -637,10 +596,9 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
         <SleepChart data={sleepData} />
       </View>
 
-      {/* ── Medication ── */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIconWrap, { backgroundColor: '#FFF0F6' }]}>
+          <View style={[styles.sectionIconWrap, { backgroundColor: AppColors.coral.soft }]}>
             <Text style={styles.sectionIcon}>💊</Text>
           </View>
           <View style={styles.sectionHeaderText}>
@@ -653,10 +611,9 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
         <MedicationChart data={medData} />
       </View>
 
-      {/* ── Caregiver Mood ── */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
-          <View style={[styles.sectionIconWrap, { backgroundColor: '#FFF8EE' }]}>
+          <View style={[styles.sectionIconWrap, { backgroundColor: AppColors.peach.soft }]}>
             <Text style={styles.sectionIcon}>🌡️</Text>
           </View>
           <View style={styles.sectionHeaderText}>
@@ -676,56 +633,55 @@ export function TrendChart({ checkIns, patientNickname = '家人', caregiverName
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { gap: 0 },
   toggleRow: { alignItems: 'center', marginBottom: 14 },
   periodToggle: {
-    flexDirection: 'row', backgroundColor: '#F0F0EE', borderRadius: 12, padding: 3,
+    flexDirection: 'row', backgroundColor: AppColors.bg.secondary, borderRadius: 12, padding: 3,
   },
   periodBtn: { paddingHorizontal: 28, paddingVertical: 8, borderRadius: 10 },
   periodBtnActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
+    backgroundColor: AppColors.surface.whiteStrong,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
   },
-  periodBtnText: { fontSize: 15, fontWeight: '700', color: '#9B9B9B' },
-  periodBtnTextActive: { color: '#1A1A1A' },
+  periodBtnText: { fontSize: 15, fontWeight: '700', color: AppColors.text.tertiary },
+  periodBtnTextActive: { color: AppColors.text.primary },
   dateNav: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 14, paddingHorizontal: 2,
   },
-  dateNavPeriod: { fontSize: 18, fontWeight: '900', color: '#1A1A1A', letterSpacing: -0.3 },
-  dateNavRange: { fontSize: 13, color: '#9B9B9B', marginTop: 3 },
+  dateNavPeriod: { fontSize: 18, fontWeight: '900', color: AppColors.text.primary, letterSpacing: -0.3 },
+  dateNavRange: { fontSize: 13, color: AppColors.text.tertiary, marginTop: 3 },
   dateNavArrows: { flexDirection: 'row', gap: 8 },
   arrowBtn: {
     width: 40, height: 40, borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface.whiteStrong,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08, shadowRadius: 6, elevation: 3,
   },
   arrowBtnDisabled: { opacity: 0.3 },
-  arrowText: { fontSize: 22, fontWeight: '600', color: '#374151', lineHeight: 26 },
-  arrowTextDisabled: { color: '#BBBBB8' },
+  arrowText: { fontSize: 22, fontWeight: '600', color: AppColors.text.primary, lineHeight: 26 },
+  arrowTextDisabled: { color: AppColors.text.tertiary },
   sectionCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, marginBottom: 12,
-    borderWidth: 1, borderColor: '#F0F0EE',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 20, padding: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: AppColors.border.soft,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   sectionIconWrap: {
     width: 44, height: 44, borderRadius: 14,
-    backgroundColor: '#F0F6F0',
+    backgroundColor: AppColors.green.soft,
     alignItems: 'center', justifyContent: 'center',
   },
   sectionIcon: { fontSize: 22 },
   sectionHeaderText: { flex: 1 },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#374151' },
-  sectionSubtitle: { fontSize: 12, color: '#9B9B9B', marginTop: 2 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: AppColors.text.primary },
+  sectionSubtitle: { fontSize: 12, color: AppColors.text.tertiary, marginTop: 2 },
   emptyHint: {
     paddingVertical: 20, alignItems: 'center',
-    backgroundColor: '#FAFAF8', borderRadius: 14,
+    backgroundColor: AppColors.bg.secondary, borderRadius: 14,
   },
-  emptyHintText: { fontSize: 13, color: '#9B9B9B', textAlign: 'center' },
+  emptyHintText: { fontSize: 13, color: AppColors.text.tertiary, textAlign: 'center' },
 });

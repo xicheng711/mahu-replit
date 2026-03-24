@@ -10,6 +10,7 @@ import { getDiaryEntryById, DiaryEntry, getProfile, formatDate } from '@/lib/sto
 import * as Haptics from 'expo-haptics';
 import { BackButton } from '@/components/back-button';
 import { trpc } from '@/lib/trpc';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 
 const MOOD_OPTIONS = [
   { emoji: '😄', label: '很开心', color: '#22C55E' },
@@ -128,7 +129,7 @@ export default function DiaryDetailScreen() {
     return (
       <ScreenContainer>
         <View style={styles.loadingBox}>
-          <ActivityIndicator size="large" color="#FF6B6B" />
+          <ActivityIndicator size="large" color={AppColors.coral.primary} />
           <Text style={styles.loadingText}>加载中...</Text>
         </View>
       </ScreenContainer>
@@ -291,8 +292,8 @@ export default function DiaryDetailScreen() {
                     <View style={styles.aiAvatarCircle}>
                       <Text style={styles.aiAvatarEmoji}>🩺</Text>
                     </View>
-                    <ActivityIndicator size="small" color="#7C3AED" style={{ marginLeft: 8 }} />
-                    <Text style={{ fontSize: 13, color: '#9BA1A6', marginLeft: 6 }}>正在思考中...</Text>
+                    <ActivityIndicator size="small" color={AppColors.purple.strong} style={{ marginLeft: 8 }} />
+                    <Text style={{ fontSize: 13, color: AppColors.text.tertiary, marginLeft: 6 }}>正在思考中...</Text>
                   </View>
                 )}
               </View>
@@ -302,7 +303,7 @@ export default function DiaryDetailScreen() {
                   value={followUpInput}
                   onChangeText={setFollowUpInput}
                   placeholder="追问 AI，如：这种情况怎么处理？"
-                  placeholderTextColor="#C4C9CF"
+                  placeholderTextColor={AppColors.text.tertiary}
                   returnKeyType="send"
                   onSubmitEditing={handleFollowUp}
                   editable={!followUpLoading}
@@ -344,38 +345,36 @@ export default function DiaryDetailScreen() {
 const styles = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40 },
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  loadingText: { fontSize: 14, color: '#687076' },
+  loadingText: { fontSize: 14, color: AppColors.text.secondary },
   emptyEmoji: { fontSize: 56 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#11181C' },
-  backBtn: { marginTop: 16, backgroundColor: '#F8F9FA', borderRadius: 16, paddingHorizontal: 24, paddingVertical: 12 },
-  backBtnText: { fontSize: 15, fontWeight: '600', color: '#687076' },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: AppColors.text.primary },
+  backBtn: { marginTop: 16, backgroundColor: AppColors.bg.secondary, borderRadius: 16, paddingHorizontal: 24, paddingVertical: 12 },
+  backBtnText: { fontSize: 15, fontWeight: '600', color: AppColors.text.secondary },
 
-  // Header
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 20,
   },
   headerBackBtn: {
-    backgroundColor: '#F8F9FA', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: AppColors.bg.secondary, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10,
   },
-  headerBackText: { fontSize: 14, fontWeight: '600', color: '#687076' },
+  headerBackText: { fontSize: 14, fontWeight: '600', color: AppColors.text.secondary },
   shareBtn: {
-    backgroundColor: '#FF6B6B', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: AppColors.coral.primary, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10,
   },
-  shareBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  shareBtnText: { fontSize: 14, fontWeight: '700', color: AppColors.surface.whiteStrong },
 
-  // Hero
   heroCard: {
-    backgroundColor: '#fff', borderRadius: 24, padding: 20, marginBottom: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06,
-    shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: '#F0F0F0',
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 24, padding: 20, marginBottom: 16,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06,
+    shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: AppColors.border.light,
   },
   heroTop: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 16,
   },
-  heroDate: { fontSize: 22, fontWeight: '800', color: '#11181C' },
-  heroTime: { fontSize: 13, color: '#9BA1A6', marginTop: 4 },
+  heroDate: { fontSize: 22, fontWeight: '800', color: AppColors.text.primary },
+  heroTime: { fontSize: 13, color: AppColors.text.tertiary, marginTop: 4 },
   heroBigMood: {
     width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center',
   },
@@ -385,37 +384,33 @@ const styles = StyleSheet.create({
   },
   heroMoodText: { fontSize: 16, fontWeight: '700' },
 
-  // Sections
   section: { marginBottom: 16 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#11181C', marginBottom: 10 },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: AppColors.text.primary, marginBottom: 10 },
 
-  // Tags
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagChip: {
-    backgroundColor: '#FFF0F0', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6,
-    borderWidth: 1, borderColor: '#FFD4D4',
+    backgroundColor: AppColors.coral.soft, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6,
+    borderWidth: 1, borderColor: AppColors.coral.primary + '44',
   },
-  tagChipText: { fontSize: 13, fontWeight: '600', color: '#FF6B6B' },
+  tagChipText: { fontSize: 13, fontWeight: '600', color: AppColors.coral.primary },
 
-  // Content
   contentCard: {
-    backgroundColor: '#fff', borderRadius: 20, padding: 18,
-    borderWidth: 1, borderColor: '#F0F0F0',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 20, padding: 18,
+    borderWidth: 1, borderColor: AppColors.border.light,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03,
     shadowRadius: 6, elevation: 1,
   },
-  contentText: { fontSize: 16, color: '#1F2937', lineHeight: 26 },
+  contentText: { fontSize: 16, color: AppColors.text.primary, lineHeight: 26 },
   noContentCard: {
-    backgroundColor: '#F8F9FA', borderRadius: 20, padding: 24, alignItems: 'center',
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.bg.secondary, borderRadius: 20, padding: 24, alignItems: 'center',
+    borderWidth: 1, borderColor: AppColors.border.soft,
   },
   noContentEmoji: { fontSize: 32, marginBottom: 8 },
-  noContentText: { fontSize: 14, color: '#9BA1A6' },
+  noContentText: { fontSize: 14, color: AppColors.text.tertiary },
 
-  // Chat box
   chatBox: {
-    backgroundColor: '#F7F8FA', borderRadius: 20, padding: 16,
-    borderWidth: 1, borderColor: '#E8EBF0',
+    backgroundColor: AppColors.bg.secondary, borderRadius: 20, padding: 16,
+    borderWidth: 1, borderColor: AppColors.border.soft,
   },
   bubbleRowRight: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 8, paddingLeft: 40 },
   bubbleRowLeft: { flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 8, paddingRight: 40 },
@@ -423,17 +418,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#95EC69', borderRadius: 18, borderTopRightRadius: 4,
     paddingHorizontal: 14, paddingVertical: 10, maxWidth: '100%',
   },
-  bubbleGreenText: { fontSize: 15, color: '#1A1A1A', lineHeight: 22 },
+  bubbleGreenText: { fontSize: 15, color: AppColors.text.primary, lineHeight: 22 },
   bubbleBlue: {
-    backgroundColor: '#FFFFFF', borderRadius: 18, borderTopLeftRadius: 4,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 18, borderTopLeftRadius: 4,
     paddingHorizontal: 14, paddingVertical: 12, maxWidth: '100%',
-    borderWidth: 1, borderColor: '#E8EBF0',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+    borderWidth: 1, borderColor: AppColors.border.soft,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
-  bubbleBlueText: { fontSize: 15, color: '#1A1A1A', lineHeight: 24 },
+  bubbleBlueText: { fontSize: 15, color: AppColors.text.primary, lineHeight: 24 },
   aiNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
 
-  // AI Reply
   aiCard: {
     backgroundColor: '#F0F7EE', borderRadius: 20, padding: 18,
     borderWidth: 1, borderColor: '#D4E8D4',
@@ -446,7 +440,7 @@ const styles = StyleSheet.create({
   aiAvatarEmoji: { fontSize: 22 },
   aiName: { fontSize: 15, fontWeight: '700', color: '#1A5C1A' },
   aiBadge: { fontSize: 11, color: '#6C9E6C', marginTop: 2 },
-  aiText: { fontSize: 15, color: '#1F2937', lineHeight: 25, marginBottom: 12 },
+  aiText: { fontSize: 15, color: AppColors.text.primary, lineHeight: 25, marginBottom: 12 },
   aiTipBox: {
     flexDirection: 'row', gap: 8, backgroundColor: '#DCFCE7', borderRadius: 14,
     padding: 14, alignItems: 'center', marginBottom: 8,
@@ -455,42 +449,39 @@ const styles = StyleSheet.create({
   aiTipText: { flex: 1, fontSize: 13, color: '#166534', fontWeight: '500', lineHeight: 20 },
   aiEmoji: { fontSize: 32, textAlign: 'center', marginTop: 4 },
 
-  // No AI
   noAiCard: {
-    backgroundColor: '#F8F9FA', borderRadius: 20, padding: 24, alignItems: 'center',
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.bg.secondary, borderRadius: 20, padding: 24, alignItems: 'center',
+    borderWidth: 1, borderColor: AppColors.border.soft,
   },
   noAiEmoji: { fontSize: 32, marginBottom: 8 },
-  noAiText: { fontSize: 14, color: '#9BA1A6', fontWeight: '600' },
-  noAiHint: { fontSize: 12, color: '#C4C9CF', marginTop: 4 },
+  noAiText: { fontSize: 14, color: AppColors.text.tertiary, fontWeight: '600' },
+  noAiHint: { fontSize: 12, color: AppColors.text.tertiary, marginTop: 4 },
 
-  // Follow-up chat input
   followUpRow: {
     flexDirection: 'row', gap: 10, marginTop: 12, alignItems: 'center',
   },
   followUpInput: {
-    flex: 1, backgroundColor: '#fff', borderRadius: 20,
+    flex: 1, backgroundColor: AppColors.surface.whiteStrong, borderRadius: 20,
     paddingHorizontal: 16, paddingVertical: 12,
-    fontSize: 14, color: '#1F2937',
-    borderWidth: 1.5, borderColor: '#E8EBF0',
+    fontSize: 14, color: AppColors.text.primary,
+    borderWidth: 1.5, borderColor: AppColors.border.soft,
   },
   followUpSend: {
-    backgroundColor: '#7C3AED', borderRadius: 20,
+    backgroundColor: AppColors.purple.strong, borderRadius: 20,
     paddingHorizontal: 18, paddingVertical: 12,
   },
-  followUpSendText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  followUpSendText: { fontSize: 14, fontWeight: '700', color: AppColors.surface.whiteStrong },
 
-  // Bottom actions
   bottomActions: {
     flexDirection: 'row', gap: 12, marginTop: 8,
   },
   actionBtn: {
     flex: 1, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#fff', borderRadius: 18, padding: 16,
-    borderWidth: 1.5, borderColor: '#E5E7EB',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 18, padding: 16,
+    borderWidth: 1.5, borderColor: AppColors.border.soft,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04,
     shadowRadius: 6, elevation: 1,
   },
   actionIcon: { fontSize: 20 },
-  actionText: { fontSize: 14, fontWeight: '600', color: '#11181C' },
+  actionText: { fontSize: 14, fontWeight: '600', color: AppColors.text.primary },
 });

@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenContainer } from '@/components/screen-container';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import { getProfile, saveProfile, ElderProfile } from '@/lib/storage';
 import { getZodiac } from '@/lib/zodiac';
 import {
@@ -158,7 +159,7 @@ export default function ProfileScreen() {
                   onChangeText={setCaregiverNameDraft}
                   autoFocus
                   placeholder="输入您的名字"
-                  placeholderTextColor="#9BA1A6"
+                  placeholderTextColor={AppColors.text.tertiary}
                   returnKeyType="done"
                   onSubmitEditing={saveCaregiverName}
                 />
@@ -169,7 +170,7 @@ export default function ProfileScreen() {
                   setCaregiverNameDraft(profile.caregiverName);
                   setEditingCaregiverName(false);
                 }}>
-                  <Text style={{ fontSize: 16, color: '#9BA1A6' }}>✕</Text>
+                  <Text style={{ fontSize: 16, color: AppColors.text.tertiary }}>✕</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -182,7 +183,7 @@ export default function ProfileScreen() {
                     setEditingCaregiverName(true);
                   }}
                 >
-                  <Text style={{ fontSize: 13, color: '#9BA1A6' }}>✏️</Text>
+                  <Text style={{ fontSize: 13, color: AppColors.text.tertiary }}>✏️</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -215,7 +216,7 @@ export default function ProfileScreen() {
                   onChangeText={setElderNicknameDraft}
                   autoFocus
                   placeholder="输入昵称（如：姥姥）"
-                  placeholderTextColor="#9BA1A6"
+                  placeholderTextColor={AppColors.text.tertiary}
                   returnKeyType="done"
                   onSubmitEditing={saveElderNickname}
                 />
@@ -226,7 +227,7 @@ export default function ProfileScreen() {
                   setElderNicknameDraft(profile.nickname || profile.name);
                   setEditingElderNickname(false);
                 }}>
-                  <Text style={{ fontSize: 16, color: '#9BA1A6' }}>✕</Text>
+                  <Text style={{ fontSize: 16, color: AppColors.text.tertiary }}>✕</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -239,7 +240,7 @@ export default function ProfileScreen() {
                     setEditingElderNickname(true);
                   }}
                 >
-                  <Text style={{ fontSize: 13, color: '#9BA1A6' }}>✏️</Text>
+                  <Text style={{ fontSize: 13, color: AppColors.text.tertiary }}>✏️</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -284,8 +285,8 @@ export default function ProfileScreen() {
             value={notifEnabled}
             onValueChange={toggleNotifications}
             disabled={notifLoading || Platform.OS === 'web'}
-            trackColor={{ false: '#E5E7EB', true: '#FF6B6B' }}
-            thumbColor={notifEnabled ? '#fff' : '#f4f3f4'}
+            trackColor={{ false: AppColors.border.soft, true: AppColors.coral.primary }}
+            thumbColor={notifEnabled ? AppColors.surface.whiteStrong : '#f4f3f4'}
           />
         </View>
 
@@ -351,33 +352,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between', marginBottom: 20,
   },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, padding: 4 },
-  backBtnText: { fontSize: 16, color: '#FF6B6B', fontWeight: '600' },
-  title: { fontSize: 18, fontWeight: '700', color: '#11181C' },
-  loading: { fontSize: 16, color: '#687076' },
-  noProfile: { fontSize: 18, color: '#687076', marginBottom: 24, textAlign: 'center' },
+  backBtnText: { fontSize: 16, color: AppColors.coral.primary, fontWeight: '600' },
+  title: { fontSize: 18, fontWeight: '700', color: AppColors.text.primary },
+  loading: { fontSize: 16, color: AppColors.text.secondary },
+  noProfile: { fontSize: 18, color: AppColors.text.secondary, marginBottom: 24, textAlign: 'center' },
 
-  sectionLabel: { fontSize: 13, fontWeight: '700', color: '#9BA1A6', marginBottom: 8, letterSpacing: 0.5 },
+  sectionLabel: { fontSize: 13, fontWeight: '700', color: AppColors.text.tertiary, marginBottom: 8, letterSpacing: 0.5 },
 
   card: {
     borderRadius: 20, padding: 20,
     flexDirection: 'row', alignItems: 'center', gap: 16,
     marginBottom: 16,
   },
-  // Avatar
   avatarWrap: { position: 'relative', width: 72, height: 72, alignItems: 'center', justifyContent: 'center' },
   avatarPhoto: { width: 72, height: 72, borderRadius: 36, borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.7)' },
   cameraChip: {
     position: 'absolute', bottom: -2, right: -4,
     width: 24, height: 24, borderRadius: 12,
-    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3,
+    backgroundColor: AppColors.surface.whiteStrong, alignItems: 'center', justifyContent: 'center',
+    shadowColor: AppColors.shadow.dark, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3,
   },
   cameraChipText: { fontSize: 13 },
 
   cardEmoji: { fontSize: 48 },
   cardInfo: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  cardName: { fontSize: 20, fontWeight: '700', color: '#11181C' },
+  cardName: { fontSize: 20, fontWeight: '700', color: AppColors.text.primary },
   editIconBtn: {
     width: 28, height: 28, borderRadius: 14,
     backgroundColor: 'rgba(0,0,0,0.06)',
@@ -385,82 +385,80 @@ const styles = StyleSheet.create({
   },
   inlineEditRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   inlineInput: {
-    flex: 1, fontSize: 17, fontWeight: '700', color: '#11181C',
-    borderBottomWidth: 2, borderBottomColor: '#FF6B6B',
+    flex: 1, fontSize: 17, fontWeight: '700', color: AppColors.text.primary,
+    borderBottomWidth: 2, borderBottomColor: AppColors.coral.primary,
     paddingVertical: 2, paddingHorizontal: 0,
   },
   saveBtn: {
-    backgroundColor: '#FF6B6B', borderRadius: 10,
+    backgroundColor: AppColors.coral.primary, borderRadius: 10,
     paddingHorizontal: 10, paddingVertical: 4,
   },
-  saveBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  saveBtnText: { fontSize: 13, fontWeight: '700', color: AppColors.surface.whiteStrong },
   cancelBtn: {
     width: 28, height: 28, borderRadius: 14,
     backgroundColor: 'rgba(0,0,0,0.06)',
     alignItems: 'center', justifyContent: 'center',
   },
-  cardSub: { fontSize: 14, color: '#687076', marginBottom: 2 },
-  cardSub2: { fontSize: 13, color: '#9BA1A6' },
+  cardSub: { fontSize: 14, color: AppColors.text.secondary, marginBottom: 2 },
+  cardSub2: { fontSize: 13, color: AppColors.text.tertiary },
 
   infoRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: '#F8F9FA', borderRadius: 16, padding: 16, marginBottom: 16,
+    backgroundColor: AppColors.bg.secondary, borderRadius: 16, padding: 16, marginBottom: 16,
   },
-  infoLabel: { fontSize: 15, color: '#687076' },
-  infoValue: { fontSize: 15, fontWeight: '600', color: '#11181C' },
+  infoLabel: { fontSize: 15, color: AppColors.text.secondary },
+  infoValue: { fontSize: 15, fontWeight: '600', color: AppColors.text.primary },
   sectionHeader: { marginTop: 8, marginBottom: 12 },
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: '#11181C' },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: AppColors.text.primary },
   settingRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: '#F8F9FA', borderRadius: 16, padding: 16, marginBottom: 8,
+    backgroundColor: AppColors.bg.secondary, borderRadius: 16, padding: 16, marginBottom: 8,
   },
   settingInfo: { flex: 1, marginRight: 12 },
-  settingLabel: { fontSize: 15, fontWeight: '600', color: '#11181C', marginBottom: 2 },
-  settingDesc: { fontSize: 13, color: '#9BA1A6' },
+  settingLabel: { fontSize: 15, fontWeight: '600', color: AppColors.text.primary, marginBottom: 2 },
+  settingDesc: { fontSize: 13, color: AppColors.text.tertiary },
   notifInfo: {
-    backgroundColor: '#FFF5F5', borderRadius: 12, padding: 14, marginBottom: 16, gap: 6,
+    backgroundColor: AppColors.coral.soft, borderRadius: 12, padding: 14, marginBottom: 16, gap: 6,
   },
-  notifInfoText: { fontSize: 14, color: '#687076', lineHeight: 20 },
+  notifInfoText: { fontSize: 14, color: AppColors.text.secondary, lineHeight: 20 },
   editBtn: {
-    backgroundColor: '#FF6B6B', borderRadius: 20, padding: 16,
+    backgroundColor: AppColors.coral.primary, borderRadius: 20, padding: 16,
     alignItems: 'center', marginTop: 8,
   },
-  editBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  btn: { backgroundColor: '#FF6B6B', borderRadius: 20, paddingHorizontal: 32, paddingVertical: 14 },
-  btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  editBtnText: { fontSize: 16, fontWeight: '700', color: AppColors.surface.whiteStrong },
+  btn: { backgroundColor: AppColors.coral.primary, borderRadius: 20, paddingHorizontal: 32, paddingVertical: 14 },
+  btnText: { fontSize: 16, fontWeight: '700', color: AppColors.surface.whiteStrong },
 
-  // Permission denied modal
   permOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' },
-  permBox: { backgroundColor: '#fff', borderRadius: 20, padding: 28, width: 300, alignItems: 'center' },
-  permTitle: { fontSize: 17, fontWeight: '800', color: '#11181C', marginBottom: 8 },
-  permMsg: { fontSize: 14, color: '#687076', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
-  permBtn: { backgroundColor: '#FF6B6B', borderRadius: 14, paddingHorizontal: 28, paddingVertical: 12 },
-  permBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  permBox: { backgroundColor: AppColors.surface.whiteStrong, borderRadius: 20, padding: 28, width: 300, alignItems: 'center' },
+  permTitle: { fontSize: 17, fontWeight: '800', color: AppColors.text.primary, marginBottom: 8 },
+  permMsg: { fontSize: 14, color: AppColors.text.secondary, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  permBtn: { backgroundColor: AppColors.coral.primary, borderRadius: 14, paddingHorizontal: 28, paddingVertical: 12 },
+  permBtnText: { fontSize: 15, fontWeight: '700', color: AppColors.surface.whiteStrong },
 
-  // Reminder time customization
   reminderEditCard: {
-    backgroundColor: '#F8F4FF',
+    backgroundColor: AppColors.purple.soft,
     borderRadius: 20,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: AppColors.purple.primary,
   },
-  reminderEditTitle: { fontSize: 15, fontWeight: '800', color: '#5B21B6', marginBottom: 14 },
+  reminderEditTitle: { fontSize: 15, fontWeight: '800', color: AppColors.purple.strong, marginBottom: 14 },
   reminderEditRow: { gap: 8 },
-  reminderEditLabel: { fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 6 },
+  reminderEditLabel: { fontSize: 14, fontWeight: '700', color: AppColors.text.primary, marginBottom: 6 },
   timeChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   timeChipSmall: {
     paddingHorizontal: 12, paddingVertical: 7,
     borderRadius: 16,
-    backgroundColor: '#EDE9FE',
+    backgroundColor: AppColors.purple.soft,
     borderWidth: 1.5,
     borderColor: 'transparent',
   },
   timeChipSmallActive: {
-    backgroundColor: '#7C3AED',
-    borderColor: '#5B21B6',
+    backgroundColor: AppColors.purple.strong,
+    borderColor: AppColors.purple.strong,
   },
-  timeChipSmallText: { fontSize: 13, fontWeight: '600', color: '#5B21B6' },
-  timeChipSmallTextActive: { color: '#fff' },
+  timeChipSmallText: { fontSize: 13, fontWeight: '600', color: AppColors.purple.strong },
+  timeChipSmallTextActive: { color: AppColors.surface.whiteStrong },
 });

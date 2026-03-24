@@ -16,9 +16,9 @@ import {
 } from '@/lib/storage';
 import { getLunarDate, getFormattedDate } from '@/lib/lunar';
 import { SHADOWS } from '@/lib/animations';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import { useFamilyContext } from '@/lib/family-context';
 
-// ─── Feed item type ───────────────────────────────────────────────────────────
 type FeedItem = {
   id: string;
   type: 'checkin' | 'diary' | 'announce' | 'med';
@@ -46,14 +46,13 @@ function buildFeed(
 ): FeedItem[] {
   const items: FeedItem[] = [];
 
-  // Latest check-in morning
   const latest = checkIns[0];
   if (latest) {
     if (latest.morningDone) {
       items.push({
         id: `ci-m-${latest.id}`, type: 'checkin',
         time: latest.completedAt ? timeStr(latest.completedAt) : '早间',
-        icon: '✅', color: '#10B981', bg: '#ECFDF5', tag: '早间打卡',
+        icon: '✅', color: AppColors.green.strong, bg: AppColors.green.soft, tag: '早间打卡',
         title: '今日早间打卡完成',
         detail: `心情 ${latest.caregiverMoodEmoji || '😊'} · 睡眠 ${latest.sleepHours}h · ${latest.medicationTaken ? '用药已服' : '用药待记录'}`,
         author: null,
@@ -64,7 +63,7 @@ function buildFeed(
       items.push({
         id: `ci-e-${latest.id}`, type: 'checkin',
         time: latest.completedAt ? timeStr(latest.completedAt) : '晚间',
-        icon: '🌙', color: '#8B5CF6', bg: '#F5F3FF', tag: '晚间打卡',
+        icon: '🌙', color: AppColors.purple.strong, bg: AppColors.purple.soft, tag: '晚间打卡',
         title: `今日护理完成${latest.careScore ? ` ⭐ ${latest.careScore}分` : ''}`,
         detail: `心情 ${latest.moodEmoji || '😴'} · ${latest.medicationTaken ? '用药已服' : '用药未记录'} · ${latest.mealOption || latest.mealNotes || '饮食正常'}`,
         author: null,
@@ -73,12 +72,11 @@ function buildFeed(
     }
   }
 
-  // Diary entries (top 3)
   diaries.slice(0, 3).forEach(d => {
     items.push({
       id: `diary-${d.id}`, type: 'diary',
       time: d.createdAt ? timeStr(d.createdAt) : d.date,
-      icon: '📔', color: '#F59E0B', bg: '#FFFBEB', tag: '护理日记',
+      icon: '📔', color: AppColors.peach.primary, bg: AppColors.peach.soft, tag: '护理日记',
       title: d.content.length > 20 ? d.content.slice(0, 20) + '…' : d.content,
       detail: d.tags && d.tags.length ? d.tags.slice(0, 3).join(' · ') : `${d.moodEmoji || '😊'} ${d.moodLabel || ''}`,
       author: caregiverName || '照顾者',
@@ -86,12 +84,11 @@ function buildFeed(
     });
   });
 
-  // Announcements (top 3)
   announcements.slice(0, 3).forEach(a => {
     items.push({
       id: `ann-${a.id}`, type: 'announce',
       time: timeStr(a.createdAt),
-      icon: '📢', color: '#0EA5E9', bg: '#EFF6FF', tag: '家庭公告',
+      icon: '📢', color: AppColors.purple.strong, bg: AppColors.purple.soft, tag: '家庭公告',
       title: a.content.length > 24 ? a.content.slice(0, 24) + '…' : a.content,
       detail: a.emoji ? `${a.emoji} ${a.content}` : a.content,
       author: a.authorName,
@@ -102,9 +99,6 @@ function buildFeed(
   return items.sort((a, b) => a.sortKey - b.sortKey);
 }
 
-// ElderStatusCard is now rendered inline in JoinerHomeScreen for richer layout
-
-// ─── Announcement card ────────────────────────────────────────────────────────
 function AnnouncementCard({ latest, onPost, onViewAll }: {
   latest: FamilyAnnouncement | null;
   onPost: () => void;
@@ -142,7 +136,6 @@ function AnnouncementCard({ latest, onPost, onViewAll }: {
   );
 }
 
-// ─── Feed row ─────────────────────────────────────────────────────────────────
 function FeedRow({ item, isLast }: { item: FeedItem; isLast: boolean }) {
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(12)).current;
@@ -180,7 +173,6 @@ function FeedRow({ item, isLast }: { item: FeedItem; isLast: boolean }) {
   );
 }
 
-// ─── Upgrade inline card ──────────────────────────────────────────────────────
 function UpgradeCard({ onPress }: { onPress: () => void }) {
   return (
     <View style={styles.upgradeCard}>
@@ -198,7 +190,7 @@ function UpgradeCard({ onPress }: { onPress: () => void }) {
       <Text style={styles.upgradeDesc}>打卡、用药、日记是主要照顾者的专属功能。{'\n'}创建自己的家庭档案，即可解锁完整记录能力。</Text>
       <TouchableOpacity style={styles.upgradeBtn} onPress={onPress} activeOpacity={0.85}>
         <LinearGradient
-          colors={['#8B5CF6', '#7C3AED', '#6D28D9']}
+          colors={[Gradients.purple[0], AppColors.purple.strong, Gradients.purple[1]]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
           style={styles.upgradeBtnGradient}
         >
@@ -209,7 +201,6 @@ function UpgradeCard({ onPress }: { onPress: () => void }) {
   );
 }
 
-// ─── Post Announcement Modal ──────────────────────────────────────────────────
 const ANNOUNCE_TYPES = [
   { key: 'news',     label: '📢 通知', emoji: '📢' },
   { key: 'medical',  label: '🏥 就医', emoji: '🏥' },
@@ -236,7 +227,7 @@ function PostAnnouncementModal({ visible, onClose, onPosted, member }: {
       authorId: member?.id ?? 'unknown',
       authorName: member?.name ?? '家庭成员',
       authorEmoji: member?.emoji ?? '👤',
-      authorColor: member?.color ?? '#6B7280',
+      authorColor: member?.color ?? AppColors.text.secondary,
       content: content.trim(),
       emoji: ANNOUNCE_TYPES.find(t => t.key === type)?.emoji,
       type,
@@ -275,7 +266,7 @@ function PostAnnouncementModal({ visible, onClose, onPosted, member }: {
                 value={content}
                 onChangeText={setContent}
                 placeholder="输入公告内容，如：下周三复查，提醒大家早点出发…"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={AppColors.text.tertiary}
                 multiline
                 numberOfLines={4}
               />
@@ -312,7 +303,6 @@ function PostAnnouncementModal({ visible, onClose, onPosted, member }: {
   );
 }
 
-// ─── Main: JoinerHomeScreen ───────────────────────────────────────────────────
 export function JoinerHomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -389,7 +379,7 @@ export function JoinerHomeScreen() {
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient
-        colors={['#FFF8F0', '#FEF0F5', '#F8F0FF', '#F0F4FF']}
+        colors={[...Gradients.appBg, AppColors.bg.secondary]}
         locations={[0, 0.3, 0.6, 1]}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -399,7 +389,6 @@ export function JoinerHomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Header ── */}
         <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
           <View style={{ flex: 1 }}>
             <View style={styles.dateRow}>
@@ -422,7 +411,7 @@ export function JoinerHomeScreen() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={['#F9A8D4', '#F472B6']}
+              colors={Gradients.coral}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={styles.avatarGradient}
             >
@@ -431,10 +420,9 @@ export function JoinerHomeScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* ── Daily Tip Banner ── */}
         <View style={styles.tipBanner}>
           <LinearGradient
-            colors={['#FFF7ED', '#FFFBEB']}
+            colors={[AppColors.peach.soft, AppColors.bg.warmCream]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={styles.tipBannerInner}
           >
@@ -443,21 +431,20 @@ export function JoinerHomeScreen() {
           </LinearGradient>
         </View>
 
-        {/* ── Elder Status Card (redesigned) ── */}
         <View style={styles.elderCardNew}>
           <LinearGradient
-            colors={['#FFFFFF', '#FFF9F5']}
+            colors={Gradients.warmCard}
             style={styles.elderCardBody}
           >
             <View style={styles.elderHeaderRow}>
               <View style={styles.elderAvatarNew}>
                 <LinearGradient
-                  colors={['#FBBF24', '#F59E0B']}
+                  colors={Gradients.peach}
                   style={styles.elderAvatarGrad}
                 >
                   <Text style={{ fontSize: 28 }}>{elderEmoji}</Text>
                 </LinearGradient>
-                <View style={[styles.statusIndicator, { backgroundColor: latestCheckIn ? '#34D399' : '#D1D5DB' }]} />
+                <View style={[styles.statusIndicator, { backgroundColor: latestCheckIn ? AppColors.green.primary : AppColors.border.soft }]} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.elderLabelNew}>被照顾者</Text>
@@ -477,9 +464,9 @@ export function JoinerHomeScreen() {
             </View>
             <View style={styles.metricsRowNew}>
               {[
-                { emoji: latestCheckIn?.moodEmoji || '😊', label: '心情', val: latestCheckIn ? (latestCheckIn.moodScore >= 7 ? '好' : latestCheckIn.moodScore >= 5 ? '还好' : '需关注') : '—', color: '#F59E0B', bg: '#FFFBEB' },
-                { emoji: '💤', label: '睡眠', val: latestCheckIn ? `${latestCheckIn.sleepHours}h` : '—', color: '#6366F1', bg: '#EEF2FF' },
-                { emoji: latestCheckIn?.medicationTaken ? '✅' : (latestCheckIn ? '⚠️' : '💊'), label: '用药', val: latestCheckIn ? (latestCheckIn.medicationTaken ? '已服' : '未服') : '—', color: latestCheckIn?.medicationTaken ? '#10B981' : '#EF4444', bg: latestCheckIn?.medicationTaken ? '#ECFDF5' : '#FEF2F2' },
+                { emoji: latestCheckIn?.moodEmoji || '😊', label: '心情', val: latestCheckIn ? (latestCheckIn.moodScore >= 7 ? '好' : latestCheckIn.moodScore >= 5 ? '还好' : '需关注') : '—', color: AppColors.peach.primary, bg: AppColors.peach.soft },
+                { emoji: '💤', label: '睡眠', val: latestCheckIn ? `${latestCheckIn.sleepHours}h` : '—', color: AppColors.purple.strong, bg: AppColors.purple.soft },
+                { emoji: latestCheckIn?.medicationTaken ? '✅' : (latestCheckIn ? '⚠️' : '💊'), label: '用药', val: latestCheckIn ? (latestCheckIn.medicationTaken ? '已服' : '未服') : '—', color: latestCheckIn?.medicationTaken ? AppColors.green.strong : AppColors.status.error, bg: latestCheckIn?.medicationTaken ? AppColors.green.soft : AppColors.coral.soft },
               ].map((m) => (
                 <View key={m.label} style={[styles.metricItemNew, { backgroundColor: m.bg }]}>
                   <Text style={{ fontSize: 20 }}>{m.emoji}</Text>
@@ -491,14 +478,12 @@ export function JoinerHomeScreen() {
           </LinearGradient>
         </View>
 
-        {/* ── Announcement Card ── */}
         <AnnouncementCard
           latest={latestAnnounce}
           onPost={() => setPostModal(true)}
           onViewAll={() => router.push('/family' as any)}
         />
 
-        {/* ── Feed ── */}
         {feed.length > 0 && (
           <View style={styles.feedSection}>
             <View style={styles.feedLabelRow}>
@@ -511,7 +496,6 @@ export function JoinerHomeScreen() {
           </View>
         )}
 
-        {/* ── Empty state when no feed ── */}
         {feed.length === 0 && (
           <View style={styles.emptyFeed}>
             <Text style={styles.emptyFeedEmoji}>🌤️</Text>
@@ -520,7 +504,6 @@ export function JoinerHomeScreen() {
           </View>
         )}
 
-        {/* ── Upgrade Card ── */}
         <UpgradeCard onPress={goSetup} />
 
         <View style={{ height: 24 }} />
@@ -533,7 +516,6 @@ export function JoinerHomeScreen() {
         member={currentMember}
       />
 
-      {/* Family Switcher Modal */}
       <Modal visible={showSwitcher} transparent animationType="fade" onRequestClose={() => setShowSwitcher(false)}>
         <TouchableOpacity style={styles.switcherOverlay} activeOpacity={1} onPress={() => setShowSwitcher(false)}>
           <View style={styles.switcherSheet}>
@@ -569,17 +551,16 @@ export function JoinerHomeScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 16, paddingBottom: 12 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  dateText: { fontSize: 12, fontWeight: '600', color: '#9CA3AF', letterSpacing: 0.3 },
-  lunarDot: { fontSize: 12, color: '#D1D5DB' },
-  lunarText: { fontSize: 11, color: '#B07848', fontWeight: '500' },
-  pageTitle: { fontSize: 22, fontWeight: '900', color: '#1A1A2E', letterSpacing: -0.3 },
-  switcher: { fontSize: 11, color: '#9CA3AF', marginTop: 4 },
+  dateText: { fontSize: 12, fontWeight: '600', color: AppColors.text.tertiary, letterSpacing: 0.3 },
+  lunarDot: { fontSize: 12, color: AppColors.border.soft },
+  lunarText: { fontSize: 11, color: AppColors.peach.primary, fontWeight: '500' },
+  pageTitle: { fontSize: 22, fontWeight: '900', color: AppColors.text.primary, letterSpacing: -0.3 },
+  switcher: { fontSize: 11, color: AppColors.text.tertiary, marginTop: 4 },
   headerAvatar: { ...SHADOWS.md, borderRadius: 24, overflow: 'hidden' },
   avatarGradient: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
 
@@ -587,14 +568,14 @@ const styles = StyleSheet.create({
   tipBannerInner: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12,
-    borderWidth: 1, borderColor: '#FDE68A',
+    borderWidth: 1, borderColor: AppColors.peach.primary,
   },
   tipIcon: { fontSize: 20 },
-  tipText: { fontSize: 13, color: '#92400E', fontWeight: '600', flex: 1, lineHeight: 19 },
+  tipText: { fontSize: 13, color: AppColors.peach.primary, fontWeight: '600', flex: 1, lineHeight: 19 },
 
   elderCardNew: {
     borderRadius: 20, marginBottom: 16, overflow: 'hidden',
-    ...SHADOWS.md, borderWidth: 1.5, borderColor: '#FDE8D0',
+    ...SHADOWS.md, borderWidth: 1.5, borderColor: AppColors.peach.primary + '60',
   },
   elderCardBody: { borderRadius: 20, padding: 18 },
   elderHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
@@ -607,127 +588,127 @@ const styles = StyleSheet.create({
   statusIndicator: {
     position: 'absolute', bottom: 0, right: 0,
     width: 14, height: 14, borderRadius: 7,
-    borderWidth: 2.5, borderColor: '#FFFFFF',
+    borderWidth: 2.5, borderColor: AppColors.surface.whiteStrong,
   },
-  elderLabelNew: { fontSize: 11, fontWeight: '700', color: '#F97316', letterSpacing: 0.5, marginBottom: 2 },
-  elderNameNew: { fontSize: 20, fontWeight: '900', color: '#1A1A2E', letterSpacing: -0.3, marginBottom: 3 },
-  elderStatusNew: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
+  elderLabelNew: { fontSize: 11, fontWeight: '700', color: AppColors.coral.primary, letterSpacing: 0.5, marginBottom: 2 },
+  elderNameNew: { fontSize: 20, fontWeight: '900', color: AppColors.text.primary, letterSpacing: -0.3, marginBottom: 3 },
+  elderStatusNew: { fontSize: 13, color: AppColors.text.secondary, fontWeight: '500' },
   scoreBadgeNew: {
-    backgroundColor: '#FFF7ED', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10,
-    alignItems: 'center', borderWidth: 1.5, borderColor: '#FDBA74',
+    backgroundColor: AppColors.peach.soft, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10,
+    alignItems: 'center', borderWidth: 1.5, borderColor: AppColors.peach.primary,
   },
-  scoreNumberNew: { fontSize: 26, fontWeight: '900', color: '#EA580C', lineHeight: 28 },
-  scoreLabelNew: { fontSize: 10, color: '#9CA3AF', fontWeight: '600', marginTop: 1 },
+  scoreNumberNew: { fontSize: 26, fontWeight: '900', color: AppColors.coral.primary, lineHeight: 28 },
+  scoreLabelNew: { fontSize: 10, color: AppColors.text.tertiary, fontWeight: '600', marginTop: 1 },
   metricsRowNew: { flexDirection: 'row', gap: 10 },
   metricItemNew: {
     flex: 1, alignItems: 'center', gap: 4,
     paddingVertical: 12, borderRadius: 14,
   },
-  metricLabelNew: { fontSize: 11, color: '#6B7280', fontWeight: '500' },
+  metricLabelNew: { fontSize: 11, color: AppColors.text.secondary, fontWeight: '500' },
   metricValNew: { fontSize: 14, fontWeight: '800' },
 
   announceCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 18, marginBottom: 16,
-    borderWidth: 1.5, borderColor: '#BAE6FD',
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 18, marginBottom: 16,
+    borderWidth: 1.5, borderColor: AppColors.purple.primary,
     ...SHADOWS.md, overflow: 'hidden',
   },
   announceHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 10 },
   announceHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   announceHeaderIcon: { fontSize: 14 },
-  announceHeaderTitle: { fontSize: 12, fontWeight: '700', color: '#0284C7', letterSpacing: 0.3 },
-  postBtn: { backgroundColor: '#EFF6FF', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#BAE6FD' },
-  postBtnText: { fontSize: 12, fontWeight: '700', color: '#0EA5E9' },
-  announceContent: { backgroundColor: '#F0F9FF', marginHorizontal: 12, borderRadius: 12, padding: 12, marginBottom: 4, borderWidth: 1, borderColor: '#E0F2FE' },
-  announceText: { fontSize: 14, fontWeight: '600', color: '#0F172A', lineHeight: 20 },
+  announceHeaderTitle: { fontSize: 12, fontWeight: '700', color: AppColors.purple.strong, letterSpacing: 0.3 },
+  postBtn: { backgroundColor: AppColors.purple.soft, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: AppColors.purple.primary },
+  postBtnText: { fontSize: 12, fontWeight: '700', color: AppColors.purple.strong },
+  announceContent: { backgroundColor: AppColors.purple.soft, marginHorizontal: 12, borderRadius: 12, padding: 12, marginBottom: 4, borderWidth: 1, borderColor: AppColors.purple.primary + '40' },
+  announceText: { fontSize: 14, fontWeight: '600', color: AppColors.text.primary, lineHeight: 20 },
   announceFooter: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   announceAuthorEmoji: { fontSize: 13, marginRight: 4 },
-  announceAuthorName: { fontSize: 12, color: '#0284C7', fontWeight: '600' },
-  announceTime: { fontSize: 12, color: '#94A3B8' },
+  announceAuthorName: { fontSize: 12, color: AppColors.purple.strong, fontWeight: '600' },
+  announceTime: { fontSize: 12, color: AppColors.text.tertiary },
   announceEmpty: { paddingHorizontal: 16, paddingBottom: 10 },
-  announceEmptyText: { fontSize: 13, color: '#94A3B8', fontStyle: 'italic' },
-  viewAllBtn: { borderTopWidth: 1, borderTopColor: '#E0F2FE', paddingVertical: 10, backgroundColor: '#F0F9FF', alignItems: 'center' },
-  viewAllBtnText: { fontSize: 12, fontWeight: '700', color: '#38BDF8' },
+  announceEmptyText: { fontSize: 13, color: AppColors.text.tertiary, fontStyle: 'italic' },
+  viewAllBtn: { borderTopWidth: 1, borderTopColor: AppColors.purple.primary + '30', paddingVertical: 10, backgroundColor: AppColors.purple.soft, alignItems: 'center' },
+  viewAllBtnText: { fontSize: 12, fontWeight: '700', color: AppColors.purple.strong },
 
   feedSection: { marginBottom: 16 },
   feedLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
   feedLabelIcon: { fontSize: 14 },
-  feedSectionLabel: { fontSize: 13, fontWeight: '700', color: '#374151', letterSpacing: 0.3 },
+  feedSectionLabel: { fontSize: 13, fontWeight: '700', color: AppColors.text.primary, letterSpacing: 0.3 },
   feedRow: { flexDirection: 'row', gap: 12, marginBottom: 4 },
   feedTimeline: { alignItems: 'center', width: 30 },
   feedDot: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
-  feedLine: { width: 1, flex: 1, backgroundColor: '#E5E7EB', marginTop: 3, marginBottom: 3, minHeight: 16 },
+  feedLine: { width: 1, flex: 1, backgroundColor: AppColors.border.soft, marginTop: 3, marginBottom: 3, minHeight: 16 },
   feedContent: { flex: 1, paddingBottom: 12 },
   feedTagRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3, flexWrap: 'wrap' },
   feedTag: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
   feedTagText: { fontSize: 11, fontWeight: '600' },
   feedAuthorRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   feedAuthorIcon: { fontSize: 10, opacity: 0.5 },
-  feedAuthorName: { fontSize: 11, color: '#94A3B8', fontWeight: '500' },
-  feedTime: { fontSize: 11, color: '#9CA3AF', marginLeft: 'auto' },
-  feedTitle: { fontSize: 13, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
-  feedDetail: { fontSize: 12, color: '#6B7280', lineHeight: 17 },
+  feedAuthorName: { fontSize: 11, color: AppColors.text.tertiary, fontWeight: '500' },
+  feedTime: { fontSize: 11, color: AppColors.text.tertiary, marginLeft: 'auto' },
+  feedTitle: { fontSize: 13, fontWeight: '700', color: AppColors.text.primary, marginBottom: 2 },
+  feedDetail: { fontSize: 12, color: AppColors.text.secondary, lineHeight: 17 },
 
   emptyFeed: { alignItems: 'center', paddingVertical: 28, marginBottom: 16 },
   emptyFeedEmoji: { fontSize: 36, marginBottom: 8 },
-  emptyFeedTitle: { fontSize: 15, fontWeight: '700', color: '#9CA3AF', marginBottom: 4 },
-  emptyFeedSub: { fontSize: 13, color: '#B0B8C4', textAlign: 'center', lineHeight: 20 },
+  emptyFeedTitle: { fontSize: 15, fontWeight: '700', color: AppColors.text.tertiary, marginBottom: 4 },
+  emptyFeedSub: { fontSize: 13, color: AppColors.text.tertiary, textAlign: 'center', lineHeight: 20 },
 
   upgradeCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 20, padding: 20, marginBottom: 12,
-    ...SHADOWS.md, borderWidth: 1.5, borderColor: '#F3E8FF',
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 20, padding: 20, marginBottom: 12,
+    ...SHADOWS.md, borderWidth: 1.5, borderColor: AppColors.purple.primary + '60',
   },
-  upgradeSectionLabel: { fontSize: 12, fontWeight: '700', color: '#7C3AED', letterSpacing: 0.5, marginBottom: 16 },
+  upgradeSectionLabel: { fontSize: 12, fontWeight: '700', color: AppColors.purple.strong, letterSpacing: 0.5, marginBottom: 16 },
   upgradeIconRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 16 },
   upgradeIconItem: { alignItems: 'center', gap: 6 },
-  upgradeIconBox: { width: 56, height: 56, borderRadius: 18, backgroundColor: '#F5F3FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E9D5FF' },
-  upgradeIconLabel: { fontSize: 12, color: '#7C3AED', fontWeight: '600' },
-  upgradeDesc: { fontSize: 13, color: '#6B7280', lineHeight: 20, textAlign: 'center', marginBottom: 16 },
+  upgradeIconBox: { width: 56, height: 56, borderRadius: 18, backgroundColor: AppColors.purple.soft, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: AppColors.purple.primary },
+  upgradeIconLabel: { fontSize: 12, color: AppColors.purple.strong, fontWeight: '600' },
+  upgradeDesc: { fontSize: 13, color: AppColors.text.secondary, lineHeight: 20, textAlign: 'center', marginBottom: 16 },
   upgradeBtn: { borderRadius: 16, overflow: 'hidden' },
   upgradeBtnGradient: { paddingVertical: 15, alignItems: 'center' },
   upgradeBtnText: { fontSize: 15, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.3 },
 
   switcherOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   switcherSheet: {
-    backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: AppColors.surface.whiteStrong, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingTop: 20, paddingBottom: 36, ...SHADOWS.lg,
   },
-  switcherTitle: { fontSize: 17, fontWeight: '800', color: '#1A1A2E', textAlign: 'center', marginBottom: 16 },
+  switcherTitle: { fontSize: 17, fontWeight: '800', color: AppColors.text.primary, textAlign: 'center', marginBottom: 16 },
   switcherRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14,
-    marginBottom: 8, backgroundColor: '#F9FAFB',
+    marginBottom: 8, backgroundColor: AppColors.bg.secondary,
   },
-  switcherRowActive: { backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#6C9E6C' },
-  switcherName: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
-  switcherRole: { fontSize: 12, color: '#6B7280' },
-  switcherAddBtn: { marginTop: 8, paddingVertical: 14, alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: '#E5E7EB', borderStyle: 'dashed' },
-  switcherAddText: { fontSize: 14, fontWeight: '700', color: '#9CA3AF' },
+  switcherRowActive: { backgroundColor: AppColors.green.soft, borderWidth: 1.5, borderColor: AppColors.green.muted },
+  switcherName: { fontSize: 15, fontWeight: '700', color: AppColors.text.primary, marginBottom: 2 },
+  switcherRole: { fontSize: 12, color: AppColors.text.secondary },
+  switcherAddBtn: { marginTop: 8, paddingVertical: 14, alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: AppColors.border.soft, borderStyle: 'dashed' },
+  switcherAddText: { fontSize: 14, fontWeight: '700', color: AppColors.text.tertiary },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 36 },
-  modalHandle: { width: 40, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: '#1A1A2E', marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, color: '#9CA3AF', marginBottom: 16 },
+  modalSheet: { backgroundColor: AppColors.surface.whiteStrong, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 36 },
+  modalHandle: { width: 40, height: 4, backgroundColor: AppColors.border.soft, borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: AppColors.text.primary, marginBottom: 4 },
+  modalSubtitle: { fontSize: 13, color: AppColors.text.tertiary, marginBottom: 16 },
   modalInput: {
-    borderWidth: 1.5, borderColor: '#E5E7EB', borderRadius: 14,
+    borderWidth: 1.5, borderColor: AppColors.border.soft, borderRadius: 14,
     paddingHorizontal: 16, paddingVertical: 12,
-    fontSize: 14, color: '#1A1A2E', lineHeight: 22,
+    fontSize: 14, color: AppColors.text.primary, lineHeight: 22,
     minHeight: 110, textAlignVertical: 'top', marginBottom: 14,
   },
   typeRow: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
-  typeChip: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
-  typeChipActive: { backgroundColor: '#EFF6FF', borderColor: '#BAE6FD' },
-  typeChipText: { fontSize: 12, fontWeight: '600', color: '#6B7280' },
-  typeChipTextActive: { color: '#0EA5E9' },
-  postSubmitBtn: { backgroundColor: '#0EA5E9', borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
-  postSubmitBtnDisabled: { backgroundColor: '#F3F4F6' },
+  typeChip: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: AppColors.bg.secondary, borderWidth: 1, borderColor: AppColors.border.soft },
+  typeChipActive: { backgroundColor: AppColors.purple.soft, borderColor: AppColors.purple.primary },
+  typeChipText: { fontSize: 12, fontWeight: '600', color: AppColors.text.secondary },
+  typeChipTextActive: { color: AppColors.purple.strong },
+  postSubmitBtn: { backgroundColor: AppColors.purple.strong, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
+  postSubmitBtnDisabled: { backgroundColor: AppColors.bg.secondary },
   postSubmitText: { fontSize: 15, fontWeight: '800', color: '#FFFFFF' },
-  postSubmitTextDisabled: { color: '#9CA3AF' },
+  postSubmitTextDisabled: { color: AppColors.text.tertiary },
   cancelBtn: { alignItems: 'center', paddingVertical: 10 },
-  cancelBtnText: { fontSize: 14, color: '#9CA3AF', fontWeight: '600' },
+  cancelBtnText: { fontSize: 14, color: AppColors.text.tertiary, fontWeight: '600' },
   modalDone: { alignItems: 'center', paddingVertical: 16 },
-  modalDoneTitle: { fontSize: 20, fontWeight: '800', color: '#1A1A2E', marginBottom: 6 },
-  modalDoneSubtitle: { fontSize: 14, color: '#6B7280', marginBottom: 24 },
-  modalDoneBtn: { backgroundColor: '#0EA5E9', borderRadius: 14, paddingVertical: 13, paddingHorizontal: 40 },
+  modalDoneTitle: { fontSize: 20, fontWeight: '800', color: AppColors.text.primary, marginBottom: 6 },
+  modalDoneSubtitle: { fontSize: 14, color: AppColors.text.secondary, marginBottom: 24 },
+  modalDoneBtn: { backgroundColor: AppColors.purple.strong, borderRadius: 14, paddingVertical: 13, paddingHorizontal: 40 },
   modalDoneBtnText: { fontSize: 15, fontWeight: '800', color: '#FFFFFF' },
 });

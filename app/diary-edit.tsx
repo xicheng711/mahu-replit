@@ -19,6 +19,7 @@ import { VoiceInput } from '@/components/voice-input';
 import { COLORS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
 import { trpc } from '@/lib/trpc';
 import * as Haptics from 'expo-haptics';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -444,7 +445,7 @@ export default function DiaryEditScreen() {
                   {/* Motivational banner */}
                   <View style={styles.motiveBanner}>
                     <LinearGradient
-                      colors={['#FFF7ED', '#FEF3C7', '#FFF7ED']}
+                      colors={[...Gradients.appBg]}
                       start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                       style={styles.motiveBannerInner}
                     >
@@ -646,7 +647,7 @@ export default function DiaryEditScreen() {
                       {followUpLoading ? (
                         <ActivityIndicator size="small" color="#fff" />
                       ) : (
-                        <Text style={{ fontSize: 18, color: '#fff' }}>➤</Text>
+                        <Text style={{ fontSize: 18, color: AppColors.surface.whiteStrong }}>➤</Text>
                       )}
                     </LinearGradient>
                   </TouchableOpacity>
@@ -685,34 +686,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: 'rgba(255,255,255,0.92)',
-    borderBottomWidth: 1, borderBottomColor: '#E8E2DA',
+    borderBottomWidth: 1, borderBottomColor: AppColors.border.soft,
     zIndex: 10,
   },
   headerBack: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 10, paddingVertical: 6,
   },
-  headerBackText: { fontSize: 15, color: '#5C4A3A', fontWeight: '600' },
+  headerBackText: { fontSize: 15, color: AppColors.text.secondary, fontWeight: '600' },
   headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   headerDot: {
     width: 7, height: 7, borderRadius: 4,
     backgroundColor: '#A07858',
   },
-  headerTitle: { fontSize: 17, fontWeight: '800', color: '#3D2B1F' },
+  headerTitle: { fontSize: 17, fontWeight: '800', color: AppColors.text.primary },
   headerSaveBtn: {
     borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8,
-    shadowColor: '#8B6048', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 3,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 3,
   },
-  headerSaveBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  headerSaveBtnText: { fontSize: 13, fontWeight: '700', color: AppColors.surface.whiteStrong },
   headerHomeBtn: {
-    backgroundColor: '#EDE8E3', borderRadius: 999,
+    backgroundColor: AppColors.bg.secondary, borderRadius: 999,
     paddingHorizontal: 12, paddingVertical: 7,
   },
-  headerHomeBtnText: { fontSize: 13, color: '#6B5444', fontWeight: '600' },
+  headerHomeBtnText: { fontSize: 13, color: AppColors.text.secondary, fontWeight: '600' },
 
   // Loading
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  loadingText: { fontSize: 15, color: COLORS.textSecondary },
+  loadingText: { fontSize: 15, color: AppColors.text.secondary },
 
   container: { padding: 16, paddingBottom: 20, zIndex: 1 },
 
@@ -721,10 +722,10 @@ const styles = StyleSheet.create({
   datePill: {
     backgroundColor: 'rgba(255,255,255,0.85)',
     borderRadius: 999, paddingHorizontal: 16, paddingVertical: 7,
-    borderWidth: 1, borderColor: '#DDD7CE',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
+    borderWidth: 1, borderColor: AppColors.border.soft,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
-  datePillText: { fontSize: 12, color: '#7C6D60' },
+  datePillText: { fontSize: 12, color: AppColors.text.secondary },
 
   // Motivational banner
   motiveBanner: { marginBottom: 24 },
@@ -747,45 +748,45 @@ const styles = StyleSheet.create({
 
   // Form sections
   section: { marginBottom: 24 },
-  label: { fontSize: 15, fontWeight: '700', color: '#2D1F14', marginBottom: 12 },
+  label: { fontSize: 15, fontWeight: '700', color: AppColors.text.primary, marginBottom: 12 },
   moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  caregiverMoodHint: { fontSize: 12, color: '#9BA1A6', marginTop: -6, marginBottom: 10 },
+  caregiverMoodHint: { fontSize: 12, color: AppColors.text.tertiary, marginTop: -6, marginBottom: 10 },
   caregiverMoodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   caregiverMoodChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 999, borderWidth: 1.5, borderColor: '#E9D5FF',
+    borderRadius: 999, borderWidth: 1.5, borderColor: AppColors.purple.primary,
     backgroundColor: 'rgba(255,255,255,0.9)',
   },
-  caregiverMoodChipSelected: { borderColor: '#7C3AED', backgroundColor: '#F5F0FF' },
+  caregiverMoodChipSelected: { borderColor: AppColors.purple.strong, backgroundColor: AppColors.purple.soft },
   caregiverMoodEmoji: { fontSize: 18 },
-  caregiverMoodLabel: { fontSize: 13, color: '#6B5E52', fontWeight: '500' },
-  caregiverMoodLabelSelected: { color: '#7C3AED', fontWeight: '700' },
+  caregiverMoodLabel: { fontSize: 13, color: AppColors.text.secondary, fontWeight: '500' },
+  caregiverMoodLabelSelected: { color: AppColors.purple.strong, fontWeight: '700' },
   moodOption: {
     alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8,
-    borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#DDD7CE',
+    borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: AppColors.border.soft,
     backgroundColor: 'rgba(255,255,255,0.9)', minWidth: 56,
   },
   moodOptionEmoji: { fontSize: 22, marginBottom: 2 },
-  moodOptionLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '500' },
+  moodOptionLabel: { fontSize: 11, color: AppColors.text.secondary, fontWeight: '500' },
   tagsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagOption: {
     paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 999, borderWidth: 1.5, borderColor: '#DDD7CE',
+    borderRadius: 999, borderWidth: 1.5, borderColor: AppColors.border.soft,
     backgroundColor: 'rgba(255,255,255,0.9)',
   },
   tagOptionSelected: { borderColor: '#A07858', backgroundColor: '#F0EBE3' },
-  tagOptionText: { fontSize: 13, color: '#6B5E52', fontWeight: '500' },
+  tagOptionText: { fontSize: 13, color: AppColors.text.secondary, fontWeight: '500' },
   tagOptionTextSelected: { color: '#7A5C3E', fontWeight: '700' },
   noteLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   noteInput: {
     backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 16,
-    borderWidth: 1.5, borderColor: '#DDD7CE',
-    padding: 14, fontSize: 15, color: '#2D1F14',
+    borderWidth: 1.5, borderColor: AppColors.border.soft,
+    padding: 14, fontSize: 15, color: AppColors.text.primary,
     minHeight: 130, lineHeight: 22,
   },
   noteHint: {
-    fontSize: 11, color: '#B0A090', marginTop: 6,
+    fontSize: 11, color: AppColors.text.tertiary, marginTop: 6,
     textAlign: 'right', fontStyle: 'italic',
   },
 
@@ -793,23 +794,23 @@ const styles = StyleSheet.create({
   summaryCard: {
     backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 20,
     padding: 16, marginBottom: 16,
-    borderWidth: 1, borderColor: '#DDD7CE',
-    shadowColor: '#8B6048', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 2,
+    borderWidth: 1, borderColor: AppColors.border.soft,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 2,
   },
   summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' },
   moodBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   moodBadgeEmoji: { fontSize: 14 },
   moodBadgeLabel: { fontSize: 12, fontWeight: '600' },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  tag: { backgroundColor: '#EDE8E3', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  tagText: { fontSize: 11, color: '#7A6354', fontWeight: '500' },
-  summaryContent: { fontSize: 14, color: '#3D2B1F', lineHeight: 20 },
-  summaryNoContent: { fontSize: 13, color: COLORS.textSecondary, fontStyle: 'italic' },
+  tag: { backgroundColor: AppColors.bg.secondary, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
+  tagText: { fontSize: 11, color: AppColors.text.secondary, fontWeight: '500' },
+  summaryContent: { fontSize: 14, color: AppColors.text.primary, lineHeight: 20 },
+  summaryNoContent: { fontSize: 13, color: AppColors.text.secondary, fontStyle: 'italic' },
 
   // Chat
   chatContainer: { marginTop: 4, marginBottom: 8, gap: 4 },
   chatTitle: {
-    fontSize: 12, fontWeight: '700', color: '#9CA3AF',
+    fontSize: 12, fontWeight: '700', color: AppColors.text.tertiary,
     textAlign: 'center', marginBottom: 12, letterSpacing: 0.5,
   },
 
@@ -822,7 +823,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18, paddingVertical: 12, maxWidth: '100%',
     shadowColor: '#34D399', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 3,
   },
-  bubbleGreenText: { fontSize: 15, color: '#fff', lineHeight: 22, fontWeight: '500' },
+  bubbleGreenText: { fontSize: 15, color: AppColors.surface.whiteStrong, lineHeight: 22, fontWeight: '500' },
 
   // AI bubble
   aiBubbleWrap: { position: 'relative', marginBottom: 4 },
@@ -831,19 +832,19 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: '#FDE047',
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3,
+    shadowColor: AppColors.shadow.dark, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3,
   },
   stickerText: { fontSize: 18 },
   bubbleBlue: {
-    backgroundColor: '#fff', borderRadius: 24, borderTopLeftRadius: 6,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 24, borderTopLeftRadius: 6,
     paddingHorizontal: 18, paddingVertical: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 2,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 2,
   },
-  bubbleBlueFirst: { borderWidth: 1.5, borderColor: '#E0D8CC' },
-  bubbleBluePink: { borderWidth: 1.5, borderColor: '#E0D8CC' },
+  bubbleBlueFirst: { borderWidth: 1.5, borderColor: AppColors.border.soft },
+  bubbleBluePink: { borderWidth: 1.5, borderColor: AppColors.border.soft },
   bubbleDots: { flexDirection: 'row', gap: 3, position: 'absolute', top: 10, right: 12 },
   bubbleDot: { width: 5, height: 5, borderRadius: 2.5 },
-  bubbleBlueText: { fontSize: 15, color: '#3D2B1F', lineHeight: 24 },
+  bubbleBlueText: { fontSize: 15, color: AppColors.text.primary, lineHeight: 24 },
 
   // AI name row
   aiNameRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8, marginLeft: 2 },
@@ -851,18 +852,18 @@ const styles = StyleSheet.create({
   aiAvatarCircle: {
     width: 38, height: 38, borderRadius: 19,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#8B6048', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 5, elevation: 3,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 5, elevation: 3,
   },
   aiAvatarEmoji: { fontSize: 18 },
   aiOnlineDot: {
     position: 'absolute', bottom: -1, right: -1,
     width: 12, height: 12, borderRadius: 6,
-    backgroundColor: '#4ADE80', borderWidth: 2, borderColor: '#fff',
+    backgroundColor: '#4ADE80', borderWidth: 2, borderColor: AppColors.surface.whiteStrong,
   },
-  aiName: { fontSize: 13, fontWeight: '800', color: '#2D1F14' },
+  aiName: { fontSize: 13, fontWeight: '800', color: AppColors.text.primary },
   aiBadgeRow: { flexDirection: 'row', marginTop: 2 },
   aiBadge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  aiBadgeText: { fontSize: 10, fontWeight: '700', color: '#fff' },
+  aiBadgeText: { fontSize: 10, fontWeight: '700', color: AppColors.surface.whiteStrong },
 
   // Typing
   typingRow: { flexDirection: 'row', gap: 4, alignItems: 'center', paddingHorizontal: 4 },
@@ -878,7 +879,7 @@ const styles = StyleSheet.create({
   // Bottom bar
   bottomBar: {
     backgroundColor: 'rgba(255,255,255,0.94)',
-    borderTopWidth: 1, borderTopColor: '#E8E2DA',
+    borderTopWidth: 1, borderTopColor: AppColors.border.soft,
     paddingHorizontal: 16, paddingTop: 12, paddingBottom: Platform.OS === 'ios' ? 24 : 16,
     gap: 10,
   },
@@ -888,25 +889,25 @@ const styles = StyleSheet.create({
   submitBtn: {
     borderRadius: 999, paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: '#8B6048', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.22, shadowRadius: 10, elevation: 4,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.22, shadowRadius: 10, elevation: 4,
   },
-  submitBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  submitBtnText: { fontSize: 16, fontWeight: '700', color: AppColors.surface.whiteStrong },
 
   // Input row
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   inputWrap: { flex: 1 },
   chatInput: {
     backgroundColor: 'rgba(250,248,245,0.95)',
-    borderWidth: 1.5, borderColor: '#DDD7CE',
+    borderWidth: 1.5, borderColor: AppColors.border.soft,
     borderRadius: 999,
     paddingHorizontal: 20, paddingVertical: 12,
-    fontSize: 15, color: '#3D2B1F',
+    fontSize: 15, color: AppColors.text.primary,
   },
   sendBtnWrap: {},
   sendBtn: {
     width: 50, height: 50, borderRadius: 25,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#8B6048', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
   },
 
   // End & Save button
@@ -922,7 +923,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     transform: [{ skewX: '-20deg' }],
   },
-  endBtnText: { fontSize: 15, fontWeight: '700', color: '#fff', zIndex: 1 },
+  endBtnText: { fontSize: 15, fontWeight: '700', color: AppColors.surface.whiteStrong, zIndex: 1 },
 
   // Finished bottom state
   finishedBottomBanner: {
@@ -930,5 +931,5 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   finishedBottomText: { fontSize: 14, color: '#16A34A', fontWeight: '600' },
-  goBackText: { fontSize: 14, color: '#EC4899', fontWeight: '700' },
+  goBackText: { fontSize: 14, color: AppColors.coral.primary, fontWeight: '700' },
 });

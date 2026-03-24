@@ -3,32 +3,32 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HapticTab } from "@/components/haptic-tab";
 import { Platform, View, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { AppColors, Gradients, Shadows } from "@/lib/design-tokens";
 
-const INACTIVE_BG = "#F3F4F6";
-const INACTIVE_LABEL = "#9CA3AF";
+const INACTIVE_LABEL = AppColors.nav.inactive;
 
 const TAB_CONFIG: Record<string, {
   emoji: string;
-  gradient: [string, string, string];
+  gradient: readonly [string, string];
   label: string;
 }> = {
-  index:      { emoji: "🏠", gradient: ["#FF8904", "#FF637E", "#F6339A"], label: "首页" },
-  checkin:    { emoji: "✨", gradient: ["#34D399", "#10B981", "#059669"], label: "每日打卡" },
-  medication: { emoji: "💊", gradient: ["#FDA4AF", "#F43F5E", "#E11D48"], label: "用药记录" },
-  diary:      { emoji: "📔", gradient: ["#7DD3FC", "#38BDF8", "#0EA5E9"], label: "日记" },
-  family:     { emoji: "👥", gradient: ["#D8B4FE", "#A855F7", "#9333EA"], label: "家人共享" },
+  index:      { emoji: "🏠", gradient: Gradients.coral,   label: "首页" },
+  checkin:    { emoji: "✨", gradient: Gradients.green,   label: "每日打卡" },
+  medication: { emoji: "💊", gradient: Gradients.peach,   label: "用药记录" },
+  diary:      { emoji: "📔", gradient: Gradients.purple,  label: "日记" },
+  family:     { emoji: "👥", gradient: Gradients.navActive, label: "家人共享" },
 };
 
 function TabIcon({ route, focused }: { route: string; focused: boolean }) {
   const cfg = TAB_CONFIG[route] ?? {
-    emoji: "⭕", gradient: ["#ccc", "#aaa", "#888"] as [string, string, string], label: "",
+    emoji: "⭕", gradient: ["#ccc", "#aaa"] as readonly [string, string], label: "",
   };
 
   return (
     <View style={styles.tabItem}>
       {focused ? (
         <LinearGradient
-          colors={cfg.gradient}
+          colors={cfg.gradient as any}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.iconCircle}
@@ -36,11 +36,11 @@ function TabIcon({ route, focused }: { route: string; focused: boolean }) {
           <Text style={styles.activeEmoji}>{cfg.emoji}</Text>
         </LinearGradient>
       ) : (
-        <View style={[styles.iconCircle, { backgroundColor: INACTIVE_BG }]}>
+        <View style={[styles.iconCircle, styles.inactiveCircle]}>
           <Text style={styles.inactiveEmoji}>{cfg.emoji}</Text>
         </View>
       )}
-      <Text style={[styles.tabLabel, focused && { color: cfg.gradient[1], fontWeight: "700" }]}>
+      <Text style={[styles.tabLabel, focused && { color: cfg.gradient[0], fontWeight: "700" as const }]}>
         {cfg.label}
       </Text>
     </View>
@@ -50,7 +50,7 @@ function TabIcon({ route, focused }: { route: string; focused: boolean }) {
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const safeBottom = Platform.OS === "web" ? 0 : insets.bottom;
-  const tabBarHeight = 72 + safeBottom;
+  const tabBarHeight = 68 + safeBottom;
 
   return (
     <Tabs
@@ -61,16 +61,16 @@ export default function TabLayout() {
         tabBarStyle: {
           height: tabBarHeight,
           paddingBottom: safeBottom,
-          paddingTop: 6,
-          backgroundColor: "#FFFFFF",
+          paddingTop: 4,
+          backgroundColor: AppColors.surface.whiteStrong,
           borderTopWidth: 0,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.10,
-          shadowRadius: 20,
-          elevation: 24,
+          borderTopLeftRadius: 22,
+          borderTopRightRadius: 22,
+          shadowColor: AppColors.shadow.default,
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          elevation: 12,
           overflow: Platform.OS === "android" ? "hidden" : undefined,
         },
         tabBarItemStyle: {
@@ -88,14 +88,14 @@ export default function TabLayout() {
   );
 }
 
-const CIRCLE = 48;
+const CIRCLE = 44;
 
 const styles = StyleSheet.create({
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    paddingTop: 4,
+    gap: 3,
+    paddingTop: 2,
   },
   iconCircle: {
     width: CIRCLE,
@@ -104,14 +104,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  activeEmoji: {
-    fontSize: 22,
-    lineHeight: 26,
+  inactiveCircle: {
+    backgroundColor: AppColors.bg.secondary,
   },
-  inactiveEmoji: {
+  activeEmoji: {
     fontSize: 20,
     lineHeight: 24,
-    opacity: 0.7,
+  },
+  inactiveEmoji: {
+    fontSize: 18,
+    lineHeight: 22,
+    opacity: 0.65,
   },
   tabLabel: {
     fontSize: 10,

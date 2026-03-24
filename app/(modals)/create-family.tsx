@@ -13,6 +13,7 @@ import {
 } from '@/lib/storage';
 import { useFamilyContext } from '@/lib/family-context';
 import { COLORS, SHADOWS, RADIUS } from '@/lib/animations';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import * as Haptics from 'expo-haptics';
 
 const ELDER_EMOJIS = ['👵', '👴', '🧓', '👩', '👨', '🌸', '🌟', '🍀', '🐉', '🦁'];
@@ -31,12 +32,10 @@ export default function CreateFamilyModal() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  // Elder info
   const [elderName, setElderName] = useState('');
   const [elderEmoji, setElderEmoji] = useState('👵');
   const [elderPhotoUri, setElderPhotoUri] = useState('');
 
-  // My info
   const [myName, setMyName] = useState('');
   const [myRole, setMyRole] = useState<'caregiver' | 'family' | 'nurse'>('caregiver');
   const [myRoleLabel, setMyRoleLabel] = useState('主要照顾者');
@@ -100,9 +99,7 @@ export default function CreateFamilyModal() {
         isCreator: true,
         isCurrentUser: true,
       }, undefined, { emoji: elderEmoji, photoUri: elderPhotoUri || undefined });
-      // Refresh family context
       await refresh();
-      // Navigate back to home
       if (router.canDismiss()) router.dismiss();
       else router.replace('/(tabs)/' as any);
     } catch (e) {
@@ -118,12 +115,11 @@ export default function CreateFamilyModal() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <LinearGradient
-        colors={['#FFF7ED', '#FDF2F8', '#FAF5FF']}
+        colors={[...Gradients.appBg]}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Header */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
           <Text style={styles.closeText}>✕ 取消</Text>
@@ -132,7 +128,6 @@ export default function CreateFamilyModal() {
         <View style={{ width: 64 }} />
       </View>
 
-      {/* Step indicator */}
       <View style={styles.stepRow}>
         {[0, 1].map(i => (
           <View key={i} style={[styles.stepDot, i <= step && styles.stepDotActive]} />
@@ -283,7 +278,6 @@ export default function CreateFamilyModal() {
         </ScrollView>
       </Animated.View>
 
-      {/* Action button */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         {step === 0 && (
           <TouchableOpacity
@@ -292,11 +286,11 @@ export default function CreateFamilyModal() {
             activeOpacity={0.85}
           >
             <LinearGradient
-              colors={canGoNext0 ? ['#FF8904', '#FF637E', '#F6339A'] : ['#E5E7EB', '#E5E7EB']}
+              colors={canGoNext0 ? [...Gradients.coral] : [AppColors.border.soft, AppColors.border.soft]}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={styles.nextBtnGradient}
             >
-              <Text style={[styles.nextBtnText, !canGoNext0 && { color: '#9CA3AF' }]}>继续 →</Text>
+              <Text style={[styles.nextBtnText, !canGoNext0 && { color: AppColors.text.tertiary }]}>继续 →</Text>
             </LinearGradient>
           </TouchableOpacity>
         )}
@@ -308,11 +302,11 @@ export default function CreateFamilyModal() {
             disabled={!canGoNext1 || saving}
           >
             <LinearGradient
-              colors={canGoNext1 ? ['#FF8904', '#FF637E', '#F6339A'] : ['#E5E7EB', '#E5E7EB']}
+              colors={canGoNext1 ? [...Gradients.coral] : [AppColors.border.soft, AppColors.border.soft]}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={styles.nextBtnGradient}
             >
-              <Text style={[styles.nextBtnText, !canGoNext1 && { color: '#9CA3AF' }]}>
+              <Text style={[styles.nextBtnText, !canGoNext1 && { color: AppColors.text.tertiary }]}>
                 {saving ? '创建中…' : '✨ 创建家庭档案'}
               </Text>
             </LinearGradient>
@@ -327,52 +321,52 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   closeBtn: { paddingVertical: 6, paddingRight: 8 },
-  closeText: { fontSize: 14, color: '#9CA3AF', fontWeight: '600' },
-  topTitle: { fontSize: 17, fontWeight: '800', color: '#1A1A2E', letterSpacing: -0.3 },
+  closeText: { fontSize: 14, color: AppColors.text.tertiary, fontWeight: '600' },
+  topTitle: { fontSize: 17, fontWeight: '800', color: AppColors.text.primary, letterSpacing: -0.3 },
 
   stepRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 8 },
-  stepDot: { width: 24, height: 4, borderRadius: 2, backgroundColor: '#E5E7EB' },
-  stepDotActive: { backgroundColor: '#FF8904' },
+  stepDot: { width: 24, height: 4, borderRadius: 2, backgroundColor: AppColors.border.soft },
+  stepDotActive: { backgroundColor: AppColors.coral.primary },
 
   content: { flex: 1 },
   scroll: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 24 },
 
-  stepLabel: { fontSize: 11, fontWeight: '700', color: '#FF8904', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 },
-  stepTitle: { fontSize: 26, fontWeight: '900', color: '#1A1A2E', marginBottom: 6, letterSpacing: -0.5 },
-  stepDesc: { fontSize: 14, color: '#6B7280', marginBottom: 24, lineHeight: 20 },
+  stepLabel: { fontSize: 11, fontWeight: '700', color: AppColors.coral.primary, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 },
+  stepTitle: { fontSize: 26, fontWeight: '900', color: AppColors.text.primary, marginBottom: 6, letterSpacing: -0.5 },
+  stepDesc: { fontSize: 14, color: AppColors.text.secondary, marginBottom: 24, lineHeight: 20 },
 
-  fieldLabel: { fontSize: 12, fontWeight: '700', color: '#374151', marginBottom: 8, marginTop: 16, letterSpacing: 0.3 },
+  fieldLabel: { fontSize: 12, fontWeight: '700', color: AppColors.text.primary, marginBottom: 8, marginTop: 16, letterSpacing: 0.3 },
   input: {
-    backgroundColor: '#FFFFFF', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
-    fontSize: 16, color: '#1A1A2E', borderWidth: 1.5, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 16, color: AppColors.text.primary, borderWidth: 1.5, borderColor: AppColors.border.soft,
     ...SHADOWS.sm,
   },
 
   emojiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  emojiBtn: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#F9FAFB', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'transparent' },
-  emojiBtnActive: { borderColor: '#FF8904', backgroundColor: '#FFF7ED' },
+  emojiBtn: { width: 52, height: 52, borderRadius: 16, backgroundColor: AppColors.bg.secondary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'transparent' },
+  emojiBtnActive: { borderColor: AppColors.coral.primary, backgroundColor: AppColors.coral.soft },
 
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tag: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F3F4F6', borderWidth: 1.5, borderColor: 'transparent' },
-  tagActive: { backgroundColor: '#FFF7ED', borderColor: '#FF8904' },
-  tagText: { fontSize: 13, color: '#6B7280', fontWeight: '600' },
-  tagTextActive: { color: '#FF8904', fontWeight: '700' },
+  tag: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: AppColors.bg.secondary, borderWidth: 1.5, borderColor: 'transparent' },
+  tagActive: { backgroundColor: AppColors.coral.soft, borderColor: AppColors.coral.primary },
+  tagText: { fontSize: 13, color: AppColors.text.secondary, fontWeight: '600' },
+  tagTextActive: { color: AppColors.coral.primary, fontWeight: '700' },
 
-  roleCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1.5, borderColor: '#E5E7EB', ...SHADOWS.sm },
+  roleCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: AppColors.surface.whiteStrong, borderRadius: 14, padding: 14, marginBottom: 8, borderWidth: 1.5, borderColor: AppColors.border.soft, ...SHADOWS.sm },
   roleCardActive: { borderColor: COLORS.primary, backgroundColor: '#F0FFF0' },
-  roleTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
-  roleDesc: { fontSize: 12, color: '#6B7280' },
+  roleTitle: { fontSize: 15, fontWeight: '700', color: AppColors.text.primary, marginBottom: 2 },
+  roleDesc: { fontSize: 12, color: AppColors.text.secondary },
   radioOuter: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#D1D5DB', alignItems: 'center', justifyContent: 'center' },
   radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.primary },
 
   colorRow: { flexDirection: 'row', gap: 10 },
   colorBtn: { width: 32, height: 32, borderRadius: 16 },
-  colorBtnActive: { borderWidth: 3, borderColor: '#FFFFFF', ...SHADOWS.md },
+  colorBtnActive: { borderWidth: 3, borderColor: AppColors.surface.whiteStrong, ...SHADOWS.md },
 
   avatarSection: { alignItems: 'center', marginBottom: 4 },
-  photoBtn: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#E5E7EB', borderStyle: 'dashed', overflow: 'hidden' },
+  photoBtn: { width: 100, height: 100, borderRadius: 50, backgroundColor: AppColors.bg.secondary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: AppColors.border.soft, borderStyle: 'dashed', overflow: 'hidden' },
   photoBtnInner: { alignItems: 'center', justifyContent: 'center' },
-  photoBtnLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 4 },
+  photoBtnLabel: { fontSize: 11, color: AppColors.text.tertiary, fontWeight: '600', marginTop: 4 },
   photoPreview: { width: 100, height: 100, borderRadius: 50 },
   clearPhotoBtn: { marginTop: 8, paddingVertical: 4, paddingHorizontal: 12 },
   clearPhotoText: { fontSize: 12, color: '#EF4444', fontWeight: '600' },
@@ -381,5 +375,5 @@ const styles = StyleSheet.create({
   nextBtn: { borderRadius: 16, overflow: 'hidden' },
   nextBtnDisabled: { opacity: 0.6 },
   nextBtnGradient: { paddingVertical: 16, alignItems: 'center' },
-  nextBtnText: { fontSize: 16, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.2 },
+  nextBtnText: { fontSize: 16, fontWeight: '800', color: AppColors.surface.whiteStrong, letterSpacing: 0.2 },
 });

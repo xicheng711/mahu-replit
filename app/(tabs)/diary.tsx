@@ -11,6 +11,7 @@ import { PageHeader, PAGE_THEMES } from '@/components/page-header';
 import { getDiaryEntries, deleteDiaryEntry, DiaryEntry, getCurrentUserIsCreator } from '@/lib/storage';
 import { JoinerLockedScreen } from '@/components/joiner-locked-screen';
 import { COLORS, SHADOWS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -92,7 +93,7 @@ function DiaryCard({ entry, onPress, onDelete, index, editMode }: {
               <Text style={[styles.moodBadgeLabel, { color: mood.color }]}>{mood.label}</Text>
             </View>
             {cgMood && (
-              <View style={[styles.moodBadge, { backgroundColor: '#FDF2F8' }]}>
+              <View style={[styles.moodBadge, { backgroundColor: AppColors.coral.soft }]}>
                 <Text style={styles.moodBadgeEmoji}>{entry.caregiverMoodEmoji}</Text>
                 <Text style={[styles.moodBadgeLabel, { color: cgMood.color }]}>我{cgMood.label}</Text>
               </View>
@@ -251,7 +252,7 @@ function CalendarView({ entries, onOpenEntry }: { entries: DiaryEntry[]; onOpenE
         </TouchableOpacity>
         <Text style={calStyles.monthLabel}>{viewYear}年{viewMonth + 1}月</Text>
         <TouchableOpacity onPress={() => goMonth(1)} style={calStyles.navBtn} disabled={isAtMax}>
-          <Text style={[calStyles.navArrow, isAtMax && { color: '#D1D5DB' }]}>›</Text>
+          <Text style={[calStyles.navArrow, isAtMax && { color: AppColors.border.soft }]}>›</Text>
         </TouchableOpacity>
       </View>
 
@@ -274,7 +275,7 @@ function CalendarView({ entries, onOpenEntry }: { entries: DiaryEntry[]; onOpenE
               {hasEntry && dateMoodEmoji[key] ? (
                 <Text style={calStyles.dayMoodEmoji}>{dateMoodEmoji[key]}</Text>
               ) : hasEntry ? (
-                <View style={[calStyles.dot, isSel && { backgroundColor: '#fff' }]} />
+                <View style={[calStyles.dot, isSel && { backgroundColor: AppColors.surface.whiteStrong }]} />
               ) : null}
             </TouchableOpacity>
           );
@@ -295,7 +296,7 @@ function CalendarView({ entries, onOpenEntry }: { entries: DiaryEntry[]; onOpenE
                     <Text style={calStyles.miniCaregiverMood}>我的心情：{e.caregiverMoodEmoji} {cg.label}</Text>
                   )}
                 </View>
-                <Text style={{ fontSize: 12, color: '#9CA3AF' }}>›</Text>
+                <Text style={{ fontSize: 12, color: AppColors.text.tertiary }}>›</Text>
               </TouchableOpacity>
             );
           })}
@@ -363,7 +364,7 @@ function DiaryScreenContent() {
   }
 
   return (
-    <ScreenContainer containerClassName="bg-[#FFF7ED]">
+    <ScreenContainer containerClassName="bg-[#F7F1F3]">
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
@@ -512,9 +513,9 @@ const styles = StyleSheet.create({
   headerBtns: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginBottom: 16 },
   manageBtn: {
     borderRadius: RADIUS.pill, paddingHorizontal: 14, paddingVertical: 8,
-    borderWidth: 1.5, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB',
+    borderWidth: 1.5, borderColor: AppColors.border.soft, backgroundColor: AppColors.bg.secondary,
   },
-  manageBtnActive: { borderColor: '#EF4444', backgroundColor: '#FEF2F2' },
+  manageBtnActive: { borderColor: AppColors.status.error, backgroundColor: '#FEF2F2' },
   manageBtnText: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
   manageBtnTextActive: { color: '#DC2626' },
   writeBtn: {
@@ -534,12 +535,12 @@ const styles = StyleSheet.create({
 
   selfCareBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#FFF5F7', borderRadius: RADIUS.lg,
+    backgroundColor: AppColors.coral.soft, borderRadius: RADIUS.lg,
     padding: 12, marginBottom: 14,
-    borderWidth: 1, borderColor: '#FCE7F3',
+    borderWidth: 1, borderColor: AppColors.coral.primary + '30',
   },
   selfCareEmoji: { fontSize: 18 },
-  selfCareText: { fontSize: 13, color: '#BE185D', fontWeight: '600', flex: 1 },
+  selfCareText: { fontSize: 13, color: AppColors.coral.primary, fontWeight: '600', flex: 1 },
 
   // Entry list
   entriesList: { gap: 12 },
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
 
   // Diary card
   diaryCard: {
-    backgroundColor: '#FFFFFF', borderRadius: RADIUS.lg,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: RADIUS.lg,
     padding: 16, ...SHADOWS.md,
   },
   diaryCardEditMode: {
@@ -580,18 +581,18 @@ const styles = StyleSheet.create({
   moodBadgeLabel: { fontSize: 12, fontWeight: '600' },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
   tag: {
-    backgroundColor: '#F3F4F6', borderRadius: RADIUS.pill,
+    backgroundColor: AppColors.bg.secondary, borderRadius: RADIUS.pill,
     paddingHorizontal: 8, paddingVertical: 3,
   },
   tagText: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '500' },
   diaryContent: { fontSize: 14, color: COLORS.text, lineHeight: 20, marginBottom: 8 },
   aiPreviewBox: {
-    backgroundColor: '#F0F7FF', borderRadius: 10, padding: 10, marginTop: 4,
+    backgroundColor: AppColors.purple.soft, borderRadius: 10, padding: 10, marginTop: 4,
   },
   aiPreviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
   aiPreviewIcon: { fontSize: 13 },
-  aiPreviewLabel: { fontSize: 12, fontWeight: '600', color: '#3B82F6' },
-  aiPreviewText: { fontSize: 13, color: '#374151', lineHeight: 18 },
+  aiPreviewLabel: { fontSize: 12, fontWeight: '600', color: AppColors.purple.strong },
+  aiPreviewText: { fontSize: 13, color: AppColors.text.primary, lineHeight: 18 },
   tapHint: { alignItems: 'flex-end', marginTop: 8 },
   tapHintText: { fontSize: 12, color: COLORS.primary, fontWeight: '600' },
 
@@ -599,7 +600,7 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingTop: 60, paddingBottom: 40 },
   emptyEmojiCircle: {
     width: 88, height: 88, borderRadius: 44,
-    backgroundColor: '#FFF3E0', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: AppColors.peach.soft, alignItems: 'center', justifyContent: 'center',
     marginBottom: 20,
   },
   emptyEmoji: { fontSize: 40 },
@@ -634,53 +635,53 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   modalBox: {
-    backgroundColor: '#FFFFFF', borderRadius: 20,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 20,
     padding: 28, width: 300, alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15, shadowRadius: 20, elevation: 10,
   },
   modalIcon: { fontSize: 36, marginBottom: 10 },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A1A', marginBottom: 10 },
-  modalMsg: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: AppColors.text.primary, marginBottom: 10 },
+  modalMsg: { fontSize: 14, color: AppColors.text.secondary, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   modalBtns: { flexDirection: 'row', gap: 12, width: '100%' },
   modalCancelBtn: {
     flex: 1, paddingVertical: 12, borderRadius: 12,
-    backgroundColor: '#F3F4F6', alignItems: 'center',
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.bg.secondary, alignItems: 'center',
+    borderWidth: 1, borderColor: AppColors.border.soft,
   },
-  modalCancelText: { fontSize: 15, fontWeight: '600', color: '#6B7280' },
+  modalCancelText: { fontSize: 15, fontWeight: '600', color: AppColors.text.secondary },
   modalDeleteBtn: {
     flex: 1, paddingVertical: 12, borderRadius: 12,
-    backgroundColor: '#EF4444', alignItems: 'center',
+    backgroundColor: AppColors.status.error, alignItems: 'center',
   },
-  modalDeleteText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+  modalDeleteText: { fontSize: 15, fontWeight: '700', color: AppColors.surface.whiteStrong },
 });
 
 const calStyles = StyleSheet.create({
-  root: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16, ...SHADOWS.md, marginTop: 4 },
+  root: { backgroundColor: AppColors.surface.whiteStrong, borderRadius: 18, padding: 16, ...SHADOWS.md, marginTop: 4 },
   navRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  navBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: '#F9FAFB' },
-  navArrow: { fontSize: 22, fontWeight: '700', color: '#374151', lineHeight: 28 },
-  monthLabel: { fontSize: 15, fontWeight: '800', color: '#1A1A2E', letterSpacing: -0.2 },
+  navBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: AppColors.bg.secondary },
+  navArrow: { fontSize: 22, fontWeight: '700', color: AppColors.text.primary, lineHeight: 28 },
+  monthLabel: { fontSize: 15, fontWeight: '800', color: AppColors.text.primary, letterSpacing: -0.2 },
   weekRow: { flexDirection: 'row', marginBottom: 6 },
-  weekDay: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '600', color: '#9CA3AF' },
+  weekDay: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '600', color: AppColors.text.tertiary },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { width: '14.285714%', alignItems: 'center', paddingVertical: 4 },
   dayCircle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  dayHasEntry: { backgroundColor: '#F0FDF4' },
-  dayToday: { backgroundColor: '#6C9E6C' },
-  daySelected: { backgroundColor: '#1A1A2E' },
-  dayText: { fontSize: 13, fontWeight: '500', color: '#374151' },
-  dayTextToday: { color: '#FFFFFF', fontWeight: '800' },
-  dayTextSelected: { color: '#FFFFFF', fontWeight: '800' },
-  dot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#6C9E6C', marginTop: 2 },
+  dayHasEntry: { backgroundColor: AppColors.green.soft },
+  dayToday: { backgroundColor: AppColors.green.muted },
+  daySelected: { backgroundColor: AppColors.text.primary },
+  dayText: { fontSize: 13, fontWeight: '500', color: AppColors.text.primary },
+  dayTextToday: { color: AppColors.surface.whiteStrong, fontWeight: '800' },
+  dayTextSelected: { color: AppColors.surface.whiteStrong, fontWeight: '800' },
+  dot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: AppColors.green.muted, marginTop: 2 },
   dayMoodEmoji: { fontSize: 10, marginTop: 1, lineHeight: 12 },
-  selectedSection: { marginTop: 14, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12, gap: 8 },
-  selectedLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 4 },
-  miniCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#F9FAFB', borderRadius: 12, padding: 10 },
+  selectedSection: { marginTop: 14, borderTopWidth: 1, borderTopColor: AppColors.border.soft, paddingTop: 12, gap: 8 },
+  selectedLabel: { fontSize: 13, fontWeight: '700', color: AppColors.text.primary, marginBottom: 4 },
+  miniCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: AppColors.bg.secondary, borderRadius: 12, padding: 10 },
   miniMood: { fontSize: 22 },
-  miniContent: { fontSize: 13, color: '#374151', lineHeight: 18 },
-  miniCaregiverMood: { fontSize: 11, color: '#9CA3AF', marginTop: 3 },
+  miniContent: { fontSize: 13, color: AppColors.text.primary, lineHeight: 18 },
+  miniCaregiverMood: { fontSize: 11, color: AppColors.text.tertiary, marginTop: 3 },
 });
 
 export default function DiaryScreen() {

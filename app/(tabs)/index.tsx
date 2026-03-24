@@ -12,6 +12,7 @@ import { getLunarDate, getFormattedDate } from '@/lib/lunar';
 import { getTodayCheckIn, getYesterdayCheckIn, getProfile, getAllCheckIns, DailyCheckIn, getCurrentUserIsCreator } from '@/lib/storage';
 import { TrendChart } from '@/components/trend-chart';
 import { COLORS, SHADOWS, fadeInUp, pressAnimation } from '@/lib/animations';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import * as Haptics from 'expo-haptics';
 import { WeeklyEcho } from '@/components/weekly-echo';
 import { JoinerHomeScreen } from '@/components/joiner-home';
@@ -154,7 +155,7 @@ function EnhancedCheckinBanner({
         <TouchableOpacity onPress={handlePress} activeOpacity={0.88}>
           <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
             <LinearGradient
-              colors={['#FFB347', '#FF8E7F', '#FF6B9D']}
+              colors={[...Gradients.coral, '#F47D96']}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={styles.checkinBanner}
             >
@@ -269,7 +270,7 @@ function EnhancedAICard({
         <View style={styles.aiHeader}>
           <Animated.View style={{ transform: [{ scale: iconScale }, { rotate: iconRotation }] }}>
             <LinearGradient
-              colors={['#A78BFA', '#8B5CF6', '#7C3AED']}
+              colors={[...Gradients.purple, AppColors.purple.strong]}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={styles.aiIconBox}
             >
@@ -324,7 +325,7 @@ function EnhancedAICard({
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={onCheckinPress} style={styles.aiDetailLink}>
-            <Text style={[styles.aiDetailLinkText, { color: '#FF8E7F' }]}>开始早间打卡 →</Text>
+            <Text style={[styles.aiDetailLinkText, { color: AppColors.coral.primary }]}>开始早间打卡 →</Text>
           </TouchableOpacity>
         )}
       </Animated.View>
@@ -447,7 +448,7 @@ function CreatorHomeScreen() {
   const [elderNickname, setElderNickname] = useState('家人');
   const [caregiverName, setCaregiverName] = useState('');
   const [memberPhotoUri, setMemberPhotoUri] = useState<string | null>(null);
-  const [zodiacColor, setZodiacColor] = useState('#FF6B6B');
+  const [zodiacColor, setZodiacColor] = useState(AppColors.coral.primary);
   const [zodiacEmoji, setZodiacEmoji] = useState('🐎');
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [cityName, setCityName] = useState('');
@@ -517,16 +518,16 @@ function CreatorHomeScreen() {
     : '先完成今天的早间打卡，我再为您生成更贴合今天情况的建议 🌸';
 
   const quickActions = [
-    { emoji: '💊', decorEmoji: '✨', label: '用药提醒', route: '/medication', gradientStart: '#F472B6', gradientEnd: '#EC4899', bgColor: '#FFF0F6' },
-    { emoji: '📔', decorEmoji: '🌸', label: '护理日记', route: '/diary',      gradientStart: '#60A5FA', gradientEnd: '#3B82F6', bgColor: '#EFF6FF' },
-    { emoji: '👥', decorEmoji: '💜', label: '家庭共享', route: '/family',     gradientStart: '#C084FC', gradientEnd: '#A855F7', bgColor: '#F5F0FF' },
-    { emoji: '🤖', decorEmoji: '🧠', label: '小马虎分析',  route: '/share',  gradientStart: '#34D399', gradientEnd: '#10B981', bgColor: '#EFFDF5' },
+    { emoji: '💊', decorEmoji: '✨', label: '用药提醒', route: '/medication', gradientStart: Gradients.coral[0], gradientEnd: Gradients.coral[1], bgColor: AppColors.coral.soft },
+    { emoji: '📔', decorEmoji: '🌸', label: '护理日记', route: '/diary',      gradientStart: Gradients.peach[0], gradientEnd: Gradients.peach[1], bgColor: AppColors.peach.soft },
+    { emoji: '👥', decorEmoji: '💜', label: '家庭共享', route: '/family',     gradientStart: Gradients.purple[0], gradientEnd: Gradients.purple[1], bgColor: AppColors.purple.soft },
+    { emoji: '🤖', decorEmoji: '🧠', label: '小马虎分析',  route: '/share',  gradientStart: Gradients.green[0], gradientEnd: Gradients.green[1], bgColor: AppColors.green.soft },
   ];
 
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={['#FFF7ED', '#FDF2F8', '#FAF5FF']}
+        colors={[...Gradients.appBg]}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
@@ -581,17 +582,17 @@ function CreatorHomeScreen() {
                 activeOpacity={memberships.length > 1 ? 0.7 : 1}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}
               >
-                <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '600' }}>
+                <Text style={{ fontSize: 12, color: AppColors.text.secondary, fontWeight: '600' }}>
                   🏠 {activeMembership?.room.elderName || elderNickname}的家庭
                 </Text>
-                {memberships.length > 1 && <Text style={{ fontSize: 10, color: '#9CA3AF' }}>▼</Text>}
+                {memberships.length > 1 && <Text style={{ fontSize: 10, color: AppColors.text.tertiary }}>▼</Text>}
               </TouchableOpacity>
             )}
             <Text style={styles.greeting}>{greeting}</Text>
           </View>
           <Animated.View style={{ transform: [{ scale: avatarScale }] }}>
             <TouchableOpacity
-              style={[styles.profileBtn, memberPhotoUri ? { backgroundColor: 'transparent', borderWidth: 2.5, borderColor: zodiacColor + '80' } : {}]}
+              style={[styles.profileBtn, memberPhotoUri ? { backgroundColor: 'transparent', borderWidth: 2.5, borderColor: zodiacColor + '60' } : {}]}
               onPress={() => {
                 if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push('/profile' as any);
@@ -600,7 +601,7 @@ function CreatorHomeScreen() {
               {memberPhotoUri ? (
                 <Image source={{ uri: memberPhotoUri }} style={styles.profilePhoto} />
               ) : (
-                <LinearGradient colors={['#FFAB9B', '#FF8C7A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.profileGradient}>
+                <LinearGradient colors={[...Gradients.coral]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.profileGradient}>
                   <Text style={{ fontSize: 24 }}>{zodiacEmoji}</Text>
                 </LinearGradient>
               )}
@@ -729,7 +730,7 @@ function CreatorHomeScreen() {
                   <Text style={switStyles.name}>{m.room.elderName}</Text>
                   <Text style={switStyles.role}>{m.role === 'creator' ? '📋 主要照顾者' : '👁️ 家庭成员'}</Text>
                 </View>
-                {activeMembership?.familyId === m.familyId && <Text style={{ fontSize: 16, color: '#6C9E6C' }}>✓</Text>}
+                {activeMembership?.familyId === m.familyId && <Text style={{ fontSize: 16, color: AppColors.green.muted }}>✓</Text>}
               </TouchableOpacity>
             ))}
             <TouchableOpacity
@@ -747,14 +748,14 @@ function CreatorHomeScreen() {
 
 const switStyles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 36, ...SHADOWS.lg },
-  title: { fontSize: 17, fontWeight: '800', color: '#1A1A2E', textAlign: 'center', marginBottom: 16 },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14, marginBottom: 8, backgroundColor: '#F9FAFB' },
-  rowActive: { backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#6C9E6C' },
-  name: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
-  role: { fontSize: 12, color: '#6B7280' },
-  addBtn: { marginTop: 8, paddingVertical: 14, alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: '#E5E7EB', borderStyle: 'dashed' },
-  addText: { fontSize: 14, fontWeight: '700', color: '#9CA3AF' },
+  sheet: { backgroundColor: AppColors.surface.whiteStrong, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 36, ...SHADOWS.lg },
+  title: { fontSize: 17, fontWeight: '800', color: AppColors.text.primary, textAlign: 'center', marginBottom: 16 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14, marginBottom: 8, backgroundColor: AppColors.bg.secondary },
+  rowActive: { backgroundColor: AppColors.green.soft, borderWidth: 1.5, borderColor: AppColors.green.muted },
+  name: { fontSize: 15, fontWeight: '700', color: AppColors.text.primary, marginBottom: 2 },
+  role: { fontSize: 12, color: AppColors.text.secondary },
+  addBtn: { marginTop: 8, paddingVertical: 14, alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: AppColors.border.soft, borderStyle: 'dashed' },
+  addText: { fontSize: 14, fontWeight: '700', color: AppColors.text.tertiary },
 });
 
 const styles = StyleSheet.create({
@@ -769,24 +770,24 @@ const styles = StyleSheet.create({
   // 日期天气行
   dateWeatherRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingRight: 14 },
   dateBlock: { flexDirection: 'column', gap: 4 },
-  dateText: { fontSize: 14, fontWeight: '600', color: '#6B7280', letterSpacing: 0.3 },
-  lunarText: { fontSize: 12, color: '#B07848', fontWeight: '500' },
+  dateText: { fontSize: 14, fontWeight: '600', color: AppColors.text.secondary, letterSpacing: 0.3 },
+  lunarText: { fontSize: 12, color: AppColors.peach.primary, fontWeight: '500' },
   weatherChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: 'rgba(255,255,255,0.90)',
     paddingHorizontal: 12, paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1, borderColor: 'rgba(0,0,0,0.07)',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6, elevation: 3,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6, elevation: 3,
   },
   weatherIcon: { fontSize: 20 },
-  weatherTemp: { fontSize: 14, fontWeight: '800', color: '#333', lineHeight: 17 },
-  weatherDesc: { fontSize: 11, color: '#9CA3AF', lineHeight: 14 },
+  weatherTemp: { fontSize: 14, fontWeight: '800', color: AppColors.text.primary, lineHeight: 17 },
+  weatherDesc: { fontSize: 11, color: AppColors.text.tertiary, lineHeight: 14 },
   // 标题行
   appNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
-  appName: { fontSize: 26, fontWeight: '900', color: '#FF4D4D', letterSpacing: -0.8 },
+  appName: { fontSize: 26, fontWeight: '900', color: AppColors.coral.primary, letterSpacing: -0.8 },
   headerSparkle: { fontSize: 20 },
-  greeting: { fontSize: 15, color: '#9CA3AF', fontWeight: '500', lineHeight: 22 },
+  greeting: { fontSize: 15, color: AppColors.text.tertiary, fontWeight: '500', lineHeight: 22 },
   profileBtn: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', ...SHADOWS.md },
   profileGradient: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   profilePhoto: { width: 56, height: 56, borderRadius: 16 },
@@ -798,48 +799,48 @@ const styles = StyleSheet.create({
   starDecor: { position: 'absolute' },
   checkinLeft: { flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 },
   checkinIconBox: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.25)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
-  checkinIconBoxDone: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#DCFCE7' },
+  checkinIconBoxDone: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: AppColors.green.soft },
   checkinTitle: { fontSize: 17, fontWeight: '800', color: '#fff', letterSpacing: -0.3 },
   checkinTitleDone: { fontSize: 16, fontWeight: '700', color: COLORS.text },
   checkinSub: { fontSize: 13, color: 'rgba(255,255,255,0.88)', marginTop: 2 },
   checkinSubDone: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-  checkinDone: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#BBF7D0', borderRadius: 24, padding: 18, marginBottom: 16, ...SHADOWS.sm },
+  checkinDone: { flexDirection: 'row', alignItems: 'center', backgroundColor: AppColors.green.soft, borderWidth: 1.5, borderColor: AppColors.green.primary, borderRadius: 24, padding: 18, marginBottom: 16, ...SHADOWS.sm },
   chevronCircle: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.28)', alignItems: 'center', justifyContent: 'center' },
-  chevronCircleDone: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
-  careScoreBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, alignSelf: 'flex-start' },
+  chevronCircleDone: { width: 32, height: 32, borderRadius: 16, backgroundColor: AppColors.bg.secondary, alignItems: 'center', justifyContent: 'center' },
+  careScoreBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: AppColors.peach.soft, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, alignSelf: 'flex-start' },
 
   // AI 卡片
-  aiCard: { marginBottom: 16, backgroundColor: '#F3EEFF', borderRadius: 24, padding: 18, borderWidth: 1, borderColor: '#DDD6FE', overflow: 'hidden', ...SHADOWS.sm },
+  aiCard: { marginBottom: 16, backgroundColor: AppColors.purple.soft, borderRadius: 24, padding: 18, borderWidth: 1, borderColor: AppColors.purple.primary, overflow: 'hidden', ...SHADOWS.sm },
   aiGlow1: { position: 'absolute', top: 0, right: 0, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(167,139,250,0.15)', transform: [{ translateX: 60 }, { translateY: -60 }] },
   aiGlow2: { position: 'absolute', bottom: 0, left: 0, width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(139,92,246,0.12)', transform: [{ translateX: -50 }, { translateY: 50 }] },
   aiDecorFigure: { position: 'absolute', top: 8, right: 12, fontSize: 44, opacity: 0.18, transform: [{ scaleX: -1 }] },
   aiHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   aiIconBox: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  aiLabel: { fontSize: 16, fontWeight: '800', color: '#5B21B6', letterSpacing: -0.3 },
-  aiSubLabel: { fontSize: 12, color: '#7C3AED', marginTop: 2 },
-  aiContentBox: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, marginBottom: 12 },
-  aiMessage: { fontSize: 14, color: '#374151', lineHeight: 22 },
+  aiLabel: { fontSize: 16, fontWeight: '800', color: AppColors.purple.strong, letterSpacing: -0.3 },
+  aiSubLabel: { fontSize: 12, color: AppColors.purple.strong, marginTop: 2 },
+  aiContentBox: { backgroundColor: AppColors.surface.whiteStrong, borderRadius: 16, padding: 14, marginBottom: 12 },
+  aiMessage: { fontSize: 14, color: AppColors.text.primary, lineHeight: 22 },
   aiSkeletonWrap: { position: 'relative', overflow: 'hidden', gap: 8, paddingBottom: 4 },
-  aiSkeletonLine: { width: '100%', height: 13, borderRadius: 6, backgroundColor: '#E5E7EB', opacity: 0.7 },
+  aiSkeletonLine: { width: '100%', height: 13, borderRadius: 6, backgroundColor: AppColors.border.soft, opacity: 0.7 },
   aiSkeletonBadgeRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  aiSkeletonBadge: { width: 56, height: 24, borderRadius: 12, backgroundColor: '#EDE9FE', opacity: 0.6 },
+  aiSkeletonBadge: { width: 56, height: 24, borderRadius: 12, backgroundColor: AppColors.purple.soft, opacity: 0.6 },
   aiSkeletonOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.82)', justifyContent: 'center', alignItems: 'center', borderRadius: 12 },
-  aiSkeletonLockBox: { alignItems: 'center', gap: 6, backgroundColor: '#F5F3FF', borderRadius: 16, paddingHorizontal: 20, paddingVertical: 14, borderWidth: 1, borderColor: '#DDD6FE' },
-  aiSkeletonLockText: { fontSize: 13, fontWeight: '700', color: '#5B21B6' },
-  aiSkeletonLockSub: { fontSize: 11, color: '#7C3AED', textAlign: 'center' },
+  aiSkeletonLockBox: { alignItems: 'center', gap: 6, backgroundColor: AppColors.purple.soft, borderRadius: 16, paddingHorizontal: 20, paddingVertical: 14, borderWidth: 1, borderColor: AppColors.purple.primary },
+  aiSkeletonLockText: { fontSize: 13, fontWeight: '700', color: AppColors.purple.strong },
+  aiSkeletonLockSub: { fontSize: 11, color: AppColors.purple.strong, textAlign: 'center' },
   aiBadgeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 4 },
-  aiBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EDE9FE', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
+  aiBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: AppColors.purple.soft, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   aiBadgeEmoji: { fontSize: 12 },
-  aiBadgeText: { fontSize: 12, color: '#5B21B6', fontWeight: '600' },
+  aiBadgeText: { fontSize: 12, color: AppColors.purple.strong, fontWeight: '600' },
   aiDetailLink: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 10 },
-  aiDetailLinkText: { fontSize: 13, fontWeight: '700', color: '#7C3AED' },
+  aiDetailLinkText: { fontSize: 13, fontWeight: '700', color: AppColors.purple.strong },
 
   // 护理贴士
-  tipCard: { backgroundColor: '#FFFBEB', borderRadius: 24, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: '#FDE68A', ...SHADOWS.sm },
+  tipCard: { backgroundColor: AppColors.peach.soft, borderRadius: 24, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: AppColors.peach.primary, ...SHADOWS.sm },
   tipHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  tipIconCircle: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#FEF3C7', alignItems: 'center', justifyContent: 'center' },
-  tipCategory: { fontSize: 12, fontWeight: '700', color: '#D4883E', textTransform: 'uppercase', letterSpacing: 0.5 },
-  tipText: { fontSize: 14, color: '#555', lineHeight: 22 },
+  tipIconCircle: { width: 36, height: 36, borderRadius: 12, backgroundColor: AppColors.peach.soft, alignItems: 'center', justifyContent: 'center' },
+  tipCategory: { fontSize: 12, fontWeight: '700', color: AppColors.peach.primary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  tipText: { fontSize: 14, color: AppColors.text.secondary, lineHeight: 22 },
 
   // 快捷入口标题
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
@@ -853,18 +854,18 @@ const styles = StyleSheet.create({
   quickCard: { borderRadius: 24, padding: 16, height: 160, flexDirection: 'column', alignItems: 'flex-start', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', ...SHADOWS.sm },
   quickIconBox: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
   quickEmoji: { fontSize: 28, lineHeight: 34 },
-  quickLabel: { fontSize: 16, fontWeight: '800', color: '#1C1C1E', letterSpacing: -0.3, lineHeight: 22 },
+  quickLabel: { fontSize: 16, fontWeight: '800', color: AppColors.text.primary, letterSpacing: -0.3, lineHeight: 22 },
   quickDecorEmoji: { fontSize: 22, opacity: 0.65, marginTop: 2 },
 
   // 数据摘要卡片
-  summaryCard: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: '#F0F0F0', ...SHADOWS.sm },
+  summaryCard: { backgroundColor: AppColors.surface.whiteStrong, borderRadius: 24, padding: 18, marginBottom: 16, borderWidth: 1, borderColor: AppColors.border.soft, ...SHADOWS.sm },
   summaryCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   summaryCardTitle: { fontSize: 15, fontWeight: '800', color: COLORS.text },
-  summaryCardEdit: { fontSize: 13, color: '#7C3AED', fontWeight: '600' },
+  summaryCardEdit: { fontSize: 13, color: AppColors.purple.strong, fontWeight: '600' },
   summaryCardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' },
   summaryCardItem: { flex: 1, alignItems: 'center', gap: 4 },
   summaryCardEmoji: { fontSize: 24 },
   summaryCardLabel: { fontSize: 11, color: COLORS.textMuted, fontWeight: '500' },
   summaryCardValue: { fontSize: 13, fontWeight: '700', color: COLORS.text },
-  summaryCardDivider: { width: 1, height: 40, backgroundColor: '#F0F0F0' },
+  summaryCardDivider: { width: 1, height: 40, backgroundColor: AppColors.border.soft },
 });

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'reac
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { COLORS, SHADOWS, RADIUS } from '@/lib/animations';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 
 interface Props {
   icon: string;
@@ -32,7 +33,7 @@ export function JoinerLockedScreen({ icon, title, description }: Props) {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={['#FFF7ED', '#FDF2F8', '#FAF5FF']}
+        colors={Gradients.appBg as any}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
@@ -64,7 +65,7 @@ export function JoinerLockedScreen({ icon, title, description }: Props) {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={['#FF8904', '#FF637E', '#F6339A']}
+            colors={[...Gradients.coral, '#F47D96'] as any}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={styles.upgradeBtnGradient}
           >
@@ -86,31 +87,31 @@ const styles = StyleSheet.create({
   iconCircleOuter: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
   iconCircle: {
     width: 100, height: 100, borderRadius: 50,
-    backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.bg.secondary, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: AppColors.border.soft,
   },
   lockBadge: {
     position: 'absolute', bottom: -4, right: -4,
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.surface.whiteStrong, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: AppColors.border.soft,
     ...SHADOWS.sm,
   },
 
-  title: { fontSize: 22, fontWeight: '800', color: '#1A1A2E', textAlign: 'center', marginBottom: 10, letterSpacing: -0.3 },
-  desc: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  title: { fontSize: 22, fontWeight: '800', color: AppColors.text.primary, textAlign: 'center', marginBottom: 10, letterSpacing: -0.3 },
+  desc: { fontSize: 14, color: AppColors.text.secondary, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
 
   infoBox: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, width: '100%',
-    borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 24,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 16, padding: 16, width: '100%',
+    borderWidth: 1, borderColor: AppColors.border.soft, marginBottom: 24,
     ...SHADOWS.sm,
   },
-  infoTitle: { fontSize: 13, fontWeight: '700', color: '#1A1A2E', marginBottom: 6 },
-  infoText: { fontSize: 13, color: '#6B7280', lineHeight: 20 },
+  infoTitle: { fontSize: 13, fontWeight: '700', color: AppColors.text.primary, marginBottom: 6 },
+  infoText: { fontSize: 13, color: AppColors.text.secondary, lineHeight: 20 },
 
   upgradeBtn: { width: '100%', borderRadius: 16, overflow: 'hidden', marginBottom: 14 },
   upgradeBtnGradient: { paddingVertical: 15, alignItems: 'center' },
-  upgradeBtnText: { fontSize: 15, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.2 },
+  upgradeBtnText: { fontSize: 15, fontWeight: '800', color: AppColors.surface.whiteStrong, letterSpacing: 0.2 },
 
-  hint: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', lineHeight: 18 },
+  hint: { fontSize: 12, color: AppColors.text.tertiary, textAlign: 'center', lineHeight: 18 },
 });

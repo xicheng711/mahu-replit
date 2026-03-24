@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect, Ellipse } from 'react-native-svg';
 import { ScreenContainer } from '@/components/screen-container';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import { saveProfile, saveMedication, generateId, createFamilyRoom, joinFamilyRoom, lookupFamilyByCode, generateRoomCode } from '@/lib/storage';
 import { scheduleAllReminders } from '@/lib/notifications';
 import { getZodiac } from '@/lib/zodiac';
@@ -331,7 +332,7 @@ export default function OnboardingScreen() {
         icon: med.icon,
         active: true,
         reminderEnabled: true,
-        color: '#FF6B6B',
+        color: AppColors.coral.primary,
       });
     }
     // Creator always creates a family room with the pre-generated code
@@ -341,7 +342,7 @@ export default function OnboardingScreen() {
       roleLabel: '主要照顾者',
       emoji: '👩',
       photoUri: caregiverPhotoUri,
-      color: '#FF6B6B',
+      color: AppColors.coral.primary,
     }, previewRoomCode, { emoji: elderZodiac.emoji, photoUri: elderPhotoUri }).catch(() => {});
     router.replace('/(tabs)');
   }
@@ -396,7 +397,7 @@ export default function OnboardingScreen() {
       {/* Full-screen gradient background for step 1 & joiner step 4 (Figma design) */}
       {(step === 1 || (step === 4 && userType === 'joiner')) && (
         <LinearGradient
-          colors={['#FFF0F5', '#FFE4EC', '#FFF5F7', '#FFF0F5']}
+          colors={[...Gradients.appBg, Gradients.appBg[0]]}
           locations={[0, 0.3, 0.7, 1]}
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.8, y: 1 }}
@@ -408,9 +409,9 @@ export default function OnboardingScreen() {
         {STEPS.map((_, i) => (
           <View key={i} style={styles.progressSegmentTrack}>
             {i < step ? (
-              <LinearGradient colors={['#FB7185', '#EC4899']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.progressSegmentFill} />
+              <LinearGradient colors={[...Gradients.coral]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.progressSegmentFill} />
             ) : i === step ? (
-              <LinearGradient colors={['#FB7185', '#EC4899']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.progressSegmentFill, { width: '50%' }]} />
+              <LinearGradient colors={[...Gradients.coral]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.progressSegmentFill, { width: '50%' }]} />
             ) : null}
           </View>
         ))}
@@ -423,7 +424,7 @@ export default function OnboardingScreen() {
           <View style={styles.stepContainer}>
             <View style={styles.welcomeIconWrap}>
               <LinearGradient
-                colors={['#F3E8FF', '#FCE7F3', '#FFF7ED']}
+                colors={[...Gradients.appBg]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.welcomeIconBg}
               >
@@ -732,7 +733,7 @@ export default function OnboardingScreen() {
                   }}
                 >
                   <Text style={[styles.cityItemText, city === c && styles.cityItemTextSelected]}>{c}</Text>
-                  {city === c && <Text style={{ color: '#FF6B6B' }}>✓</Text>}
+                  {city === c && <Text style={{ color: AppColors.coral.primary }}>✓</Text>}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -952,7 +953,7 @@ export default function OnboardingScreen() {
             <Text style={styles.title}>确认加入</Text>
             <Text style={styles.subtitle}>请确认您要加入的家庭</Text>
 
-            <View style={{ width: '100%', padding: 20, backgroundColor: '#FFF7ED', borderRadius: 16, borderWidth: 1, borderColor: '#FED7AA', marginTop: 16, alignItems: 'center', gap: 8 }}>
+            <View style={{ width: '100%', padding: 20, backgroundColor: AppColors.peach.soft, borderRadius: 16, borderWidth: 1, borderColor: AppColors.peach.primary, marginTop: 16, alignItems: 'center', gap: 8 }}>
               <Text style={{ fontSize: 32 }}>👨‍👩‍👧‍👦</Text>
               {joinerFoundRoom ? (
                 <>
@@ -1172,7 +1173,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   // ── Progress bar: horizontal gradient segments (Figma) ──────
   progressBarRow: { flexDirection: 'row', gap: 4, paddingHorizontal: 24, paddingTop: 14, paddingBottom: 10 },
-  progressSegmentTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: '#E5E7EB', overflow: 'hidden' },
+  progressSegmentTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: AppColors.border.soft, overflow: 'hidden' },
   progressSegmentFill: { height: '100%', width: '100%', borderRadius: 3 },
 
   // ── Heart mascot (step 1) ────────────────────────────────────
@@ -1195,23 +1196,23 @@ const styles = StyleSheet.create({
   welcomeIconBg: { width: 130, height: 130, borderRadius: 36, alignItems: 'center', justifyContent: 'center', shadowColor: '#C084FC', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 6 },
   welcomeSparkle1: { position: 'absolute', top: -4, right: -8 },
   welcomeSparkle2: { position: 'absolute', bottom: 4, left: -6 },
-  welcomeTitle: { fontSize: 28, fontWeight: '900', color: '#1A1A2E', textAlign: 'center', marginBottom: 8, letterSpacing: -0.5 },
-  welcomeSub: { fontSize: 15, color: '#6B7280', textAlign: 'center', lineHeight: 24, marginBottom: 6 },
-  welcomeCta: { fontSize: 15, color: '#7C3AED', fontWeight: '600', textAlign: 'center', marginBottom: 28 },
+  welcomeTitle: { fontSize: 28, fontWeight: '900', color: AppColors.text.primary, textAlign: 'center', marginBottom: 8, letterSpacing: -0.5 },
+  welcomeSub: { fontSize: 15, color: AppColors.text.secondary, textAlign: 'center', lineHeight: 24, marginBottom: 6 },
+  welcomeCta: { fontSize: 15, color: AppColors.purple.strong, fontWeight: '600', textAlign: 'center', marginBottom: 28 },
   featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, width: '100%' },
   featureCard: { width: '47%', alignItems: 'center', justifyContent: 'center', borderRadius: 20, paddingVertical: 18, paddingHorizontal: 10, gap: 6, borderWidth: 1.5 },
   featureCardIcon: { fontSize: 32 },
-  featureCardLabel: { fontSize: 15, fontWeight: '800', color: '#1A1A2E', textAlign: 'center' },
-  featureCardDesc: { fontSize: 12, color: '#6B7280', textAlign: 'center', fontWeight: '500' },
+  featureCardLabel: { fontSize: 15, fontWeight: '800', color: AppColors.text.primary, textAlign: 'center' },
+  featureCardDesc: { fontSize: 12, color: AppColors.text.secondary, textAlign: 'center', fontWeight: '500' },
   inputGroup: { width: '100%', marginBottom: 20 },
   label: { fontSize: 14, fontWeight: '600', color: '#687076', marginBottom: 8 },
-  zodiacHint: { fontSize: 16, fontWeight: '700', color: '#FF6B6B', marginBottom: 8, textAlign: 'center' },
+  zodiacHint: { fontSize: 16, fontWeight: '700', color: AppColors.coral.primary, marginBottom: 8, textAlign: 'center' },
   input: {
-    backgroundColor: '#F8F9FA', borderRadius: 16, padding: 16,
-    fontSize: 16, color: '#11181C', borderWidth: 1.5, borderColor: '#E5E7EB', width: '100%',
+    backgroundColor: AppColors.bg.secondary, borderRadius: 16, padding: 16,
+    fontSize: 16, color: '#11181C', borderWidth: 1.5, borderColor: AppColors.border.soft, width: '100%',
   },
   row: { flexDirection: 'row', gap: 12 },
-  pickerContainer: { backgroundColor: '#F8F9FA', borderRadius: 16, overflow: 'hidden', position: 'relative' },
+  pickerContainer: { backgroundColor: AppColors.bg.secondary, borderRadius: 16, overflow: 'hidden', position: 'relative' },
   pickerHighlight: { position: 'absolute', left: 0, right: 0, backgroundColor: 'rgba(255,107,107,0.1)', borderRadius: 8, zIndex: 1, pointerEvents: 'none' },
   pickerItem: { justifyContent: 'center', alignItems: 'center' },
   pickerItemText: { fontSize: 16, color: '#9BA1A6' },
@@ -1221,10 +1222,10 @@ const styles = StyleSheet.create({
   zodiacCardName: { fontSize: 18, fontWeight: '700', marginBottom: 2 },
   zodiacCardDesc: { fontSize: 13, color: '#687076' },
   cityList: { width: '100%', maxHeight: 280 },
-  cityItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 12, marginBottom: 6, backgroundColor: '#F8F9FA' },
-  cityItemSelected: { backgroundColor: '#FFF0F0', borderWidth: 1.5, borderColor: '#FF6B6B' },
+  cityItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 12, marginBottom: 6, backgroundColor: AppColors.bg.secondary },
+  cityItemSelected: { backgroundColor: '#FFF0F0', borderWidth: 1.5, borderColor: AppColors.coral.primary },
   cityItemText: { fontSize: 16, color: '#11181C' },
-  cityItemTextSelected: { color: '#FF6B6B', fontWeight: '700' },
+  cityItemTextSelected: { color: AppColors.coral.primary, fontWeight: '700' },
   // Medication styles
   medList: { width: '100%', gap: 10, marginBottom: 16 },
   medCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF8F0', borderRadius: 16, padding: 14, gap: 12, borderWidth: 1, borderColor: '#FFE0CC' },
@@ -1232,30 +1233,30 @@ const styles = StyleSheet.create({
   medCardName: { fontSize: 15, fontWeight: '700', color: '#11181C' },
   medCardSub: { fontSize: 13, color: '#687076', marginTop: 2 },
   medDeleteBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#FFE0CC', alignItems: 'center', justifyContent: 'center' },
-  medDeleteText: { fontSize: 12, color: '#FF6B6B', fontWeight: '700' },
-  addMedBtn: { width: '100%', padding: 16, borderRadius: 16, borderWidth: 2, borderColor: '#FF6B6B', borderStyle: 'dashed', alignItems: 'center', marginBottom: 12 },
-  addMedBtnText: { fontSize: 16, fontWeight: '700', color: '#FF6B6B' },
+  medDeleteText: { fontSize: 12, color: AppColors.coral.primary, fontWeight: '700' },
+  addMedBtn: { width: '100%', padding: 16, borderRadius: 16, borderWidth: 2, borderColor: AppColors.coral.primary, borderStyle: 'dashed', alignItems: 'center', marginBottom: 12 },
+  addMedBtnText: { fontSize: 16, fontWeight: '700', color: AppColors.coral.primary },
   addMedForm: { width: '100%', backgroundColor: '#FFF8F0', borderRadius: 20, padding: 20, gap: 4, borderWidth: 1, borderColor: '#FFE0CC' },
   addMedTitle: { fontSize: 18, fontWeight: '700', color: '#11181C', marginBottom: 12, textAlign: 'center' },
   iconRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  iconBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F8F9FA', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#E5E7EB' },
-  iconBtnSelected: { borderColor: '#FF6B6B', backgroundColor: '#FFF0F0' },
+  iconBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: AppColors.bg.secondary, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: AppColors.border.soft },
+  iconBtnSelected: { borderColor: AppColors.coral.primary, backgroundColor: '#FFF0F0' },
   iconBtnText: { fontSize: 22 },
   freqRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
-  freqBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: '#F8F9FA', borderWidth: 1.5, borderColor: '#E5E7EB' },
-  freqBtnSelected: { borderColor: '#FF6B6B', backgroundColor: '#FFF0F0' },
+  freqBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: AppColors.bg.secondary, borderWidth: 1.5, borderColor: AppColors.border.soft },
+  freqBtnSelected: { borderColor: AppColors.coral.primary, backgroundColor: '#FFF0F0' },
   freqBtnText: { fontSize: 13, color: '#687076', fontWeight: '600' },
-  freqBtnTextSelected: { color: '#FF6B6B' },
+  freqBtnTextSelected: { color: AppColors.coral.primary },
   skipHint: { fontSize: 13, color: '#9BA1A6', textAlign: 'center', marginTop: 8 },
-  summaryCard: { width: '100%', backgroundColor: '#F8F9FA', borderRadius: 20, padding: 20, gap: 12, marginTop: 8 },
+  summaryCard: { width: '100%', backgroundColor: AppColors.bg.secondary, borderRadius: 20, padding: 20, gap: 12, marginTop: 8 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryLabel: { fontSize: 14, color: '#687076' },
   summaryValue: { fontSize: 15, fontWeight: '600', color: '#11181C', flex: 1, textAlign: 'right' },
   navButtons: { flexDirection: 'row', gap: 12, paddingHorizontal: 24, paddingBottom: 16 },
-  backBtn: { flex: 1, padding: 16, borderRadius: 20, backgroundColor: '#F8F9FA', alignItems: 'center' },
+  backBtn: { flex: 1, padding: 16, borderRadius: 20, backgroundColor: AppColors.bg.secondary, alignItems: 'center' },
   backBtnText: { fontSize: 16, fontWeight: '600', color: '#687076' },
-  nextBtn: { flex: 2, padding: 16, borderRadius: 20, backgroundColor: '#FF6B6B', alignItems: 'center' },
-  nextBtnDisabled: { backgroundColor: '#E5E7EB' },
+  nextBtn: { flex: 2, padding: 16, borderRadius: 20, backgroundColor: AppColors.coral.primary, alignItems: 'center' },
+  nextBtnDisabled: { backgroundColor: AppColors.border.soft },
   nextBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
   // Reminder time picker
@@ -1268,8 +1269,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E9D5FF',
   },
-  reminderTitle: { fontSize: 16, fontWeight: '800', color: '#5B21B6', marginBottom: 4 },
-  reminderSubtitle: { fontSize: 13, color: '#7C3AED', marginBottom: 14 },
+  reminderTitle: { fontSize: 16, fontWeight: '800', color: AppColors.purple.strong, marginBottom: 4 },
+  reminderSubtitle: { fontSize: 13, color: AppColors.purple.strong, marginBottom: 14 },
   reminderRow: { gap: 16 },
   reminderItem: { gap: 8 },
   reminderLabel: { fontSize: 14, fontWeight: '700', color: '#374151' },
@@ -1282,10 +1283,10 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   timeChipActive: {
-    backgroundColor: '#7C3AED',
-    borderColor: '#5B21B6',
+    backgroundColor: AppColors.purple.strong,
+    borderColor: AppColors.purple.strong,
   },
-  timeChipText: { fontSize: 14, fontWeight: '600', color: '#5B21B6' },
+  timeChipText: { fontSize: 14, fontWeight: '600', color: AppColors.purple.strong },
   timeChipTextActive: { color: '#fff' },
 
   // Avatar selection styles
@@ -1303,7 +1304,7 @@ const styles = StyleSheet.create({
   avatarEditBadge: {
     position: 'absolute', bottom: 4, right: 4,
     width: 26, height: 26, borderRadius: 13,
-    backgroundColor: '#7C3AED',
+    backgroundColor: AppColors.purple.strong,
     alignItems: 'center', justifyContent: 'center',
   },
   avatarEditIcon: { fontSize: 13 },
@@ -1312,20 +1313,20 @@ const styles = StyleSheet.create({
   avatarToggleBtn: {
     paddingHorizontal: 18, paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: AppColors.bg.secondary,
     borderWidth: 1.5, borderColor: 'transparent',
   },
   avatarToggleBtnActive: {
     backgroundColor: '#EDE9FE',
-    borderColor: '#7C3AED',
+    borderColor: AppColors.purple.strong,
   },
   avatarToggleText: { fontSize: 14, fontWeight: '600', color: '#687076' },
-  avatarToggleTextActive: { color: '#7C3AED' },
+  avatarToggleTextActive: { color: AppColors.purple.strong },
 
   // Care needs
   careNeedsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginTop: 8 },
   careNeedCard: {
-    width: '46%', backgroundColor: '#F8F9FA', borderRadius: 14,
+    width: '46%', backgroundColor: AppColors.bg.secondary, borderRadius: 14,
     padding: 14, alignItems: 'center', gap: 4,
     borderWidth: 1.5, borderColor: '#EBEBEB', position: 'relative',
   },
@@ -1333,19 +1334,19 @@ const styles = StyleSheet.create({
   careNeedEmoji: { fontSize: 28, marginBottom: 2 },
   careNeedLabel: { fontSize: 14, fontWeight: '700', color: '#374151', textAlign: 'center' },
   careNeedLabelSelected: { color: '#2563EB' },
-  careNeedDesc: { fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16 },
+  careNeedDesc: { fontSize: 11, color: AppColors.text.tertiary, textAlign: 'center', lineHeight: 16 },
   careNeedCheck: {
     position: 'absolute', top: 8, right: 8,
     width: 18, height: 18, borderRadius: 9,
     backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center',
   },
-  careNeedsSkipHint: { fontSize: 12, color: '#9CA3AF', marginTop: 12, textAlign: 'center' },
+  careNeedsSkipHint: { fontSize: 12, color: AppColors.text.tertiary, marginTop: 12, textAlign: 'center' },
   // Family step
   familyChoiceCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     backgroundColor: '#fff', borderRadius: 18, padding: 18,
-    borderWidth: 1.5, borderColor: '#E5E7EB',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+    borderWidth: 1.5, borderColor: AppColors.border.soft,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
   familyChoiceIcon: { fontSize: 30 },
   familyChoiceTitle: { fontSize: 16, fontWeight: '700', color: '#11181C', marginBottom: 2 },
@@ -1355,25 +1356,25 @@ const styles = StyleSheet.create({
   familyBackBtn: { alignSelf: 'flex-start', paddingVertical: 8, marginBottom: 4 },
   familyBackText: { fontSize: 14, color: '#687076' },
   familyEmojiBtn: {
-    width: 44, height: 44, borderRadius: 12, backgroundColor: '#F8F9FA',
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#E5E7EB',
+    width: 44, height: 44, borderRadius: 12, backgroundColor: AppColors.bg.secondary,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: AppColors.border.soft,
   },
-  familyEmojiBtnActive: { borderColor: '#FF6B6B', backgroundColor: '#FFF0F0' },
+  familyEmojiBtnActive: { borderColor: AppColors.coral.primary, backgroundColor: '#FFF0F0' },
   familyRoleBtn: {
     flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
-    backgroundColor: '#F8F9FA', borderWidth: 1.5, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.bg.secondary, borderWidth: 1.5, borderColor: AppColors.border.soft,
   },
-  familyRoleBtnActive: { backgroundColor: '#FFF0F0', borderColor: '#FF6B6B' },
+  familyRoleBtnActive: { backgroundColor: '#FFF0F0', borderColor: AppColors.coral.primary },
   familyRoleBtnText: { fontSize: 13, fontWeight: '600', color: '#687076' },
-  familyRoleBtnTextActive: { color: '#FF6B6B' },
+  familyRoleBtnTextActive: { color: AppColors.coral.primary },
   familyCreateConfirm: {
-    width: '100%', backgroundColor: '#F8F9FA', borderRadius: 20,
-    padding: 24, alignItems: 'center', borderWidth: 1.5, borderColor: '#E5E7EB',
+    width: '100%', backgroundColor: AppColors.bg.secondary, borderRadius: 20,
+    padding: 24, alignItems: 'center', borderWidth: 1.5, borderColor: AppColors.border.soft,
   },
 
   // Generic primary button
   btn: {
-    backgroundColor: '#FF6B6B', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 24,
+    backgroundColor: AppColors.coral.primary, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 24,
     alignItems: 'center', width: '100%',
   },
   btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
@@ -1392,7 +1393,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: '#FECDD3',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
 
   // ── Role Selection (step 1) — Figma design ────────────────────
@@ -1400,7 +1401,7 @@ const styles = StyleSheet.create({
   roleCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     borderRadius: 20, padding: 18, width: '100%',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3,
   },
   roleCardCreator: {
     borderWidth: 1.5, borderColor: '#FECDD3',
@@ -1411,10 +1412,10 @@ const styles = StyleSheet.create({
   // iOS app-icon–style icon box — white background
   roleIconBox: {
     width: 52, height: 52, borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface.whiteStrong,
     alignItems: 'center', justifyContent: 'center',
     flexShrink: 0,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
+    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
   },
   roleCardTitle: { fontSize: 16, fontWeight: '700', color: '#11181C', marginBottom: 3 },
   roleCardDesc: { fontSize: 13, color: '#687076', lineHeight: 19 },

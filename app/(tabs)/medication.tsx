@@ -10,6 +10,7 @@ import { PageHeader, PAGE_THEMES } from '@/components/page-header';
 import { getMedications, saveMedications, Medication, getProfile, CareNeedType, CareNeedsProfile, getCurrentUserIsCreator } from '@/lib/storage';
 import { JoinerLockedScreen } from '@/components/joiner-locked-screen';
 import { COLORS, SHADOWS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import * as Haptics from 'expo-haptics';
 import { scheduleMedicationMorningEvening, scheduleMedicationReminder, cancelMedicationReminder } from '@/lib/notifications';
 
@@ -35,14 +36,14 @@ function MedCard({ med, onToggle, onDelete, onEdit, index }: { med: Medication; 
     <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }}>
       <View style={[styles.medCard, med.active ? styles.medCardActive : styles.medCardInactive]}>
         <View style={styles.medCardTop}>
-          <View style={[styles.medIconCircle, { backgroundColor: med.active ? COLORS.primaryBg : '#F3F4F6' }]}>
+          <View style={[styles.medIconCircle, { backgroundColor: med.active ? AppColors.coral.soft : AppColors.bg.secondary }]}>
             <Text style={styles.medIcon}>{med.icon || '💊'}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.medName, !med.active && { color: COLORS.textMuted }]}>{med.name}</Text>
+            <Text style={[styles.medName, !med.active && { color: AppColors.text.secondary }]}>{med.name}</Text>
             <Text style={styles.medDose}>{med.dosage} · {med.frequency}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: med.active ? '#DCFCE7' : '#FEE2E2' }]}>
+          <View style={[styles.statusBadge, { backgroundColor: med.active ? AppColors.green.soft : AppColors.coral.soft }]}>
             <View style={[styles.statusDot, { backgroundColor: med.active ? COLORS.successDark : COLORS.error }]} />
             <Text style={[styles.statusText, { color: med.active ? '#166534' : '#991B1B' }]}>{med.active ? '启用' : '停用'}</Text>
           </View>
@@ -69,7 +70,7 @@ function MedCard({ med, onToggle, onDelete, onEdit, index }: { med: Medication; 
             <Text style={styles.editBtnText}>✏️ 修改</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: med.active ? '#FEE2E2' : '#DCFCE7' }]}
+            style={[styles.actionBtn, { backgroundColor: med.active ? AppColors.coral.soft : AppColors.green.soft }]}
             onPress={() => pressAnimation(scaleAnim, onToggle)}
           >
             <Text style={[styles.actionBtnText, { color: med.active ? '#991B1B' : '#166534' }]}>
@@ -235,7 +236,7 @@ function MedicationScreenContent() {
   const activeCount = meds.filter(m => m.active).length;
 
   return (
-    <ScreenContainer containerClassName="bg-[#FFF7ED]">
+    <ScreenContainer containerClassName="bg-[#F7F1F3]">
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <Animated.View style={{ opacity: headerFade, transform: [{ translateY: headerSlide }] }}>
@@ -279,10 +280,10 @@ function MedicationScreenContent() {
             </ScrollView>
 
             <Text style={styles.label}>药物名称 *</Text>
-            <TextInput style={styles.input} placeholder="例如：多奈哌齐、美金刚..." value={name} onChangeText={setName} placeholderTextColor="#B8BCC0" />
+            <TextInput style={styles.input} placeholder="例如：多奈哌齐、美金刚..." value={name} onChangeText={setName} placeholderTextColor={AppColors.text.tertiary} />
 
             <Text style={styles.label}>剂量</Text>
-            <TextInput style={styles.input} placeholder="例如：5mg、1片..." value={dosage} onChangeText={setDosage} placeholderTextColor="#B8BCC0" />
+            <TextInput style={styles.input} placeholder="例如：5mg、1片..." value={dosage} onChangeText={setDosage} placeholderTextColor={AppColors.text.tertiary} />
 
             <Text style={styles.label}>服药频率</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.freqRow}>
@@ -312,7 +313,7 @@ function MedicationScreenContent() {
             </View>
 
             <Text style={styles.label}>备注（可选）</Text>
-            <TextInput style={styles.input} placeholder="例如：饭后服用、需要大量喝水..." value={notes} onChangeText={setNotes} placeholderTextColor="#B8BCC0" />
+            <TextInput style={styles.input} placeholder="例如：饭后服用、需要大量喝水..." value={notes} onChangeText={setNotes} placeholderTextColor={AppColors.text.tertiary} />
 
             {/* Reminder Toggle */}
             <TouchableOpacity
@@ -326,7 +327,7 @@ function MedicationScreenContent() {
               <View style={styles.reminderToggleLeft}>
                 <Text style={styles.reminderToggleEmoji}>{reminderEnabled ? '🔔' : '🔕'}</Text>
                 <View>
-                  <Text style={[styles.reminderToggleTitle, reminderEnabled && { color: '#D97706' }]}>
+                  <Text style={[styles.reminderToggleTitle, reminderEnabled && { color: AppColors.peach.primary }]}>
                     每日 App 提醒
                   </Text>
                   <Text style={styles.reminderToggleSub}>
@@ -546,11 +547,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18, paddingVertical: 10,
     ...SHADOWS.glow(COLORS.primary),
   },
-  addBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  addBtnText: { fontSize: 14, fontWeight: '700', color: AppColors.surface.whiteStrong },
 
   // Form
   addForm: {
-    backgroundColor: '#fff', borderRadius: RADIUS.xxl, padding: 22, marginBottom: 20,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: RADIUS.xxl, padding: 22, marginBottom: 20,
     borderWidth: 1, borderColor: COLORS.border,
     ...SHADOWS.lg,
   },
@@ -559,14 +560,14 @@ const styles = StyleSheet.create({
   formTitle: { fontSize: 20, fontWeight: '800', color: COLORS.text },
   label: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 8, marginTop: 14 },
   input: {
-    backgroundColor: '#F8F9FA', borderRadius: RADIUS.md, padding: 14,
-    fontSize: 15, color: COLORS.text, borderWidth: 1.5, borderColor: '#EBEBEB',
+    backgroundColor: AppColors.bg.secondary, borderRadius: RADIUS.md, padding: 14,
+    fontSize: 15, color: COLORS.text, borderWidth: 1.5, borderColor: AppColors.border.soft,
   },
   iconRow: { flexDirection: 'row', marginBottom: 4 },
   iconOption: {
     width: 46, height: 46, borderRadius: RADIUS.md,
-    backgroundColor: '#F8F9FA', alignItems: 'center', justifyContent: 'center',
-    marginRight: 8, borderWidth: 1.5, borderColor: '#EBEBEB',
+    backgroundColor: AppColors.bg.secondary, alignItems: 'center', justifyContent: 'center',
+    marginRight: 8, borderWidth: 1.5, borderColor: AppColors.border.soft,
   },
   iconOptionSelected: { backgroundColor: COLORS.primaryBg, borderColor: COLORS.primary },
   iconOptionText: { fontSize: 22 },
@@ -574,7 +575,7 @@ const styles = StyleSheet.create({
   freqOption: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 14, paddingVertical: 10, borderRadius: RADIUS.md,
-    backgroundColor: '#F8F9FA', marginRight: 8, borderWidth: 1.5, borderColor: '#EBEBEB',
+    backgroundColor: AppColors.bg.secondary, marginRight: 8, borderWidth: 1.5, borderColor: AppColors.border.soft,
   },
   freqOptionSelected: { backgroundColor: COLORS.primaryBg, borderColor: COLORS.primary },
   freqIcon: { fontSize: 16 },
@@ -583,7 +584,7 @@ const styles = StyleSheet.create({
   timesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   timeOption: {
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.sm,
-    backgroundColor: '#F8F9FA', borderWidth: 1.5, borderColor: '#EBEBEB',
+    backgroundColor: AppColors.bg.secondary, borderWidth: 1.5, borderColor: AppColors.border.soft,
   },
   timeOptionSelected: { backgroundColor: COLORS.primaryBg, borderColor: COLORS.primary },
   timeOptionText: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
@@ -591,8 +592,8 @@ const styles = StyleSheet.create({
   formBtns: { flexDirection: 'row', gap: 12, marginTop: 20 },
   cancelBtn: {
     flex: 1, padding: 14, borderRadius: RADIUS.xl,
-    backgroundColor: '#F8F9FA', alignItems: 'center',
-    borderWidth: 1, borderColor: '#EBEBEB',
+    backgroundColor: AppColors.bg.secondary, alignItems: 'center',
+    borderWidth: 1, borderColor: AppColors.border.soft,
   },
   cancelBtnText: { fontSize: 15, fontWeight: '600', color: COLORS.textSecondary },
   saveBtn: {
@@ -600,14 +601,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary, alignItems: 'center',
     ...SHADOWS.glow(COLORS.primary),
   },
-  saveBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  saveBtnText: { fontSize: 15, fontWeight: '700', color: AppColors.surface.whiteStrong },
 
   // Med List
   medList: { gap: 12, marginBottom: 20 },
   listTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   listTitle: { fontSize: 16, fontWeight: '700', color: COLORS.text },
   countBadge: {
-    backgroundColor: '#F3F4F6', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill,
+    backgroundColor: AppColors.bg.secondary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill,
   },
   countBadgeText: { fontSize: 12, fontWeight: '600', color: COLORS.textMuted },
 
@@ -617,8 +618,8 @@ const styles = StyleSheet.create({
     borderWidth: 1, marginBottom: 2,
     ...SHADOWS.sm,
   },
-  medCardActive: { backgroundColor: '#fff', borderColor: COLORS.borderAccent },
-  medCardInactive: { backgroundColor: '#FAFAFA', borderColor: '#EBEBEB', opacity: 0.75 },
+  medCardActive: { backgroundColor: AppColors.surface.whiteStrong, borderColor: AppColors.coral.soft },
+  medCardInactive: { backgroundColor: AppColors.bg.secondary, borderColor: AppColors.border.soft, opacity: 0.75 },
   medCardTop: { flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 12 },
   medIconCircle: {
     width: 48, height: 48, borderRadius: 24,
@@ -638,16 +639,16 @@ const styles = StyleSheet.create({
   timeBadgeText: { fontSize: 12, color: COLORS.primary, fontWeight: '600' },
   medNotes: { fontSize: 12, color: COLORS.textMuted, marginBottom: 8 },
   reminderBadge: {
-    backgroundColor: '#FEF3C7', borderRadius: RADIUS.sm,
+    backgroundColor: AppColors.peach.soft, borderRadius: RADIUS.sm,
     paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 8,
   },
-  reminderBadgeText: { fontSize: 11, color: '#92400E', fontWeight: '600' },
+  reminderBadgeText: { fontSize: 11, color: AppColors.text.primary, fontWeight: '600' },
   medCardActions: { flexDirection: 'row', gap: 8, justifyContent: 'flex-end', marginTop: 4, alignItems: 'center' },
   editBtn: {
     borderRadius: RADIUS.sm, paddingHorizontal: 12, paddingVertical: 8,
-    backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE',
+    backgroundColor: AppColors.purple.soft, borderWidth: 1, borderColor: AppColors.purple.primary,
   },
-  editBtnText: { fontSize: 13, fontWeight: '600', color: '#1D4ED8' },
+  editBtnText: { fontSize: 13, fontWeight: '600', color: AppColors.purple.strong },
   actionBtn: { borderRadius: RADIUS.sm, paddingHorizontal: 14, paddingVertical: 8 },
   actionBtnText: { fontSize: 13, fontWeight: '600' },
   deleteBtn: { padding: 8 },
@@ -656,22 +657,22 @@ const styles = StyleSheet.create({
   // Reminder toggle (form)
   reminderToggleRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#F8F9FA', borderRadius: RADIUS.xl, padding: 16, marginTop: 18,
-    borderWidth: 1.5, borderColor: '#EBEBEB',
+    backgroundColor: AppColors.bg.secondary, borderRadius: RADIUS.xl, padding: 16, marginTop: 18,
+    borderWidth: 1.5, borderColor: AppColors.border.soft,
   },
-  reminderToggleRowActive: { backgroundColor: '#FFFBEB', borderColor: '#FCD34D' },
+  reminderToggleRowActive: { backgroundColor: AppColors.peach.soft, borderColor: AppColors.peach.primary },
   reminderToggleLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   reminderToggleEmoji: { fontSize: 24 },
   reminderToggleTitle: { fontSize: 14, fontWeight: '700', color: COLORS.text, marginBottom: 2 },
   reminderToggleSub: { fontSize: 12, color: COLORS.textSecondary },
   toggleTrack: {
     width: 48, height: 28, borderRadius: 14,
-    backgroundColor: '#D1D5DB', justifyContent: 'center', paddingHorizontal: 3,
+    backgroundColor: AppColors.border.soft, justifyContent: 'center', paddingHorizontal: 3,
   },
   toggleTrackActive: { backgroundColor: '#F59E0B' },
   toggleThumb: {
-    width: 22, height: 22, borderRadius: 11, backgroundColor: '#fff',
-    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
+    width: 22, height: 22, borderRadius: 11, backgroundColor: AppColors.surface.whiteStrong,
+    shadowColor: AppColors.shadow.default, shadowOpacity: 0.15, shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
     elevation: 2,
   },
   toggleThumbActive: { transform: [{ translateX: 20 }] },
@@ -692,20 +693,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28, paddingVertical: 14,
     ...SHADOWS.glow(COLORS.primary),
   },
-  startBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  startBtnText: { fontSize: 15, fontWeight: '700', color: AppColors.surface.whiteStrong },
 
   // Tips
   tipsCard: {
-    backgroundColor: '#FFFBEB', borderRadius: RADIUS.xxl, padding: 20,
-    borderWidth: 1, borderColor: '#FDE68A', marginTop: 8,
+    backgroundColor: AppColors.peach.soft, borderRadius: RADIUS.xxl, padding: 20,
+    borderWidth: 1, borderColor: AppColors.peach.primary, marginTop: 8,
     ...SHADOWS.sm,
   },
   tipsHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   tipsIcon: { fontSize: 20 },
-  tipsTitle: { fontSize: 16, fontWeight: '700', color: '#92400E' },
-  tipsSectionLabel: { fontSize: 12, fontWeight: '700', color: '#B45309', marginBottom: 8, letterSpacing: 0.3 },
+  tipsTitle: { fontSize: 16, fontWeight: '700', color: AppColors.text.primary },
+  tipsSectionLabel: { fontSize: 12, fontWeight: '700', color: AppColors.text.secondary, marginBottom: 8, letterSpacing: 0.3 },
   tipsList: { gap: 10 },
-  tipItem: { fontSize: 13, color: '#78350F', lineHeight: 21, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: '#FDE68A' },
+  tipItem: { fontSize: 13, color: AppColors.text.primary, lineHeight: 21, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: AppColors.peach.primary },
 });
 
 export default function MedicationScreen() {

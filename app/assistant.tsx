@@ -15,6 +15,7 @@ import { scoreSleepInput } from '@/lib/sleep-scoring';
 import { trpc } from '@/lib/trpc';
 import { BackButton } from '@/components/back-button';
 import { COLORS, RADIUS, SHADOWS } from '@/lib/animations';
+import { AppColors, Gradients } from '@/lib/design-tokens';
 import { BarChart } from 'react-native-gifted-charts';
 
 const { width: SW } = Dimensions.get('window');
@@ -50,7 +51,7 @@ function LoadingScreen() {
   const bar3H = bar3.interpolate({ inputRange: [0, 1], outputRange: ['0%', '85%'] });
 
   return (
-    <LinearGradient colors={['#FFF7ED', '#FDF2F8', '#FAF5FF']} style={{ flex: 1 }}>
+    <LinearGradient colors={[...Gradients.appBg]} style={{ flex: 1 }}>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
         <Animated.View style={[ldStyles.card, { transform: [{ scale: cardScale }], opacity: cardOpacity }]}>
           <View style={ldStyles.bars}>
@@ -60,8 +61,8 @@ function LoadingScreen() {
           </View>
         </Animated.View>
         <Animated.View style={{ alignItems: 'center', marginTop: 32, opacity: titleOpacity, transform: [{ translateY: titleY }] }}>
-          <Text style={{ fontSize: 20, fontWeight: '800', color: '#7C3AED', marginBottom: 8 }}>小马虎正在整理数据...</Text>
-          <Text style={{ fontSize: 14, color: '#9CA3AF' }}>正在生成护理总结</Text>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: AppColors.purple.strong, marginBottom: 8 }}>小马虎正在整理数据...</Text>
+          <Text style={{ fontSize: 14, color: AppColors.text.tertiary }}>正在生成护理总结</Text>
         </Animated.View>
       </View>
     </LinearGradient>
@@ -70,7 +71,7 @@ function LoadingScreen() {
 
 const ldStyles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFF', borderRadius: 28, padding: 28,
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 28, padding: 28,
     shadowColor: '#A855F7', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 10,
     width: 160, height: 160, justifyContent: 'flex-end',
   },
@@ -213,13 +214,13 @@ export default function AssistantScreen() {
       const hasData = hours > 0;
       const color = hasData
         ? (hours >= 7 ? '#6EE7B7' : hours >= 5 ? '#FCD34D' : '#FCA5A5')
-        : '#F3F4F6';
+        : AppColors.bg.secondary;
       return {
         value: hasData ? hours : 0.15,
         label,
         frontColor: color,
         topLabelComponent: () => (
-          <Text style={{ fontSize: 10, color: '#6B7280', marginBottom: 2 }}>
+          <Text style={{ fontSize: 10, color: AppColors.text.secondary, marginBottom: 2 }}>
             {hasData ? `${hours}h` : ''}
           </Text>
         ),
@@ -239,7 +240,7 @@ export default function AssistantScreen() {
 
   if (error || !advice) {
     return (
-      <ScreenContainer containerClassName="bg-[#FFF7ED]">
+      <ScreenContainer containerClassName="bg-[#F7F1F3]">
         <View style={s.header}>
           <BackButton onPress={() => router.replace('/(tabs)' as any)} />
           <Text style={s.headerTitle}>护理总结</Text>
@@ -253,7 +254,7 @@ export default function AssistantScreen() {
             <Text style={s.retryBtnText}>重新生成</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.replace('/(tabs)' as any)} style={{ marginTop: 12 }}>
-            <Text style={{ fontSize: 15, color: '#9CA3AF' }}>返回首页</Text>
+            <Text style={{ fontSize: 15, color: AppColors.text.tertiary }}>返回首页</Text>
           </TouchableOpacity>
         </View>
       </ScreenContainer>
@@ -292,7 +293,7 @@ export default function AssistantScreen() {
           <Text style={s.dateLabel}>{todayLabel}</Text>
 
           <LinearGradient
-            colors={[sd.bgColor, '#FFFFFF']}
+            colors={[sd.bgColor, AppColors.surface.whiteStrong]}
             style={s.scoreCard}
           >
             <View style={s.scoreRow}>
@@ -378,13 +379,13 @@ export default function AssistantScreen() {
                 yAxisThickness={0}
                 yAxisLabelWidth={30}
                 xAxisThickness={1}
-                xAxisColor="#E5E7EB"
-                rulesColor="#F3F4F6"
+                xAxisColor={AppColors.border.soft}
+                rulesColor={AppColors.bg.secondary}
                 rulesType="solid"
                 initialSpacing={8}
                 endSpacing={8}
-                yAxisTextStyle={{ fontSize: 10, color: '#9CA3AF' }}
-                xAxisLabelTextStyle={{ fontSize: 11, color: '#6B7280', fontWeight: '500' }}
+                yAxisTextStyle={{ fontSize: 10, color: AppColors.text.tertiary }}
+                xAxisLabelTextStyle={{ fontSize: 11, color: AppColors.text.secondary, fontWeight: '500' }}
                 isAnimated
                 animationDuration={600}
               />
@@ -438,7 +439,7 @@ export default function AssistantScreen() {
 
       <View style={s.bottomBar}>
         <TouchableOpacity onPress={() => router.replace('/(tabs)' as any)} activeOpacity={0.88} style={{ flex: 1 }}>
-          <LinearGradient colors={['#FF6B6B', '#FF8E8E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.bottomBtn}>
+          <LinearGradient colors={[AppColors.coral.primary, '#FF8E8E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.bottomBtn}>
             <Text style={s.bottomBtnText}>返回首页</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -450,16 +451,16 @@ export default function AssistantScreen() {
 const s = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: 'rgba(255,255,255,0.95)', borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
+    backgroundColor: 'rgba(255,255,255,0.95)', borderBottomWidth: 1, borderBottomColor: AppColors.border.soft,
   },
-  headerTitle: { flex: 1, fontSize: 17, fontWeight: '800', color: '#1A1A1A', textAlign: 'center' },
+  headerTitle: { flex: 1, fontSize: 17, fontWeight: '800', color: AppColors.text.primary, textAlign: 'center' },
   shareBtn: { borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
-  shareBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  shareBtnText: { fontSize: 13, fontWeight: '700', color: AppColors.surface.whiteStrong },
   scroll: { padding: 20, paddingBottom: 24 },
-  dateLabel: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginBottom: 16 },
+  dateLabel: { fontSize: 13, color: AppColors.text.tertiary, textAlign: 'center', marginBottom: 16 },
   scoreCard: {
     borderRadius: 24, padding: 20, marginBottom: 24,
-    borderWidth: 1, borderColor: '#E5E7EB',
+    borderWidth: 1, borderColor: AppColors.border.soft,
   },
   scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 18, marginBottom: 16 },
   scoreCircle: {
@@ -468,65 +469,65 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.8)',
   },
   scoreNum: { fontSize: 36, fontWeight: '900', lineHeight: 40 },
-  scoreMax: { fontSize: 12, color: '#9CA3AF' },
+  scoreMax: { fontSize: 12, color: AppColors.text.tertiary },
   scoreRight: { flex: 1, gap: 8 },
   scoreBadge: { alignSelf: 'flex-start', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 4 },
-  scoreBadgeText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  scoreBadgeText: { fontSize: 13, fontWeight: '700', color: AppColors.surface.whiteStrong },
   scoreSummary: { fontSize: 14, color: '#374151', lineHeight: 21 },
   encourageRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 14, padding: 12,
   },
   encourageText: { flex: 1, fontSize: 14, color: '#92400E', fontWeight: '600', lineHeight: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1A1A1A', marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: AppColors.text.primary, marginBottom: 12 },
   reviewGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
   reviewCard: {
     width: (SW - 50) / 2 - 5, borderRadius: 16, padding: 14,
     alignItems: 'center', gap: 4, borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)',
   },
   reviewEmoji: { fontSize: 24 },
-  reviewLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
+  reviewLabel: { fontSize: 11, color: AppColors.text.tertiary, fontWeight: '600' },
   reviewValue: { fontSize: 14, fontWeight: '700', color: '#374151' },
   chartCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 20, padding: 18, marginBottom: 24,
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 20, padding: 18, marginBottom: 24,
+    borderWidth: 1, borderColor: AppColors.border.soft,
   },
   chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 16 },
-  chartMetric: { fontSize: 24, fontWeight: '900', color: '#1A1A1A' },
-  chartMetricLabel: { fontSize: 12, color: '#9CA3AF', fontWeight: '500' },
+  chartMetric: { fontSize: 24, fontWeight: '900', color: AppColors.text.primary },
+  chartMetricLabel: { fontSize: 12, color: AppColors.text.tertiary, fontWeight: '500' },
   chartStatRow: { flexDirection: 'row', gap: 8 },
   chartStatPill: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   chartDot: { width: 8, height: 8, borderRadius: 4 },
-  chartStatText: { fontSize: 11, color: '#6B7280' },
+  chartStatText: { fontSize: 11, color: AppColors.text.secondary },
   emptyChart: { alignItems: 'center', paddingVertical: 30 },
-  emptyText: { fontSize: 14, color: '#9CA3AF', marginBottom: 4 },
+  emptyText: { fontSize: 14, color: AppColors.text.tertiary, marginBottom: 4 },
   emptySubtext: { fontSize: 12, color: '#D1D5DB' },
   wakingRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F3F4F6',
+    marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: AppColors.bg.secondary,
   },
-  wakingText: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
+  wakingText: { fontSize: 13, color: AppColors.text.secondary, fontWeight: '500' },
   segmentCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, paddingLeft: 12, marginBottom: 24,
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: AppColors.surface.whiteStrong, borderRadius: 16, padding: 16, paddingLeft: 12, marginBottom: 24,
+    borderWidth: 1, borderColor: AppColors.border.soft,
   },
   segmentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 36 },
   segmentTimeline: { width: 16, alignItems: 'center' },
   segmentDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: '#D1FAE5' },
-  segmentLine: { width: 2, height: 24, backgroundColor: '#E5E7EB', marginTop: 2 },
+  segmentLine: { width: 2, height: 24, backgroundColor: AppColors.border.soft, marginTop: 2 },
   segmentLabel: { fontSize: 13, color: '#374151', fontWeight: '600', width: 50 },
-  segmentTime: { flex: 1, fontSize: 13, color: '#6B7280' },
-  segmentBadge: { backgroundColor: '#F3F4F6', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8 },
+  segmentTime: { flex: 1, fontSize: 13, color: AppColors.text.secondary },
+  segmentBadge: { backgroundColor: AppColors.bg.secondary, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8 },
   segmentDuration: { fontSize: 13, fontWeight: '700', color: '#4B5563' },
   bottomBar: {
     backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 20,
-    borderTopWidth: 1, borderTopColor: '#E5E7EB',
+    borderTopWidth: 1, borderTopColor: AppColors.border.soft,
   },
   bottomBtn: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center', borderRadius: 24 },
-  bottomBtnText: { fontSize: 15, fontWeight: '800', color: '#fff' },
+  bottomBtnText: { fontSize: 15, fontWeight: '800', color: AppColors.surface.whiteStrong },
   errorWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
-  errorTitle: { fontSize: 20, fontWeight: '700', color: '#1A1A1A', marginBottom: 8 },
-  errorText: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', marginBottom: 24, lineHeight: 21 },
+  errorTitle: { fontSize: 20, fontWeight: '700', color: AppColors.text.primary, marginBottom: 8 },
+  errorText: { fontSize: 14, color: AppColors.text.tertiary, textAlign: 'center', marginBottom: 24, lineHeight: 21 },
   retryBtn: { backgroundColor: '#6C9E6C', borderRadius: 20, paddingHorizontal: 32, paddingVertical: 14 },
-  retryBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  retryBtnText: { fontSize: 16, fontWeight: '700', color: AppColors.surface.whiteStrong },
 });
