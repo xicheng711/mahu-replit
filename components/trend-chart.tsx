@@ -358,9 +358,6 @@ function SleepChart({ data }: { data: { label: string; value: number; hasData: b
           <Text style={sleepStyles.yLabel}>0</Text>
         </View>
         <View style={[sleepStyles.barsContainer, { height: chartH }]}>
-          {[0, 0.5, 1].map((pct, i) => (
-            <View key={i} style={[sleepStyles.gridLine, { bottom: `${pct * 100}%` }]} />
-          ))}
           {data.map((d, i) => {
             const h = d.hasData ? Math.max(4, (d.value / maxVal) * chartH) : 0;
             const color = d.value >= 7 ? '#6EE7B7' : d.value >= 5 ? '#FCD34D' : '#FCA5A5';
@@ -395,13 +392,12 @@ const sleepStyles = StyleSheet.create({
   yAxis: { width: 28, justifyContent: 'space-between', alignItems: 'flex-end', paddingRight: 4, height: 100 },
   yLabel: { fontSize: 10, color: AppColors.text.tertiary },
   barsContainer: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', position: 'relative' },
-  gridLine: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: AppColors.border.soft },
   barCol: { alignItems: 'center', flex: 1 },
   barWrapper: { height: 100, justifyContent: 'flex-end', alignItems: 'center' },
   bar: { minHeight: 4 },
   barEmpty: { height: 4, backgroundColor: AppColors.border.soft },
   barValue: { fontSize: 9, color: AppColors.text.tertiary, marginBottom: 2 },
-  xAxis: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 4 },
+  xAxis: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 4, marginLeft: 28 },
   xLabel: { fontSize: 10, color: AppColors.text.tertiary, textAlign: 'center', flex: 1 },
 });
 
