@@ -225,7 +225,7 @@ function EnhancedCheckinBanner({
         </View>
       </View>
       <View style={styles.chevronCircleDone}>
-        <Text style={{ fontSize: 16, color: COLORS.textMuted, fontWeight: '600' }}>›</Text>
+        <Text style={{ fontSize: 16, color: AppColors.green.strong, fontWeight: '700' }}>›</Text>
       </View>
     </TouchableOpacity>
   );
@@ -895,8 +895,8 @@ const styles = StyleSheet.create({
   checkinSubDone: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
   checkinDone: { flexDirection: 'row', alignItems: 'center', backgroundColor: AppColors.green.soft, borderWidth: 1.5, borderColor: AppColors.green.primary + '80', borderRadius: 28, padding: 18, marginBottom: 16, ...SHADOWS.sm },
   chevronCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.30)', alignItems: 'center', justifyContent: 'center' },
-  chevronCircleDone: { width: 32, height: 32, borderRadius: 16, backgroundColor: AppColors.bg.secondary, alignItems: 'center', justifyContent: 'center' },
-  careScoreBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: AppColors.peach.soft, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, alignSelf: 'flex-start' },
+  chevronCircleDone: { width: 32, height: 32, borderRadius: 16, backgroundColor: AppColors.green.primary + '30', alignItems: 'center', justifyContent: 'center' },
+  careScoreBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: AppColors.green.primary + '25', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, alignSelf: 'flex-start' },
 
   // AI 卡片
   aiCard: { marginBottom: 16, backgroundColor: AppColors.purple.soft, borderRadius: 18, padding: 14, borderWidth: 1, borderColor: AppColors.purple.primary + '60', overflow: 'hidden', ...SHADOWS.sm },
