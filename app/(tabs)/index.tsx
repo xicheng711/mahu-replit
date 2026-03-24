@@ -294,8 +294,8 @@ function EnhancedAICard({
                 <Text style={styles.aiDetailLinkText}>查看完整分析 ›</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity onPress={onCheckinPress} style={styles.aiDetailLink}>
-                <Text style={[styles.aiDetailLinkText, { color: AppColors.coral.primary }]}>去完成打卡 →</Text>
+              <TouchableOpacity onPress={onCheckinPress} style={[styles.aiDetailLink, { backgroundColor: AppColors.coral.primary }]}>
+                <Text style={styles.aiDetailLinkText}>去完成打卡 →</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -905,8 +905,13 @@ const styles = StyleSheet.create({
   aiLabel: { fontSize: 14, fontWeight: '700', color: AppColors.purple.strong, letterSpacing: -0.2 },
   aiSubLabel: { fontSize: 11, color: AppColors.purple.strong, opacity: 0.65 },
   aiMessage: { fontSize: 13, color: AppColors.text.secondary, lineHeight: 19, marginTop: 4 },
-  aiDetailLink: { marginTop: 6 },
-  aiDetailLinkText: { fontSize: 12, fontWeight: '700', color: AppColors.purple.strong },
+  aiDetailLink: {
+    marginTop: 10, alignSelf: 'flex-start',
+    backgroundColor: AppColors.purple.primary,
+    borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6,
+    flexDirection: 'row', alignItems: 'center',
+  },
+  aiDetailLinkText: { fontSize: 12, fontWeight: '800', color: AppColors.surface.whiteStrong, letterSpacing: 0.2 },
 
   // 护理贴士
 
