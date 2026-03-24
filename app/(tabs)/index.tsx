@@ -533,7 +533,7 @@ function CreatorHomeScreen() {
     { emoji: '💊', label: '用药记录', route: '/medication', gradientStart: Gradients.coral[0], gradientEnd: Gradients.coral[1], bgColor: AppColors.coral.soft, pulse: false },
     { emoji: '📔', label: '护理日记', route: '/diary',      gradientStart: Gradients.peach[0], gradientEnd: Gradients.peach[1], bgColor: AppColors.peach.soft, pulse: false },
     { emoji: '👥', label: '家庭同步', route: '/family',     gradientStart: Gradients.purple[0], gradientEnd: Gradients.purple[1], bgColor: AppColors.purple.soft, pulse: false },
-    { emoji: '📊', label: '数据分析', route: '/share',      gradientStart: Gradients.green[0], gradientEnd: Gradients.green[1], bgColor: AppColors.green.soft, pulse: true },
+    { emoji: '📊', label: '今日记录', route: '/share',      gradientStart: Gradients.green[0], gradientEnd: Gradients.green[1], bgColor: AppColors.green.soft, pulse: true },
   ];
 
   return (
