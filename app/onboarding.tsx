@@ -252,10 +252,13 @@ export default function OnboardingScreen() {
 
   const filteredCities = citySearch ? CITIES.filter(c => c.includes(citySearch)) : CITIES;
 
+  const nativeDriver = Platform.OS !== 'web';
+
   function animateTransition(next: () => void) {
-    Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
+    Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: nativeDriver }).start(({ finished }) => {
+      if (!finished) { next(); return; }
       next();
-      Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+      Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: nativeDriver }).start();
     });
   }
 
@@ -266,7 +269,14 @@ export default function OnboardingScreen() {
 
   function prevStep() {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    animateTransition(() => setStep(s => s - 1));
+    // 返回角色选择页时重置 userType，避免状态残留
+    animateTransition(() => {
+      setStep(s => {
+        const next = s - 1;
+        if (next === 1) setUserType(null);
+        return next;
+      });
+    });
   }
 
   function addMedication() {
