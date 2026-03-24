@@ -444,15 +444,20 @@ function WeeklySleepChart({ weeklyData }: { weeklyData: Array<{ date: string; sl
       const stacks = hasData
         ? [
             { value: sleep, color: sleepColor },
-            ...(awake > 0 ? [{ value: awake, color: '#FCD34D' }] : []),
+            ...(awake > 0 ? [{ value: awake, color: '#FEF3C7', marginBottom: 2 }] : []),
           ]
         : [{ value: 0.15, color: AppColors.bg.secondary }];
       return {
         stacks,
         label,
+        topLabelComponent: () => (
+          <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#4B5563', marginBottom: 4 }}>
+            {hasData ? `${sleep}h` : ''}
+          </Text>
+        ),
       };
     });
-    const chartMax = Math.max(12, Math.ceil(peak / 2) * 2 + 2);
+    const chartMax = Math.max(12, peak + 3);
     return { stackData: data, chartMax };
   }, [weeklyData]);
 
@@ -478,7 +483,7 @@ function WeeklySleepChart({ weeklyData }: { weeklyData: Array<{ date: string; sl
         </View>
         {hasAwakeData && (
           <View style={sleepStyles.legendItem}>
-            <View style={[sleepStyles.legendDot, { backgroundColor: '#FCD34D' }]} />
+            <View style={[sleepStyles.legendDot, { backgroundColor: '#FEF3C7' }]} />
             <Text style={sleepStyles.legendText}>清醒</Text>
           </View>
         )}
