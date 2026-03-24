@@ -672,47 +672,70 @@ function CreatorHomeScreen() {
         </View>
 
         {/* ── 今日数据摘要 ── */}
-        {latestCheckIn && (
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryCardHeader}>
-              <Text style={styles.summaryCardTitle}>
-                {todayCheckIn ? '今日' : '昨日'}数据摘要
-              </Text>
-              <TouchableOpacity onPress={() => router.push('/share' as any)}>
-                <Text style={styles.summaryCardEdit}>查看分析 →</Text>
-              </TouchableOpacity>
+        {latestCheckIn && (() => {
+          const yesterdayStr = (() => {
+            const d = new Date(); d.setDate(d.getDate() - 1);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          })();
+          const yDiary = allDiaryEntries.find(e => e.date === yesterdayStr);
+          const yCheckIn = allCheckIns.find(c => c.date === yesterdayStr);
+          const mealText = yCheckIn?.mealOption || (yCheckIn?.mealNotes ? yCheckIn.mealNotes.slice(0, 6) : null);
+          return (
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryCardHeader}>
+                <Text style={styles.summaryCardTitle}>
+                  {todayCheckIn ? '今日' : '昨日'}数据摘要
+                </Text>
+                <TouchableOpacity onPress={() => router.push('/share' as any)}>
+                  <Text style={styles.summaryCardEdit}>查看分析 →</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.summaryCardRow}>
+                {yDiary?.moodEmoji && (
+                  <>
+                    <View style={styles.summaryCardItem}>
+                      <Text style={styles.summaryCardEmoji}>{yDiary.moodEmoji}</Text>
+                      <Text style={styles.summaryCardLabel}>心情</Text>
+                      <Text style={styles.summaryCardValue}>{yDiary.moodLabel || getMoodLabel(0)}</Text>
+                    </View>
+                    <View style={styles.summaryCardDivider} />
+                  </>
+                )}
+                <View style={styles.summaryCardItem}>
+                  <Text style={styles.summaryCardEmoji}>💤</Text>
+                  <Text style={styles.summaryCardLabel}>睡眠</Text>
+                  <Text style={styles.summaryCardValue}>{latestCheckIn.sleepHours}h</Text>
+                </View>
+                <View style={styles.summaryCardDivider} />
+                <View style={styles.summaryCardItem}>
+                  <Text style={styles.summaryCardEmoji}>💊</Text>
+                  <Text style={styles.summaryCardLabel}>用药</Text>
+                  <Text style={styles.summaryCardValue}>{latestCheckIn.medicationTaken ? '已服用' : '未记录'}</Text>
+                </View>
+                {mealText && (
+                  <>
+                    <View style={styles.summaryCardDivider} />
+                    <View style={styles.summaryCardItem}>
+                      <Text style={styles.summaryCardEmoji}>🍽️</Text>
+                      <Text style={styles.summaryCardLabel}>吃饭</Text>
+                      <Text style={styles.summaryCardValue}>{mealText}</Text>
+                    </View>
+                  </>
+                )}
+                {latestCheckIn.careScore != null && (
+                  <>
+                    <View style={styles.summaryCardDivider} />
+                    <View style={styles.summaryCardItem}>
+                      <Text style={styles.summaryCardEmoji}>⭐</Text>
+                      <Text style={styles.summaryCardLabel}>今日状态</Text>
+                      <Text style={[styles.summaryCardValue, { color: '#F59E0B' }]}>{latestCheckIn.careScore}分</Text>
+                    </View>
+                  </>
+                )}
+              </View>
             </View>
-            <View style={styles.summaryCardRow}>
-              <View style={styles.summaryCardItem}>
-                <Text style={styles.summaryCardEmoji}>{latestCheckIn.moodEmoji || '😊'}</Text>
-                <Text style={styles.summaryCardLabel}>心情</Text>
-                <Text style={styles.summaryCardValue}>{getMoodLabel(latestCheckIn.moodScore)}</Text>
-              </View>
-              <View style={styles.summaryCardDivider} />
-              <View style={styles.summaryCardItem}>
-                <Text style={styles.summaryCardEmoji}>💤</Text>
-                <Text style={styles.summaryCardLabel}>睡眠</Text>
-                <Text style={styles.summaryCardValue}>{latestCheckIn.sleepHours}h</Text>
-              </View>
-              <View style={styles.summaryCardDivider} />
-              <View style={styles.summaryCardItem}>
-                <Text style={styles.summaryCardEmoji}>💊</Text>
-                <Text style={styles.summaryCardLabel}>用药</Text>
-                <Text style={styles.summaryCardValue}>{latestCheckIn.medicationTaken ? '已服用' : '未记录'}</Text>
-              </View>
-              {latestCheckIn.careScore != null && (
-                <>
-                  <View style={styles.summaryCardDivider} />
-                  <View style={styles.summaryCardItem}>
-                    <Text style={styles.summaryCardEmoji}>⭐</Text>
-                    <Text style={styles.summaryCardLabel}>护理指数</Text>
-                    <Text style={[styles.summaryCardValue, { color: '#F59E0B' }]}>{latestCheckIn.careScore}分</Text>
-                  </View>
-                </>
-              )}
-            </View>
-          </View>
-        )}
+          );
+        })()}
 
         <WeeklyEcho caregiverName={caregiverName} elderNickname={elderNickname} />
         <View style={{ height: 32 }} />
