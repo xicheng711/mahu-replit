@@ -973,25 +973,33 @@ function CheckinScreenContent() {
 
   const addSleepSegment = () => {
     setSleepSegments(prev => {
+      let next;
       if (prev.length > 0) {
         const lastEnd = new Date(prev[prev.length - 1].end);
         const newStart = new Date(lastEnd);
         const newEnd = new Date(lastEnd);
         newEnd.setMinutes(newEnd.getMinutes() + 90);
-        return [...prev, { start: newStart.toISOString(), end: newEnd.toISOString() }];
+        next = [...prev, { start: newStart.toISOString(), end: newEnd.toISOString() }];
+      } else {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const defaultStart = new Date(yesterday);
+        defaultStart.setHours(22, 0, 0, 0);
+        const defaultEnd = new Date();
+        defaultEnd.setHours(6, 30, 0, 0);
+        next = [...prev, { start: defaultStart.toISOString(), end: defaultEnd.toISOString() }];
       }
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const defaultStart = new Date(yesterday);
-      defaultStart.setHours(22, 0, 0, 0);
-      const defaultEnd = new Date();
-      defaultEnd.setHours(6, 30, 0, 0);
-      return [...prev, { start: defaultStart.toISOString(), end: defaultEnd.toISOString() }];
+      setNightWakings(Math.max(0, next.length - 1));
+      return next;
     });
   };
 
   const removeSleepSegment = (idx: number) => {
-    setSleepSegments(prev => prev.filter((_, i) => i !== idx));
+    setSleepSegments(prev => {
+      const next = prev.filter((_, i) => i !== idx);
+      setNightWakings(Math.max(0, next.length - 1));
+      return next;
+    });
   };
 
   const updateSegmentTime = (idx: number, field: 'start' | 'end', hour: number, minute: number) => {
