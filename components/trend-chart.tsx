@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated, Easing } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { DailyCheckIn, DiaryEntry } from '@/lib/storage';
-import { AppColors, Gradients } from '@/lib/design-tokens';
+import { AppColors } from '@/lib/design-tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CHART_W = SCREEN_WIDTH - 80;
@@ -60,66 +59,33 @@ function buildDateRange(start: Date, end: Date): string[] {
 
 function MoodGauge({ avgMood, prevAvg }: { avgMood: number; prevAvg: number | null }) {
   const pct = Math.min(1, Math.max(0, avgMood / 10));
-  const gradStart = avgMood >= 8 ? '#4ADE80' : avgMood >= 5 ? '#FBBF24' : '#F97316';
-  const gradEnd   = avgMood >= 8 ? '#16A34A' : avgMood >= 5 ? '#F59E0B' : '#EF4444';
   const accentColor = avgMood >= 8 ? '#16A34A' : avgMood >= 5 ? '#F59E0B' : '#F97316';
-  const bgColor = AppColors.peach.soft;
   const emoji = avgMood >= 8 ? '😄' : avgMood >= 6 ? '😊' : avgMood >= 4 ? '😌' : avgMood >= 2 ? '😕' : '😢';
   const statusLabel = avgMood >= 8 ? '本周心情很好' : avgMood >= 6 ? '本周心情不错' : avgMood >= 4 ? '本周心情平稳' : avgMood >= 2 ? '本周心情一般' : '本周需要关注';
 
-  const THERMO_H = 140;
-  const fillAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
-    Animated.spring(fillAnim, { toValue: pct, speed: 3, bounciness: 6, useNativeDriver: false }).start();
-    Animated.timing(progressAnim, { toValue: pct, duration: 1500, delay: 600, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+    Animated.timing(progressAnim, { toValue: pct, duration: 1200, delay: 300, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
   }, [avgMood]);
-
-  const fillHeight = fillAnim.interpolate({ inputRange: [0, 1], outputRange: [0, THERMO_H] });
   const progressWidth = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
-    <View style={[gaugeStyles.card, { backgroundColor: bgColor }]}>
-      <View style={gaugeStyles.titleRow}>
-        <Text style={gaugeStyles.title}>心情指数</Text>
-        <Text style={gaugeStyles.titleEmoji}>😊</Text>
+    <View style={gaugeStyles.row}>
+      <View style={[gaugeStyles.badge, { backgroundColor: AppColors.peach.soft }]}>
+        <Text style={gaugeStyles.badgeEmoji}>{emoji}</Text>
+        <Text style={[gaugeStyles.badgeScore, { color: accentColor }]}>{avgMood.toFixed(1)}</Text>
       </View>
-      <View style={gaugeStyles.row}>
-        <View style={gaugeStyles.thermoOuter}>
-          <View style={gaugeStyles.thermoTrack}>
-            <Animated.View style={[gaugeStyles.thermoFillWrapper, { height: fillHeight }]}>
-              <LinearGradient
-                colors={[gradEnd, gradStart]}
-                start={{ x: 0, y: 1 }} end={{ x: 0, y: 0 }}
-                style={StyleSheet.absoluteFill}
-              />
-            </Animated.View>
-          </View>
-          <View style={[gaugeStyles.thermoBulb, { backgroundColor: accentColor }]}>
-            <Text style={gaugeStyles.thermoBulbEmoji}>{emoji}</Text>
-            <View style={gaugeStyles.bulbHighlight} />
-          </View>
+      <View style={gaugeStyles.stats}>
+        <View style={gaugeStyles.topRow}>
+          <Text style={[gaugeStyles.statusLabel, { color: accentColor }]}>{statusLabel}</Text>
+          <Text style={gaugeStyles.scoreSmall}><Text style={{ color: accentColor, fontWeight: '800' }}>{avgMood.toFixed(1)}</Text> / 10</Text>
         </View>
-
-        <View style={gaugeStyles.stats}>
-          <View style={gaugeStyles.numRow}>
-            <Text style={[gaugeStyles.avgNum, { color: accentColor }]}>{avgMood.toFixed(1)}</Text>
-            <Text style={gaugeStyles.avgLabel}> / 10</Text>
-          </View>
-          <View style={[gaugeStyles.statusPill, { backgroundColor: AppColors.surface.whiteStrong }]}>
-            <Text style={gaugeStyles.statusEmoji}>{emoji}</Text>
-            <Text style={[gaugeStyles.statusText, { color: accentColor }]}>{statusLabel}</Text>
-          </View>
-          <View style={gaugeStyles.progressSection}>
-            <View style={gaugeStyles.progressLabelRow}>
-              <Text style={gaugeStyles.progressLabel}>心情健康度</Text>
-              <Text style={[gaugeStyles.progressPct, { color: accentColor }]}>{Math.round(pct * 100)}%</Text>
-            </View>
-            <View style={gaugeStyles.progressTrack}>
-              <Animated.View style={[gaugeStyles.progressFill, { width: progressWidth, backgroundColor: accentColor }]} />
-            </View>
-          </View>
+        <View style={gaugeStyles.progressLabelRow}>
+          <Text style={gaugeStyles.progressLabel}>心情健康度</Text>
+          <Text style={[gaugeStyles.progressPct, { color: accentColor }]}>{Math.round(pct * 100)}%</Text>
+        </View>
+        <View style={gaugeStyles.progressTrack}>
+          <Animated.View style={[gaugeStyles.progressFill, { width: progressWidth, backgroundColor: accentColor }]} />
         </View>
       </View>
     </View>
@@ -127,44 +93,18 @@ function MoodGauge({ avgMood, prevAvg }: { avgMood: number; prevAvg: number | nu
 }
 
 const gaugeStyles = StyleSheet.create({
-  card: { borderRadius: 20, padding: 18, marginBottom: 12 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
-  title: { fontSize: 15, fontWeight: '800', color: AppColors.text.primary },
-  titleEmoji: { fontSize: 16 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 24 },
-  thermoOuter: { alignItems: 'center', width: 52 },
-  thermoTrack: {
-    width: 22, height: 140, backgroundColor: AppColors.border.soft, borderRadius: 11,
-    overflow: 'hidden', justifyContent: 'flex-end',
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  badge: {
+    width: 60, height: 60, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center', gap: 0,
   },
-  thermoFillWrapper: { width: '100%', overflow: 'hidden', borderRadius: 11 },
-  thermoBulb: {
-    width: 52, height: 52, borderRadius: 26, marginTop: -10,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2, shadowRadius: 8, elevation: 6,
-  },
-  thermoBulbEmoji: { fontSize: 26 },
-  bulbHighlight: {
-    position: 'absolute', top: 8, left: 10,
-    width: 12, height: 8, borderRadius: 6,
-    backgroundColor: 'rgba(255,255,255,0.45)',
-  },
-  stats: { flex: 1 },
-  numRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
-  avgNum: { fontSize: 52, fontWeight: '900', lineHeight: 56 },
-  avgLabel: { fontSize: 16, color: AppColors.text.tertiary, marginBottom: 8 },
-  statusPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8,
-    marginBottom: 14, alignSelf: 'flex-start',
-    shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
-  },
-  statusEmoji: { fontSize: 16 },
-  statusText: { fontSize: 14, fontWeight: '700' },
-  progressSection: {},
-  progressLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  badgeEmoji: { fontSize: 24, lineHeight: 28 },
+  badgeScore: { fontSize: 11, fontWeight: '800', lineHeight: 14 },
+  stats: { flex: 1, gap: 6 },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  statusLabel: { fontSize: 14, fontWeight: '700' },
+  scoreSmall: { fontSize: 12, color: AppColors.text.tertiary },
+  progressLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   progressLabel: { fontSize: 12, color: AppColors.text.tertiary, fontWeight: '500' },
   progressPct: { fontSize: 12, fontWeight: '700' },
   progressTrack: {
