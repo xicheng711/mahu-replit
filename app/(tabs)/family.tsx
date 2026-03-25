@@ -24,6 +24,7 @@ import { ScreenContainer } from '@/components/screen-container';
 import { sendFamilyAnnouncementNotification } from '@/lib/notifications';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import { FamilySkeleton } from '@/components/skeleton-loader';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -407,8 +408,8 @@ export default function FamilyScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { paddingTop: insets.top + 60 }]}>
-        <Text style={styles.loadingText}>🏡 加载中...</Text>
+      <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+        <FamilySkeleton />
       </View>
     );
   }

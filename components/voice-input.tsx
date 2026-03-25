@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
+import { AppColors } from '@/lib/design-tokens';
 
 interface VoiceInputProps {
   onResult: (text: string) => void;
@@ -28,10 +30,86 @@ function checkNativeAvailability(): boolean {
   return _nativeAvailable;
 }
 
+const WAVE_BAR_COUNT = 7;
+const WAVE_HEIGHTS = [0.4, 0.7, 1.0, 0.6, 0.9, 0.5, 0.3];
+
+function AudioWaveform({ active }: { active: boolean }) {
+  const bars = useRef(
+    Array.from({ length: WAVE_BAR_COUNT }, () => new Animated.Value(0.3))
+  ).current;
+  const animations = useRef<Animated.CompositeAnimation[]>([]);
+
+  useEffect(() => {
+    if (active) {
+      animations.current = bars.map((bar, i) =>
+        Animated.loop(
+          Animated.sequence([
+            Animated.delay(i * 80),
+            Animated.timing(bar, {
+              toValue: WAVE_HEIGHTS[i],
+              duration: 300 + Math.random() * 200,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(bar, {
+              toValue: 0.2,
+              duration: 300 + Math.random() * 200,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ])
+        )
+      );
+      animations.current.forEach(a => a.start());
+    } else {
+      animations.current.forEach(a => a.stop());
+      bars.forEach(bar =>
+        Animated.timing(bar, { toValue: 0.3, duration: 200, useNativeDriver: true }).start()
+      );
+    }
+    return () => {
+      animations.current.forEach(a => a.stop());
+    };
+  }, [active]);
+
+  return (
+    <View style={waveStyles.container}>
+      {bars.map((bar, i) => (
+        <Animated.View
+          key={i}
+          style={[
+            waveStyles.bar,
+            {
+              transform: [{ scaleY: bar }],
+              backgroundColor: active ? '#DC2626' : AppColors.green.primary,
+            },
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
+
+const waveStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2.5,
+    height: 24,
+    justifyContent: 'center',
+  },
+  bar: {
+    width: 3,
+    height: 22,
+    borderRadius: 1.5,
+  },
+});
+
 export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
   const [isListening, setIsListening] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
   const pulseLoop = useRef<Animated.CompositeAnimation | null>(null);
   const recognitionRef = useRef<any>(null);
   const accumulatedText = useRef('');
@@ -47,16 +125,19 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
   function startPulse() {
     pulseLoop.current = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.25, duration: 500, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.15, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
       ])
     );
     pulseLoop.current.start();
+
+    Animated.timing(glowAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
   }
 
   function stopPulse() {
     pulseLoop.current?.stop();
     Animated.timing(pulseAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+    Animated.timing(glowAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
   }
 
   const registerNativeListeners = useCallback(() => {
@@ -120,7 +201,6 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
       return;
     }
 
-    // ── Try native expo-speech-recognition ──
     if (checkNativeAvailability() && _speechModule) {
       try {
         const perm = await _speechModule.requestPermissionsAsync();
@@ -139,7 +219,6 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
       }
     }
 
-    // ── Web Speech API ──
     if (typeof window !== 'undefined') {
       const SpeechRecognitionClass =
         (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -192,24 +271,32 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
       }
     }
 
-    // ── No speech recognition available ──
     showError('当前环境不支持语音输入，请直接打字');
   }, [isListening, language, onResult, registerNativeListeners]);
 
+  const glowOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.3],
+  });
+
   return (
     <View style={styles.container}>
-      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-        <TouchableOpacity
-          style={[styles.micBtn, isListening && styles.micBtnActive]}
-          onPress={handlePress}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.micIcon}>{isListening ? '🔴' : '🎙️'}</Text>
-          <Text style={[styles.micLabel, isListening && styles.micLabelActive]}>
-            {isListening ? '停止' : '语音'}
-          </Text>
-        </TouchableOpacity>
-      </Animated.View>
+      <View style={styles.btnRow}>
+        <Animated.View style={[styles.glowRing, { opacity: glowOpacity, transform: [{ scale: pulseAnim }] }]} />
+        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+          <TouchableOpacity
+            style={[styles.micBtn, isListening && styles.micBtnActive]}
+            onPress={handlePress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.micIcon}>{isListening ? '🔴' : '🎙️'}</Text>
+          </TouchableOpacity>
+        </Animated.View>
+        {isListening && <AudioWaveform active={isListening} />}
+        <Text style={[styles.micLabel, isListening && styles.micLabelActive]}>
+          {isListening ? '聆听中…' : '语音'}
+        </Text>
+      </View>
       {errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null}
     </View>
   );
@@ -217,15 +304,46 @@ export function VoiceInput({ onResult, language = 'zh-CN' }: VoiceInputProps) {
 
 const styles = StyleSheet.create({
   container: { alignItems: 'center', gap: 4 },
-  micBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#F0F7EE', borderRadius: 16,
-    paddingHorizontal: 14, paddingVertical: 10,
-    borderWidth: 1.5, borderColor: '#D4E8D4',
+  btnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  micBtnActive: { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' },
+  glowRing: {
+    position: 'absolute',
+    left: -6,
+    top: -6,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#FCA5A5',
+  },
+  micBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    backgroundColor: '#F0F7EE',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#D4E8D4',
+  },
+  micBtnActive: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FCA5A5',
+  },
   micIcon: { fontSize: 18 },
-  micLabel: { fontSize: 13, fontWeight: '600', color: '#3D7A3D' },
+  micLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#3D7A3D',
+  },
   micLabelActive: { color: '#DC2626' },
-  errorMsg: { fontSize: 11, color: '#DC2626', textAlign: 'center', maxWidth: 160 },
+  errorMsg: {
+    fontSize: 11,
+    color: '#DC2626',
+    textAlign: 'center',
+    maxWidth: 180,
+    marginTop: 4,
+  },
 });

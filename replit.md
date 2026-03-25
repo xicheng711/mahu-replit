@@ -25,6 +25,9 @@ The application features a modern, full-stack architecture designed for scalabil
 - **Accessibility**: WCAG 2.1 color contrast standards are met for text elements.
 - **Check-in Redesign**: Typeform-style questions with one question per screen, smart defaults, and pre-filling strategies for sleep data.
 - **Diary Calendar Redesign**: Displays recent entries, a monthly grid with navigation, highlights days with entries, and shows caregiver mood emojis on date cells.
+- **Skeleton Loading**: Reusable `SkeletonBlock` component (`components/skeleton-loader.tsx`) with breathing opacity animation. `FamilySkeleton`, `BriefingSkeleton`, `WeeklyEchoSkeleton` variants replace text/ActivityIndicator loading states.
+- **Audio Waveform**: Voice input (`components/voice-input.tsx`) displays 7-bar animated waveform during recording with glow pulse effect, replacing simple icon toggle.
+- **Calendar Day Detail Transition**: MonthCalendar in `checkin.tsx` uses spring scale + fade overlay animation for day detail popup instead of basic Modal fade.
 - **AI Advice Skeleton Screen**: Shows a blurred preview of AI advice with a lock overlay to motivate check-ins.
 - **Care Analysis Page**: Unified `share.tsx` for daily record analysis, including header card with app icon, 5-grid badges, AI summary, sleep detail (donut chart), and weekly bar chart. Warm beige (#FBF7F4) card backgrounds with soft borders.
 - **Tone**: Professional and practical throughout. Headings use factual language ("今日照护总览", "今日状态分析"), AI responses are data-driven, completion screens use neutral copy ("早间记录已保存"), and no cutesy emoji decorations.

@@ -6,7 +6,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Animated, Easing,
-  ActivityIndicator, Alert, Platform,
+  Alert, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,6 +16,30 @@ import { SHADOWS, RADIUS } from '@/lib/animations';
 import { AppColors, Gradients } from '@/lib/design-tokens';
 import ViewShot from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
+
+function WaveBar({ delay = 0 }: { delay?: number }) {
+  const anim = useRef(new Animated.Value(0.3)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(anim, { toValue: 1, duration: 400, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0.3, duration: 400, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+  return (
+    <Animated.View style={{
+      width: 3,
+      height: 16,
+      borderRadius: 1.5,
+      backgroundColor: 'rgba(255,255,255,0.8)',
+      transform: [{ scaleY: anim }],
+    }} />
+  );
+}
 
 interface WeeklyEchoProps {
   caregiverName: string;
@@ -233,7 +257,11 @@ export function WeeklyEcho({ caregiverName, elderNickname, forceShow = false }: 
 
         {loading && (
           <View style={styles.loadingArea}>
-            <ActivityIndicator color="rgba(255,255,255,0.8)" size="small" />
+            <View style={styles.waveContainer}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <WaveBar key={i} delay={i * 120} />
+              ))}
+            </View>
             <Text style={styles.loadingText}>正在回顾这一周的点滴…</Text>
           </View>
         )}
@@ -340,6 +368,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: AppColors.purple.strong,
+  },
+  waveContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    height: 20,
   },
   loadingArea: {
     flexDirection: 'row',

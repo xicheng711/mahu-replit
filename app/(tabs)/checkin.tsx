@@ -248,6 +248,35 @@ function MonthCalendar({ checkIns, caregiverName = '照顾者' }: { checkIns: Da
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<DailyCheckIn | null>(null);
+  const popupScale = useRef(new Animated.Value(0)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const [showModal, setShowModal] = useState(false);
+
+  function openDayDetail(checkIn: DailyCheckIn) {
+    setSelectedDay(checkIn);
+    setShowModal(true);
+    overlayOpacity.setValue(0);
+    popupScale.setValue(0.85);
+    Animated.parallel([
+      Animated.timing(overlayOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
+      Animated.spring(popupScale, { toValue: 1, friction: 8, tension: 65, useNativeDriver: true }),
+    ]).start();
+  }
+
+  const mountedRef = useRef(true);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
+
+  function closeDayDetail() {
+    Animated.parallel([
+      Animated.timing(overlayOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(popupScale, { toValue: 0.85, duration: 200, useNativeDriver: true }),
+    ]).start(() => {
+      if (mountedRef.current) {
+        setShowModal(false);
+        setSelectedDay(null);
+      }
+    });
+  }
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -305,7 +334,7 @@ function MonthCalendar({ checkIns, caregiverName = '照顾者' }: { checkIns: Da
             <TouchableOpacity
               key={dateStr}
               style={calStyles.cell}
-              onPress={() => { if (!isFuture && checkIn) setSelectedDay(checkIn); }}
+              onPress={() => { if (!isFuture && checkIn) openDayDetail(checkIn); }}
               activeOpacity={anyDone ? 0.7 : 1}
             >
               <View style={[
@@ -338,42 +367,49 @@ function MonthCalendar({ checkIns, caregiverName = '照顾者' }: { checkIns: Da
         <View style={calStyles.legendItem}><View style={[calStyles.legendDot, calStyles.dotEvening]} /><Text style={calStyles.legendText}>晚间</Text></View>
       </View>
 
-      {/* Day detail modal */}
-      <Modal visible={!!selectedDay} transparent animationType="fade" onRequestClose={() => setSelectedDay(null)}>
-        <TouchableOpacity style={calStyles.overlay} activeOpacity={1} onPress={() => setSelectedDay(null)}>
-          <TouchableOpacity style={calStyles.popup} activeOpacity={1} onPress={() => {}}>
-            <Text style={calStyles.popupDate}>{selectedDay?.date}</Text>
-            <View style={calStyles.popupDivider} />
-            {selectedDay?.morningDone && (
-              <View style={calStyles.popupSection}>
-                <Text style={calStyles.popupSectionTitle}>🌅 早间打卡</Text>
-                <Text style={calStyles.popupItem}>
-                  💤 睡眠：{selectedDay.sleepRange ?? `${selectedDay.sleepHours}小时`}
-                  {selectedDay.nightAwakenings ? ` · 夜醒${selectedDay.nightAwakenings}` : ` · ${selectedDay.sleepQuality === 'good' ? '良好' : selectedDay.sleepQuality === 'fair' ? '一般' : '较差'}`}
-                </Text>
-                {selectedDay.napDuration && selectedDay.napDuration !== '没有' && (
-                  <Text style={calStyles.popupItem}>☀️ 白天小睡：{selectedDay.napDuration}</Text>
+      {/* Day detail modal with spring animation */}
+      <Modal visible={showModal} transparent animationType="none" onRequestClose={closeDayDetail}>
+        <Animated.View style={[calStyles.overlay, { opacity: overlayOpacity }]}>
+          <TouchableOpacity style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center', padding: 24 }} activeOpacity={1} onPress={closeDayDetail}>
+            <Animated.View style={[calStyles.popup, { transform: [{ scale: popupScale }] }]}>
+              <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+                <View style={calStyles.popupDateRow}>
+                  <Text style={calStyles.popupDateEmoji}>📅</Text>
+                  <Text style={calStyles.popupDate}>{selectedDay?.date}</Text>
+                </View>
+                <View style={calStyles.popupDivider} />
+                {selectedDay?.morningDone && (
+                  <View style={calStyles.popupSection}>
+                    <Text style={calStyles.popupSectionTitle}>🌅 早间打卡</Text>
+                    <Text style={calStyles.popupItem}>
+                      💤 睡眠：{selectedDay.sleepRange ?? `${selectedDay.sleepHours}小时`}
+                      {selectedDay.nightAwakenings ? ` · 夜醒${selectedDay.nightAwakenings}` : ` · ${selectedDay.sleepQuality === 'good' ? '良好' : selectedDay.sleepQuality === 'fair' ? '一般' : '较差'}`}
+                    </Text>
+                    {selectedDay.napDuration && selectedDay.napDuration !== '没有' && (
+                      <Text style={calStyles.popupItem}>☀️ 白天小睡：{selectedDay.napDuration}</Text>
+                    )}
+                    {selectedDay.caregiverMoodEmoji && (
+                      <Text style={calStyles.popupItem}>{selectedDay.caregiverMoodEmoji} {caregiverName}心情已记录</Text>
+                    )}
+                    {selectedDay.morningNotes ? <Text style={calStyles.popupNote}>📝 {selectedDay.morningNotes}</Text> : null}
+                  </View>
                 )}
-                {selectedDay.caregiverMoodEmoji && (
-                  <Text style={calStyles.popupItem}>{selectedDay.caregiverMoodEmoji} {caregiverName}心情已记录</Text>
+                {selectedDay?.eveningDone && (
+                  <View style={calStyles.popupSection}>
+                    <Text style={calStyles.popupSectionTitle}>🌙 晚间记录</Text>
+                    <Text style={calStyles.popupItem}>{selectedDay.moodEmoji} 心情：{selectedDay.moodScore}/10</Text>
+                    <Text style={calStyles.popupItem}>💊 用药：{selectedDay.medicationTaken ? '✅ 已按时服药' : '❌ 未服药'}</Text>
+                    {selectedDay.mealNotes ? <Text style={calStyles.popupItem}>🍽️ {selectedDay.mealNotes}</Text> : null}
+                    {selectedDay.eveningNotes ? <Text style={calStyles.popupNote}>📝 {selectedDay.eveningNotes}</Text> : null}
+                  </View>
                 )}
-                {selectedDay.morningNotes ? <Text style={calStyles.popupNote}>📝 {selectedDay.morningNotes}</Text> : null}
-              </View>
-            )}
-            {selectedDay?.eveningDone && (
-              <View style={calStyles.popupSection}>
-                <Text style={calStyles.popupSectionTitle}>🌙 晚间记录</Text>
-                <Text style={calStyles.popupItem}>{selectedDay.moodEmoji} 心情：{selectedDay.moodScore}/10</Text>
-                <Text style={calStyles.popupItem}>💊 用药：{selectedDay.medicationTaken ? '✅ 已按时服药' : '❌ 未服药'}</Text>
-                {selectedDay.mealNotes ? <Text style={calStyles.popupItem}>🍽️ {selectedDay.mealNotes}</Text> : null}
-                {selectedDay.eveningNotes ? <Text style={calStyles.popupNote}>📝 {selectedDay.eveningNotes}</Text> : null}
-              </View>
-            )}
-            <TouchableOpacity style={calStyles.popupClose} onPress={() => setSelectedDay(null)}>
-              <Text style={calStyles.popupCloseText}>关闭</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={calStyles.popupClose} onPress={closeDayDetail}>
+                  <Text style={calStyles.popupCloseText}>关闭</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </Animated.View>
           </TouchableOpacity>
-        </TouchableOpacity>
+        </Animated.View>
       </Modal>
     </View>
   );
@@ -1904,13 +1940,15 @@ const calStyles = StyleSheet.create({
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendText: { fontSize: 11, color: COLORS.textMuted },
 
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' },
   popup: {
     backgroundColor: AppColors.surface.whiteStrong, borderRadius: RADIUS.xxl, padding: 20,
     width: '100%', maxWidth: 340,
     ...SHADOWS.lg,
   },
-  popupDate: { fontSize: 16, fontWeight: '800', color: COLORS.text, marginBottom: 10 },
+  popupDateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  popupDateEmoji: { fontSize: 20 },
+  popupDate: { fontSize: 16, fontWeight: '800', color: COLORS.text },
   popupDivider: { height: 1, backgroundColor: '#F0F0F0', marginBottom: 12 },
   popupSection: { marginBottom: 12 },
   popupSectionTitle: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 6 },
