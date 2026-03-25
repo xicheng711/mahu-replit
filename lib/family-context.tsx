@@ -18,6 +18,7 @@ export interface FamilyContextValue {
   activeMembership: FamilyMembership | null;
   isCreator: boolean;
   hasFamilies: boolean;
+  ready: boolean;
   switchFamily: (familyId: string) => Promise<void>;
   leaveFamily: (familyId: string) => Promise<void>;
   deleteFamily: (familyId: string) => Promise<void>;
@@ -29,6 +30,7 @@ const FamilyContext = createContext<FamilyContextValue>({
   activeMembership: null,
   isCreator: false,
   hasFamilies: false,
+  ready: false,
   switchFamily: async () => {},
   leaveFamily: async () => {},
   deleteFamily: async () => {},
@@ -38,6 +40,7 @@ const FamilyContext = createContext<FamilyContextValue>({
 export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const [memberships, setMemberships] = useState<FamilyMembership[]>([]);
   const [activeMembership, setActiveMembership] = useState<FamilyMembership | null>(null);
+  const [ready, setReady] = useState(false);
   const initialized = useRef(false);
 
   const refresh = useCallback(async () => {
@@ -47,6 +50,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
     const active = all.find(m => m.familyId === activeId) ?? all[0] ?? null;
     setMemberships(all);
     setActiveMembership(active);
+    setReady(true);
   }, []);
 
   useEffect(() => {
@@ -81,7 +85,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const hasFamilies = memberships.length > 0;
 
   return (
-    <FamilyContext.Provider value={{ memberships, activeMembership, isCreator, hasFamilies, switchFamily, leaveFamily, deleteFamily, refresh }}>
+    <FamilyContext.Provider value={{ memberships, activeMembership, isCreator, hasFamilies, ready, switchFamily, leaveFamily, deleteFamily, refresh }}>
       {children}
     </FamilyContext.Provider>
   );
