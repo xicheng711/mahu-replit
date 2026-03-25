@@ -40,7 +40,7 @@ The application features a modern, full-stack architecture designed for scalabil
 - **API URL Resolution**: Dynamic resolution of backend URL from frontend hostname for Replit environment.
 - **Sleep Scoring Engine**: Pure rule-based function for scoring sleep input, providing scores, problems, and breakdowns based on geriatric sleep guidelines.
 - **Structured AI Pipeline**: App pre-computes data (e.g., sleep score, problems) which is then interpreted by the AI. AI prompt sends structured JSON for factual grounding.
-- **Multi-Family Support**: Allows caregivers to manage multiple family memberships with a family switcher modal and role-gated screens.
+- **Multi-Family Support**: Allows caregivers to manage multiple family memberships with a family switcher modal and role-gated screens. Switching families triggers an immediate `loadData` refresh via `useEffect` on `activeMembership.familyId`, updating elder info, member data, and all displayed content instantly. Both creator (index.tsx) and joiner (joiner-home.tsx) pages respond to family changes.
 - **Data Visualization**: Uses `react-native-gifted-charts` for sleep visualization (donut and bar charts).
 - **Briefing Persistence**: `CareBriefing` interface and storage functions to persist and load daily briefings, prioritizing fresh data.
 - **Route Unification**: `/assistant` route deprecated; all post-checkin and analysis flows redirect to `/share`.

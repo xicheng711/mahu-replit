@@ -323,12 +323,19 @@ export function JoinerHomeScreen() {
   const todayLabel = getFormattedDate();
   const lunarDate = getLunarDate();
 
+  const activeFamilyId = activeMembership?.familyId ?? null;
+
   const loadData = useCallback(async () => {
+    if (activeMembership) {
+      setElderNickname(activeMembership.room.elderName || '家人');
+      const elderMember = activeMembership.room.members.find(m => m.role === 'elder');
+      if (elderMember?.emoji) setElderEmoji(elderMember.emoji);
+    }
     const profile = await getProfile();
     if (profile) {
-      setElderNickname(profile.nickname || profile.name || '家人');
+      if (!activeMembership) setElderNickname(profile.nickname || profile.name || '家人');
       setCaregiverName(profile.caregiverName || '');
-      if (profile.zodiacEmoji) setElderEmoji(profile.zodiacEmoji);
+      if (profile.zodiacEmoji && !activeMembership) setElderEmoji(profile.zodiacEmoji);
     }
     const member = await getCurrentMember();
     setCurrentMember(member);
@@ -341,9 +348,23 @@ export function JoinerHomeScreen() {
     setLatestAnnounce(announcements[0] ?? null);
 
     setFeed(buildFeed(checkIns.slice(0, 2), diaries.slice(0, 3), announcements.slice(0, 2), profile?.caregiverName || '照顾者'));
-  }, []);
+  }, [activeFamilyId]);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+
+  useEffect(() => {
+    if (activeFamilyId) {
+      loadData();
+    } else {
+      setElderNickname('家人');
+      setElderEmoji('🌸');
+      setCaregiverName('');
+      setLatestCheckIn(null);
+      setLatestAnnounce(null);
+      setFeed([]);
+      setCurrentMember(null);
+    }
+  }, [activeFamilyId]);
 
   useEffect(() => {
     Animated.parallel([
@@ -542,7 +563,6 @@ export function JoinerHomeScreen() {
                 onPress={async () => {
                   await switchFamily(m.familyId);
                   setShowSwitcher(false);
-                  setTimeout(() => loadData(), 200);
                 }}
               >
                 <Text style={{ fontSize: 22, marginRight: 12 }}>{m.room.members[0]?.emoji || '🏠'}</Text>

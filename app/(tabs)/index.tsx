@@ -8,7 +8,8 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getWeatherByGPS, buildGreetingWithWeather, fetchWeather, GpsWeatherInfo, WeatherData } from '@/lib/weather';
 import { getLunarDate, getFormattedDate } from '@/lib/lunar';
-import { getTodayCheckIn, getYesterdayCheckIn, getProfile, getAllCheckIns, DailyCheckIn, getCurrentUserIsCreator, joinFamilyRoom, getDiaryEntries, DiaryEntry, upsertCheckIn } from '@/lib/storage';
+import { getTodayCheckIn, getYesterdayCheckIn, getProfile, getAllCheckIns, DailyCheckIn, getCurrentUserIsCreator, joinFamilyRoom, getDiaryEntries, DiaryEntry, upsertCheckIn, getCurrentMember } from '@/lib/storage';
+import { getZodiacFromDate } from '@/lib/zodiac';
 import { TrendChart } from '@/components/trend-chart';
 import { COLORS, SHADOWS, fadeInUp, pressAnimation } from '@/lib/animations';
 import { AppColors, Gradients } from '@/lib/design-tokens';
@@ -481,7 +482,6 @@ function CreatorHomeScreen() {
     if (profile?.caregiverAvatarType === 'photo' && profile?.caregiverPhotoUri) {
       setMemberPhotoUri(profile.caregiverPhotoUri);
     } else {
-      const { getCurrentMember } = require('@/lib/storage');
       const member = await getCurrentMember();
       if (member?.photoUri) setMemberPhotoUri(member.photoUri);
     }
@@ -494,7 +494,6 @@ function CreatorHomeScreen() {
       fetchWeather(profileCity).then(w => { if (w) setWeatherData(w); });
     }
     if (profile?.birthDate) {
-      const { getZodiacFromDate } = require('@/lib/zodiac');
       const zodiac = getZodiacFromDate(profile.birthDate);
       setZodiacColor(zodiac.color);
       setZodiacEmoji(zodiac.emoji);
@@ -518,9 +517,13 @@ function CreatorHomeScreen() {
     setAllCheckIns(all);
     const diaries = await getDiaryEntries();
     setAllDiaryEntries(diaries);
-  }, []);
+  }, [activeMembership?.familyId]);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+
+  useEffect(() => {
+    if (activeMembership?.familyId) loadData();
+  }, [activeMembership?.familyId]);
 
   useEffect(() => {
     Animated.parallel([
