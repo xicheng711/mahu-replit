@@ -404,15 +404,22 @@ export function JoinerHomeScreen() {
               <Text style={styles.lunarDot}>·</Text>
               <Text style={styles.lunarText}>{lunarDate.full}</Text>
             </View>
+            <Text style={styles.pageTitle}>{greetingText}</Text>
+            {/* 家庭切换胶囊 — 与主照顾者首页保持一致 */}
             <TouchableOpacity
               onPress={() => memberships.length > 1 && setShowSwitcher(true)}
-              activeOpacity={memberships.length > 1 ? 0.7 : 1}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              activeOpacity={memberships.length > 1 ? 0.75 : 1}
+              style={styles.familyPill}
             >
-              <Text style={styles.pageTitle}>{greetingText}</Text>
-              {memberships.length > 1 && <Text style={styles.switcher}>▼</Text>}
+              <Text style={styles.familyPillText}>
+                🏠 {activeMembership?.room.elderName || elderNickname}的家庭
+              </Text>
+              {memberships.length > 1 && (
+                <Text style={styles.familyPillArrow}>⌄</Text>
+              )}
             </TouchableOpacity>
           </View>
+          {/* 头像按钮 — 与主照顾者首页保持一致（56×56 圆角方形） */}
           <TouchableOpacity
             style={styles.headerAvatar}
             onPress={() => router.push('/profile' as any)}
@@ -423,7 +430,7 @@ export function JoinerHomeScreen() {
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={styles.avatarGradient}
             >
-              <Text style={{ fontSize: 22 }}>{currentMember?.emoji || '👤'}</Text>
+              <Text style={{ fontSize: 24 }}>{currentMember?.emoji || '👤'}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
@@ -568,9 +575,17 @@ const styles = StyleSheet.create({
   lunarDot: { fontSize: 12, color: AppColors.border.soft },
   lunarText: { fontSize: 11, color: AppColors.peach.primary, fontWeight: '500' },
   pageTitle: { fontSize: 22, fontWeight: '900', color: AppColors.text.primary, letterSpacing: -0.3 },
-  switcher: { fontSize: 11, color: AppColors.text.tertiary, marginTop: 4 },
-  headerAvatar: { ...SHADOWS.md, borderRadius: 24, overflow: 'hidden' },
-  avatarGradient: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  familyPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6,
+    backgroundColor: AppColors.purple.soft,
+    borderWidth: 1, borderColor: AppColors.purple.primary + '60',
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
+    alignSelf: 'flex-start',
+  },
+  familyPillText: { fontSize: 13, color: AppColors.purple.strong, fontWeight: '700' },
+  familyPillArrow: { fontSize: 12, color: AppColors.purple.strong, fontWeight: '700' },
+  headerAvatar: { ...SHADOWS.md, borderRadius: 22, overflow: 'hidden' },
+  avatarGradient: { width: 56, height: 56, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 
   tipBanner: { marginBottom: 16 },
   tipBannerInner: {
