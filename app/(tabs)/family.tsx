@@ -12,7 +12,7 @@ import {
   joinFamilyRoom, setCurrentMember, getTodayCheckIn, getYesterdayCheckIn,
   getAllCheckIns, getDiaryEntries,
   getProfile, FamilyAnnouncement, AnnouncementReaction, FamilyMember, FamilyRoom, DailyCheckIn,
-  updateFamilyMemberPhoto, getCurrentUserIsCreator, toggleAnnouncementReaction,
+  updateFamilyMemberPhoto, getCurrentUserIsCreator, toggleAnnouncementReaction, todayStr,
 } from '@/lib/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
@@ -235,7 +235,7 @@ export default function FamilyScreen() {
 
   // Briefing state
   const [briefingData, setBriefingData] = useState<any>(null);
-  const [selectedBriefingDate, setSelectedBriefingDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedBriefingDate, setSelectedBriefingDate] = useState<string>(todayStr());
   const [briefingHistory, setBriefingHistory] = useState<{ date: string; label: string; checkIn: DailyCheckIn | null; diary: any; announcements: any[] }[]>([]);
   const [elderNickname, setElderNickname] = useState('家人');
   const [elderEmoji, setElderEmoji] = useState('🐯');
@@ -284,8 +284,8 @@ export default function FamilyScreen() {
       getDiaryEntries(),
       getProfile(),
     ]);
-    const todayStr = new Date().toISOString().split('T')[0];
-    setBriefingData({ checkIn: todayCheckIn, profile, todayAnnouncements: a.filter(ann => ann.date === todayStr) });
+    const today = todayStr();
+    setBriefingData({ checkIn: todayCheckIn, profile, todayAnnouncements: a.filter(ann => ann.date === today) });
     setElderNickname(profile?.nickname || profile?.name || '家人');
     setElderEmoji(profile?.zodiacEmoji || '🐯');
 
@@ -297,7 +297,7 @@ export default function FamilyScreen() {
     for (let i = 0; i < 7; i++) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateKey = d.toISOString().split('T')[0];
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const label = i === 0 ? '今日' : i === 1 ? '昨日' : d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
       const dayCheckIn = checkInMap.get(dateKey) || null;
       const dayDiary = diaryEntries.find(e => e.date === dateKey);
@@ -427,8 +427,8 @@ export default function FamilyScreen() {
   const typeInfo = (type: FamilyAnnouncement['type']) =>
     ANNOUNCEMENT_TYPES.find(t => t.type === type) ?? ANNOUNCEMENT_TYPES[0];
 
-  const todayAnnouncements = announcements.filter(a => a.date === new Date().toISOString().split('T')[0]);
-  const olderAnnouncements = announcements.filter(a => a.date !== new Date().toISOString().split('T')[0]);
+  const todayAnnouncements = announcements.filter(a => a.date === todayStr());
+  const olderAnnouncements = announcements.filter(a => a.date !== todayStr());
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
@@ -617,8 +617,7 @@ export default function FamilyScreen() {
 
             {/* Selected date briefing card */}
             {briefingHistory.filter(item => item.date === selectedBriefingDate).map(item => {
-              const todayStr = new Date().toISOString().split('T')[0];
-              const isToday = item.date === todayStr;
+              const isToday = item.date === todayStr();
               const hasScore = item.checkIn?.eveningDone && item.checkIn?.careScore != null;
               const score = hasScore ? item.checkIn!.careScore : 0;
               const scoreColor = !hasScore ? '#D5CFC9' : score >= 80 ? '#16A34A' : score >= 60 ? '#3B82F6' : score >= 40 ? '#F59E0B' : '#EF4444';
@@ -982,7 +981,7 @@ function AnnouncementCard({
   }
 
   const time = new Date(ann.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-  const date = ann.date !== new Date().toISOString().split('T')[0]
+  const date = ann.date !== todayStr()
     ? new Date(ann.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }) + ' '
     : '';
 
