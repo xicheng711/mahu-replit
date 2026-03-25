@@ -387,28 +387,27 @@ ${checkIn.notes ? `- 照顾者备注：${checkIn.notes}` : ""}
       const { elderNickname, caregiverName, moodEmoji, moodLabel, tags, content } = input;
       const nickname = elderNickname || "家人";
 
-      const prompt = `
-照顾者${caregiverName}刚刚写了一篇关于照顾阿兹海默患者${nickname}的护理日记。
+      const prompt = `你是${caregiverName}的好朋友，也有多年照顾失智老人的实际经验。你刚看完他们写的护理日记，要回复一段话。
 
-日记内容：
-- 老人今日心情：${moodEmoji} ${moodLabel}
+日记信息：
+- ${nickname}今日心情：${moodEmoji} ${moodLabel}
 - 今日标签：${tags.length > 0 ? tags.join('、') : '无'}
-- 详细记录：${content || '（未写详细内容）'}
+- 详细内容：${content || '（没有写详细内容）'}
 
-请以一位有经验的护理顾问身份，给照顾者${caregiverName}写一段实用回复。
-
-回复结构：
-1【观察】简要描述日记中记录的实际情况，让照顾者感到被认真对待。
-2【分析】针对日记中提到的具体情况，给出1-2条具体可操作的建议，基于数据和事实。
-3【小结】一句话总结当前状态和方向。
-
-语气要求：温和、专业、可信。避免空泛鼓励或过度煽情。总字数150-200字。
+回复要求：
+- 只针对日记里实际写到的内容回应，不要脑补或想象没提到的场景
+- 语气像发微信给朋友，自然、直接、真实，不要排比句，不要文学化
+- 如果日记里有具体情况（比如老人做了什么、出现了什么问题），就具体回应那件事
+- 如果有实用的建议，直接说，不要绕弯子
+- 不要用"你一定"、"你心里"之类猜测对方感受的话
+- 字数控制在120字以内
+- 结尾如果有护理小贴士，另起一段，用💡开头，25字以内
 
 返回JSON格式（不要包含任何代码块标记）：
 {
-  "reply": "<按共情→专业→鼓励结构写的回复文字>",
-  "emoji": "<1个最合适的emoji表情>",
-  "tip": "<一条简短的专业护理小贴士，30字以内>"
+  "reply": "<回复正文，结尾可带💡小贴士>",
+  "emoji": "<1个emoji>",
+  "tip": "<同样的小贴士文字，25字以内>"
 }`;
 
       try {
@@ -445,19 +444,23 @@ ${checkIn.notes ? `- 照顾者备注：${checkIn.notes}` : ""}
       const historyText = history.length > 0
         ? history.map(m => m.role === 'user' ? `照顾者问：${m.text}` : `AI回复：${m.text}`).join('\n')
         : '';
-      // Use JSON format to avoid raw text parsing issues
-      const prompt = `您是一位专业的阿兹海默护理医生和温暖的心理咨询师。
-背景：照顾者${caregiverName}在照顾阿兹海默患者${nickname}。
-日记内容：${originalContent || '未写详细内容'}
-心情：${originalMood}
-之前的AI回复：${originalAiReply}
-${historyText ? `\n对话历史：\n${historyText}\n` : ''}
-照顾者现在问：${question}
+      const prompt = `你是${caregiverName}有经验的朋友，了解失智照护，正在通过消息聊天。
 
-请给出简洁、专业、温暖的回复（150字内）。
-返回JSON格式（不要包含任何代码块标记）：
+背景：
+- 日记内容：${originalContent || '未写详细内容'}
+- 心情：${originalMood}
+${historyText ? `\n对话记录：\n${historyText}\n` : ''}
+${caregiverName}现在问你：${question}
+
+要求：
+- 直接回答问题，不要绕
+- 语气像朋友发消息，口语自然，不要正式文体
+- 如果不知道或不确定，就说"不太确定，建议问下医生"
+- 100字以内
+
+返回JSON（不要任何代码块标记）：
 {
-  "reply": "<您的回复文字>"
+  "reply": "<回复内容>"
 }`;
       try {
         const raw = await callQwen(prompt, SYSTEM_PROMPT);
