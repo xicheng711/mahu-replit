@@ -83,7 +83,7 @@ export default function TabLayout() {
         tabBarStyle: {
           height: tabBarHeight,
           paddingBottom: safeBottom,
-          paddingTop: 4,
+          paddingTop: 8,
           backgroundColor: AppColors.surface.whiteStrong,
           borderTopWidth: 0,
           borderTopLeftRadius: 22,
@@ -110,14 +110,14 @@ export default function TabLayout() {
   );
 }
 
-const CIRCLE = 44;
+const CIRCLE = 46;
 
 const styles = StyleSheet.create({
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
     gap: 3,
-    paddingTop: 2,
+    paddingTop: 0,
   },
   tabItemFaded: {
     opacity: 0.22,
@@ -133,12 +133,12 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.bg.secondary,
   },
   activeEmoji: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 22,
+    lineHeight: 26,
   },
   inactiveEmoji: {
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 20,
+    lineHeight: 24,
     opacity: 0.65,
   },
   tabLabel: {
