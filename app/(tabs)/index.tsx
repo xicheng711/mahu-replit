@@ -21,21 +21,26 @@ import { useFamilyContext } from '@/lib/family-context';
 const { width } = Dimensions.get('window');
 
 function getDailyStatusHint(checkIn: DailyCheckIn | null): string {
-  if (!checkIn) return '今日尚未打卡，完成记录后为您整理情况';
+  if (!checkIn) return '完成今日打卡后，自动生成昨晚睡眠与今日状态摘要';
   const parts: string[] = [];
   if (checkIn.sleepHours != null) {
-    if (checkIn.sleepHours >= 7) parts.push('睡眠时长正常');
-    else if (checkIn.sleepHours >= 5) parts.push('睡眠时长偏短');
-    else parts.push('睡眠严重不足，建议安排补觉');
+    if (checkIn.sleepHours >= 8) parts.push(`昨晚睡眠 ${checkIn.sleepHours} 小时，休息充足`);
+    else if (checkIn.sleepHours >= 6) parts.push(`昨晚睡眠 ${checkIn.sleepHours} 小时，基本达标`);
+    else if (checkIn.sleepHours >= 4) parts.push(`昨晚睡眠仅 ${checkIn.sleepHours} 小时，建议今日安排适当午休`);
+    else parts.push(`昨晚睡眠 ${checkIn.sleepHours} 小时，严重不足，请密切关注精神状态`);
+  }
+  if (checkIn.nightWakings != null && checkIn.nightWakings >= 2) {
+    parts.push(`夜间觉醒 ${checkIn.nightWakings} 次，建议排查夜间不适原因`);
   }
   if (checkIn.moodScore != null) {
-    if (checkIn.moodScore >= 7) parts.push('心情状态稳定');
-    else if (checkIn.moodScore >= 4) parts.push('心情一般');
-    else parts.push('情绪需要关注');
+    if (checkIn.moodScore >= 8) parts.push('情绪状态良好，无明显异常');
+    else if (checkIn.moodScore >= 6) parts.push('情绪平稳，可继续维持现有照护节奏');
+    else if (checkIn.moodScore >= 4) parts.push('情绪评分偏低，请关注是否有行为或环境诱因');
+    else parts.push('情绪评分较低，建议增加陪伴时间并观察行为变化');
   }
-  if (checkIn.medicationTaken === false) parts.push('用药未完成');
-  if (parts.length === 0) return '今日记录已整理完毕';
-  return parts.join('，');
+  if (checkIn.medicationTaken === false) parts.push('今日用药记录未完成，请核实服药情况');
+  if (parts.length === 0) return '今日打卡数据已记录完整';
+  return parts.join('；');
 }
 
 
@@ -401,31 +406,35 @@ function getPersonalizedAISuggestion(checkIn: DailyCheckIn): string {
   const { moodScore, sleepHours, medicationTaken, nightWakings } = checkIn;
   const observations: string[] = [];
 
-  if (sleepHours >= 7) {
-    observations.push('睡眠时长正常');
-  } else if (sleepHours >= 5) {
-    observations.push(`睡眠${sleepHours}小时，略偏短`);
+  if (sleepHours >= 8) {
+    observations.push(`昨晚睡眠 ${sleepHours} 小时，夜间休息充足`);
+  } else if (sleepHours >= 6) {
+    observations.push(`昨晚睡眠 ${sleepHours} 小时，基本达标`);
+  } else if (sleepHours >= 4) {
+    observations.push(`昨晚睡眠 ${sleepHours} 小时，时间偏短，建议今日安排午休`);
   } else {
-    observations.push(`睡眠仅${sleepHours}小时，建议今天安排午休补充`);
+    observations.push(`昨晚睡眠仅 ${sleepHours} 小时，严重不足，请密切关注精神与行为状态`);
   }
 
   if (nightWakings && nightWakings >= 2) {
-    observations.push(`夜间中断${nightWakings}次，建议今晚继续观察是否重复出现`);
+    observations.push(`夜间觉醒 ${nightWakings} 次，建议排查夜间不适或如厕需求`);
   }
 
-  if (moodScore >= 7) {
-    observations.push('心情状态稳定');
+  if (moodScore >= 8) {
+    observations.push('情绪状态良好，无明显异常表现');
+  } else if (moodScore >= 6) {
+    observations.push('情绪平稳，可维持现有照护节奏');
   } else if (moodScore >= 4) {
-    observations.push('情绪一般，可留意是否有诱因');
+    observations.push('情绪评分偏低，建议观察是否有触发因素');
   } else {
-    observations.push('情绪偏低，建议安排轻松活动或陪伴聊天');
+    observations.push('情绪评分较低，建议增加陪伴时间，必要时记录行为变化');
   }
 
   if (!medicationTaken) {
-    observations.push('用药尚未完成，请确认是否已服用');
+    observations.push('用药记录未完成，请核实当日服药情况');
   }
 
-  return observations.join('。') + '。';
+  return observations.join('；') + '。';
 }
 
 // ─── 主页面 ─────────────────────────────────────────────────────────────
@@ -682,7 +691,7 @@ function CreatorHomeScreen() {
           </View>
         </View>
 
-        {/* ── 今日数据摘要 ── */}
+        {/* ── 打卡数据摘要 ── */}
         {latestCheckIn && (() => {
           const yesterdayStr = (() => {
             const d = new Date(); d.setDate(d.getDate() - 1);
@@ -691,12 +700,14 @@ function CreatorHomeScreen() {
           const yDiary = allDiaryEntries.find(e => e.date === yesterdayStr);
           const yCheckIn = allCheckIns.find(c => c.date === yesterdayStr);
           const mealText = yCheckIn?.mealOption || (yCheckIn?.mealNotes ? yCheckIn.mealNotes.slice(0, 6) : null);
+          const dataSource = todayCheckIn ? '今晨打卡记录（含昨日汇总）' : '昨日打卡记录';
           return (
             <View style={styles.summaryCard}>
               <View style={styles.summaryCardHeader}>
-                <Text style={styles.summaryCardTitle}>
-                  {todayCheckIn ? '今日' : '昨日'}数据摘要
-                </Text>
+                <View>
+                  <Text style={styles.summaryCardTitle}>昨日打卡数据</Text>
+                  <Text style={{ fontSize: 11, color: AppColors.text.tertiary, marginTop: 1 }}>{dataSource}</Text>
+                </View>
                 <TouchableOpacity onPress={() => router.push('/share' as any)}>
                   <Text style={styles.summaryCardEdit}>查看分析 →</Text>
                 </TouchableOpacity>
@@ -706,7 +717,7 @@ function CreatorHomeScreen() {
                   <>
                     <View style={styles.summaryCardItem}>
                       <Text style={styles.summaryCardEmoji}>{yDiary.moodEmoji}</Text>
-                      <Text style={styles.summaryCardLabel}>心情</Text>
+                      <Text style={styles.summaryCardLabel}>昨日心情</Text>
                       <Text style={styles.summaryCardValue}>{yDiary.moodLabel || getMoodLabel(0)}</Text>
                     </View>
                     <View style={styles.summaryCardDivider} />
@@ -714,13 +725,13 @@ function CreatorHomeScreen() {
                 )}
                 <View style={styles.summaryCardItem}>
                   <Text style={styles.summaryCardEmoji}>💤</Text>
-                  <Text style={styles.summaryCardLabel}>睡眠</Text>
+                  <Text style={styles.summaryCardLabel}>昨晚睡眠</Text>
                   <Text style={styles.summaryCardValue}>{latestCheckIn.sleepHours}h</Text>
                 </View>
                 <View style={styles.summaryCardDivider} />
                 <View style={styles.summaryCardItem}>
                   <Text style={styles.summaryCardEmoji}>💊</Text>
-                  <Text style={styles.summaryCardLabel}>用药</Text>
+                  <Text style={styles.summaryCardLabel}>昨日用药</Text>
                   <Text style={styles.summaryCardValue}>{latestCheckIn.medicationTaken ? '已服用' : '未记录'}</Text>
                 </View>
                 {mealText && (
@@ -728,7 +739,7 @@ function CreatorHomeScreen() {
                     <View style={styles.summaryCardDivider} />
                     <View style={styles.summaryCardItem}>
                       <Text style={styles.summaryCardEmoji}>🍽️</Text>
-                      <Text style={styles.summaryCardLabel}>吃饭</Text>
+                      <Text style={styles.summaryCardLabel}>昨日饮食</Text>
                       <Text style={styles.summaryCardValue}>{mealText}</Text>
                     </View>
                   </>
@@ -736,11 +747,11 @@ function CreatorHomeScreen() {
                 <View style={styles.summaryCardDivider} />
                 <View style={styles.summaryCardItem}>
                   <Text style={styles.summaryCardEmoji}>⭐</Text>
-                  <Text style={styles.summaryCardLabel}>今日状态</Text>
+                  <Text style={styles.summaryCardLabel}>照护评分</Text>
                   {(yCheckIn?.eveningDone ?? false) && latestCheckIn.careScore != null ? (
                     <Text style={[styles.summaryCardValue, { color: '#F59E0B' }]}>{latestCheckIn.careScore}分</Text>
                   ) : (
-                    <Text style={[styles.summaryCardValue, { color: AppColors.text.secondary }]}>--</Text>
+                    <Text style={[styles.summaryCardValue, { color: AppColors.text.secondary }]}>待晚间</Text>
                   )}
                 </View>
               </View>

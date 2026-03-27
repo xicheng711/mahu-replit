@@ -65,7 +65,7 @@ function buildFeed(
         time: latest.completedAt ? timeStr(latest.completedAt) : '晚间',
         icon: '🌙', color: AppColors.purple.strong, bg: AppColors.purple.soft, tag: '晚间打卡',
         title: `今日护理完成${latest.careScore ? ` ⭐ ${latest.careScore}分` : ''}`,
-        detail: `心情 ${latest.moodEmoji || '😴'} · ${latest.medicationTaken ? '用药已服' : '用药未记录'} · ${latest.mealOption || latest.mealNotes || '饮食正常'}`,
+        detail: `心情 ${latest.moodEmoji || '😴'} · ${latest.medicationTaken ? '用药已按时服用' : '用药记录未完成'} · 饮食：${latest.mealOption || latest.mealNotes || '未记录'}`,
         author: null,
         sortKey: latest.completedAt ? new Date(latest.completedAt).getTime() : Date.now() - 1800000,
       });
@@ -387,22 +387,27 @@ export function JoinerHomeScreen() {
   })();
 
   const statusSummary = (() => {
-    if (!latestCheckIn) return '今日尚无照护记录';
+    if (!latestCheckIn) return '今日暂无照护打卡记录，完成打卡后自动生成状态摘要';
     const parts: string[] = [];
     if (latestCheckIn.sleepHours != null) {
-      parts.push(`睡眠${latestCheckIn.sleepHours}小时`);
+      const h = latestCheckIn.sleepHours;
+      if (h >= 8) parts.push(`昨晚睡眠 ${h} 小时，休息充足`);
+      else if (h >= 6) parts.push(`昨晚睡眠 ${h} 小时，基本达标`);
+      else if (h >= 4) parts.push(`昨晚睡眠 ${h} 小时，时间偏短`);
+      else parts.push(`昨晚睡眠仅 ${h} 小时，请密切关注精神状态`);
     }
     if (latestCheckIn.medicationTaken === false) {
-      parts.push('用药未完成');
+      parts.push('今日用药未完成，请核实服药情况');
     } else if (latestCheckIn.medicationTaken) {
-      parts.push('用药已完成');
+      parts.push('今日用药已按时完成');
     }
     if (latestCheckIn.moodScore != null) {
-      if (latestCheckIn.moodScore >= 7) parts.push('心情稳定');
-      else if (latestCheckIn.moodScore >= 4) parts.push('心情一般');
-      else parts.push('情绪需关注');
+      if (latestCheckIn.moodScore >= 8) parts.push('情绪状态良好');
+      else if (latestCheckIn.moodScore >= 6) parts.push('情绪平稳');
+      else if (latestCheckIn.moodScore >= 4) parts.push('情绪评分偏低，建议留意诱因');
+      else parts.push('情绪评分较低，建议增加陪伴');
     }
-    return parts.length > 0 ? parts.join('，') : '今日记录已更新';
+    return parts.length > 0 ? parts.join('；') : '今日打卡数据已记录完整';
   })();
 
   return (
