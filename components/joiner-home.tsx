@@ -12,6 +12,7 @@ import {
   getProfile, getAllCheckIns, getDiaryEntries, getFamilyAnnouncements,
   getCurrentMember,
   saveFamilyAnnouncement,
+  upsertCheckIn,
   DailyCheckIn, DiaryEntry, FamilyAnnouncement, FamilyMember,
 } from '@/lib/storage';
 import { getLunarDate, getFormattedDate } from '@/lib/lunar';
@@ -341,7 +342,27 @@ export function JoinerHomeScreen() {
     setCurrentMember(member);
 
     const checkIns = await getAllCheckIns();
-    setLatestCheckIn(checkIns[0] ?? null);
+    const latest = checkIns[0] ?? null;
+
+    // 补算 careScore：与主照顾者首页保持一致，避免 joiner 视图分数为空
+    if (latest) {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      const yesterdayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const yCheckIn = checkIns.find(c => c.date === yesterdayStr) ?? null;
+      if (yCheckIn?.eveningDone && latest.careScore == null) {
+        try {
+          const { calculateCareScore } = await import('@/lib/ai-advice');
+          const score = calculateCareScore(yCheckIn, null);
+          if (score != null) {
+            latest.careScore = score;
+            await upsertCheckIn({ date: latest.date, careScore: score });
+          }
+        } catch {}
+      }
+    }
+
+    setLatestCheckIn(latest);
 
     const diaries = await getDiaryEntries();
     const announcements = await getFamilyAnnouncements(30);
