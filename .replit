@@ -17,6 +17,10 @@ author = "agent"
 task = "workflow.run"
 args = "Start application"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Expo Go (手机预览)"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -28,6 +32,17 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow]]
+name = "Expo Go (手机预览)"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "concurrently -k \"pnpm dev:proxy\" \"pnpm dev:server\" \"bash scripts/expo-go.sh\""
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 3000
@@ -69,3 +84,8 @@ externalPort = 4200
 deploymentTarget = "autoscale"
 run = ["bash", "-c", "node dist/index.js"]
 build = ["bash", "-c", "pnpm build && npx expo export --platform web --output-dir dist/public"]
+
+[userenv]
+
+[userenv.shared]
+EXPO_PUBLIC_API_BASE_URL = "https://bb61136f-b877-4468-976e-ad1f0dd820c5-00-13353agfbwm1u.worf.replit.dev"
