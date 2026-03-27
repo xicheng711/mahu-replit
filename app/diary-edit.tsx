@@ -276,7 +276,7 @@ export default function DiaryEditScreen() {
       } else if (entry.aiReply) {
         const legacyConv: ConversationMessage[] = [
           { id: generateId(), role: 'user', text: entry.moodEmoji + (entry.content ? ' ' + entry.content.slice(0, 80) : ' 已记录今日护理情况 📖'), createdAt: entry.createdAt ?? new Date().toISOString() },
-          { id: generateId(), role: 'ai', text: entry.aiReply + (entry.aiTip ? '\n\n💡 ' + entry.aiTip : ''), createdAt: entry.createdAt ?? new Date().toISOString() },
+          { id: generateId(), role: 'ai', text: entry.aiReply, createdAt: entry.createdAt ?? new Date().toISOString() },
         ];
         setConversation(legacyConv);
       }
@@ -327,7 +327,6 @@ export default function DiaryEditScreen() {
 
     setAiLoading(true);
     let aiText = `${caregiverName}，辛苦了！您的每一份记录都是对${elderNickname}最好的关爱。照顾好自己，才能更好地照顾家人 💕`;
-    let aiTip = '';
     try {
       const result = await replyMutation.mutateAsync({
         elderNickname, caregiverName,
@@ -349,14 +348,13 @@ export default function DiaryEditScreen() {
         } : undefined,
       });
       aiText = result.reply ?? aiText;
-      aiTip = result.tip ?? '';
     } catch { }
 
-    const aiMsg: ConversationMessage = { id: generateId(), role: 'ai', text: aiText + (aiTip ? '\n\n💡 ' + aiTip : ''), createdAt: new Date().toISOString() };
+    const aiMsg: ConversationMessage = { id: generateId(), role: 'ai', text: aiText, createdAt: new Date().toISOString() };
     const conv2 = [...conv1, aiMsg];
     setConversation(conv2);
     setAiLoading(false);
-    await updateDiaryEntry(savedEntry.id, { aiReply: aiText, aiTip, conversation: conv2 });
+    await updateDiaryEntry(savedEntry.id, { aiReply: aiText, conversation: conv2 });
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
   }
 
