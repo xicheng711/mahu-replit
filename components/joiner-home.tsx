@@ -599,13 +599,13 @@ const styles = StyleSheet.create({
   pageTitle: { fontSize: 22, fontWeight: '900', color: AppColors.text.primary, letterSpacing: -0.3 },
   familyPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6,
-    backgroundColor: AppColors.purple.soft,
-    borderWidth: 1, borderColor: AppColors.purple.primary + '60',
+    backgroundColor: AppColors.green.soft,
+    borderWidth: 1.5, borderColor: AppColors.green.primary,
     borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
     alignSelf: 'flex-start',
   },
-  familyPillText: { fontSize: 13, color: AppColors.purple.strong, fontWeight: '700' },
-  familyPillArrow: { fontSize: 12, color: AppColors.purple.strong, fontWeight: '700' },
+  familyPillText: { fontSize: 13, color: AppColors.green.strong, fontWeight: '700' },
+  familyPillArrow: { fontSize: 12, color: AppColors.green.strong, fontWeight: '800' },
   headerAvatar: { ...SHADOWS.md, borderRadius: 22, overflow: 'hidden' },
   avatarGradient: { width: 56, height: 56, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 
