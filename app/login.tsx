@@ -155,31 +155,47 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={[styles.wechatBtn, loading === 'wechat' && styles.btnLoading]}
             onPress={handleWeChatLogin}
-            activeOpacity={0.85}
+            activeOpacity={0.9}
             disabled={!!loading}
           >
             <LinearGradient
-              colors={[WECHAT_GREEN, WECHAT_GREEN_DARK]}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              colors={['#2DC84D', '#07C160', '#06A855']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={styles.btnGradient}
             >
-              <Text style={styles.wechatIcon}>💬</Text>
-              <Text style={styles.wechatText}>
-                {loading === 'wechat' ? '登录中...' : '微信一键登录'}
-              </Text>
+              <View style={styles.btnIconWrap}>
+                <Text style={styles.btnIcon}>💬</Text>
+              </View>
+              <View style={styles.btnTextCol}>
+                <Text style={styles.btnMainText}>
+                  {loading === 'wechat' ? '登录中...' : '微信一键登录'}
+                </Text>
+                <Text style={styles.btnSubText}>WeChat Login</Text>
+              </View>
             </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.appleBtn, loading === 'apple' && styles.btnLoading]}
             onPress={handleAppleLogin}
-            activeOpacity={0.85}
+            activeOpacity={0.9}
             disabled={!!loading}
           >
-            <Text style={styles.appleIcon}>🍎</Text>
-            <Text style={styles.appleText}>
-              {loading === 'apple' ? '登录中...' : '通过 Apple 继续'}
-            </Text>
+            <LinearGradient
+              colors={['#2C2C2E', '#1C1C1E', '#000000']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={styles.btnGradient}
+            >
+              <View style={styles.btnIconWrap}>
+                <Text style={[styles.btnIcon, { fontSize: 22 }]}>🍎</Text>
+              </View>
+              <View style={styles.btnTextCol}>
+                <Text style={styles.btnMainText}>
+                  {loading === 'apple' ? '登录中...' : '通过 Apple 继续'}
+                </Text>
+                <Text style={styles.btnSubText}>Sign in with Apple</Text>
+              </View>
+            </LinearGradient>
           </TouchableOpacity>
 
           <View style={styles.agreementRow}>
@@ -259,21 +275,31 @@ const styles = StyleSheet.create({
 
   buttonSection: { marginBottom: 24 },
 
-  wechatBtn: { borderRadius: 16, overflow: 'hidden', marginBottom: 14 },
-  btnGradient: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 16, paddingHorizontal: 24,
+  wechatBtn: {
+    borderRadius: 18, overflow: 'hidden', marginBottom: 14,
+    shadowColor: '#07C160', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3, shadowRadius: 14, elevation: 8,
   },
-  wechatIcon: { fontSize: 22, marginRight: 10 },
-  wechatText: { fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.5 },
+  btnGradient: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 18, paddingHorizontal: 24,
+  },
+  btnIconWrap: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center', alignItems: 'center',
+    marginRight: 14,
+  },
+  btnIcon: { fontSize: 20 },
+  btnTextCol: { flex: 1 },
+  btnMainText: { fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.5 },
+  btnSubText: { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2, fontWeight: '500' },
 
   appleBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: APPLE_BLACK, borderRadius: 16,
-    paddingVertical: 16, paddingHorizontal: 24, marginBottom: 20,
+    borderRadius: 18, overflow: 'hidden', marginBottom: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25, shadowRadius: 14, elevation: 8,
   },
-  appleIcon: { fontSize: 20, marginRight: 10 },
-  appleText: { fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.5 },
   btnLoading: { opacity: 0.6 },
 
   agreementRow: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 4 },
