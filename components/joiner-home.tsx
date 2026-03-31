@@ -379,13 +379,14 @@ export function JoinerHomeScreen() {
     router.push('/(modals)/create-family' as any);
   }
 
-  const greetingText = buildGreeting(caregiverName || undefined) || (() => {
+  const greetingText = (() => {
     const h = new Date().getHours();
-    if (h < 6) return '夜深了，注意休息';
-    if (h < 11) return '早上好';
-    if (h < 14) return '中午好';
-    if (h < 18) return '下午好';
-    return '晚上好';
+    const name = elderNickname || '家人';
+    if (h < 6) return `${name}正在安睡，你的牵挂是最好的守护 💛`;
+    if (h < 11) return `新的一天，${name}有你的关心更温暖 ☀️`;
+    if (h < 14) return `午间小憩，记得也关心一下自己 🌿`;
+    if (h < 18) return `下午好，有你在${name}不孤单 🧡`;
+    return `晚上好，感谢每一天对${name}的惦念 🌙`;
   })();
 
   const statusSummary = (() => {
