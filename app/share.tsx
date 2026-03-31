@@ -212,38 +212,6 @@ const slStyles = StyleSheet.create({
 });
 
 // ─── Score Ring (animated) ───────────────────────────────────────────────────
-function ScoreRing({ score, size = 100 }: { score: number | null; size?: number }) {
-  if (score == null) {
-    const mutedColor = AppColors.text.secondary;
-    return (
-      <View style={ringStyles.wrapper}>
-        <View style={[ringStyles.container, { width: size, height: size, borderRadius: size / 2, backgroundColor: '#F5F0ED', borderWidth: 3.5, borderColor: '#D5CFC9', borderStyle: 'dashed' }]}>
-          <Text style={[ringStyles.score, { color: mutedColor, fontSize: size * 0.32 }]}>--</Text>
-        </View>
-        <Text style={[ringStyles.label, { color: mutedColor }]}>暂未评分</Text>
-      </View>
-    );
-  }
-  const color = score >= 80 ? AppColors.green.strong : score >= 60 ? AppColors.green.muted : score >= 40 ? '#D97706' : AppColors.coral.primary;
-  const bgColor = score >= 80 ? AppColors.green.soft : score >= 60 ? '#F0F7F2' : score >= 40 ? '#FFF8EE' : '#FFF0EE';
-  const label = score >= 80 ? '状态稳定' : score >= 60 ? '状态良好' : score >= 40 ? '需关注' : '需照护';
-  return (
-    <View style={ringStyles.wrapper}>
-      <View style={[ringStyles.container, { width: size, height: size, borderRadius: size / 2, backgroundColor: bgColor, borderWidth: 3.5, borderColor: color }]}>
-        <Text style={[ringStyles.score, { color, fontSize: size * 0.34 }]}>{score}</Text>
-        <Text style={[ringStyles.scoreUnit, { color }]}>分</Text>
-      </View>
-      <Text style={[ringStyles.label, { color }]}>{label}</Text>
-    </View>
-  );
-}
-const ringStyles = StyleSheet.create({
-  wrapper: { alignItems: 'center', gap: 5 },
-  container: { alignItems: 'center', justifyContent: 'center' },
-  score: { fontWeight: '900', lineHeight: undefined },
-  scoreUnit: { fontSize: 11, fontWeight: '700', marginTop: -2 },
-  label: { fontSize: 11, fontWeight: '700' },
-});
 
 // ─── Data Badge ──────────────────────────────────────────────────────────────
 function DataBadge({ emoji, label, value, color }: { emoji: string; label: string; value: string; color: string }) {
@@ -279,8 +247,8 @@ function AnimatedBadge({ emoji, label, value, color, delay }: { emoji: string; l
   );
 }
 
-function BriefingCard({ briefing, checkIn, careScore, elderNickname, caregiverName, elderEmoji }: {
-  briefing: any; checkIn: DailyCheckIn; careScore: number | null;
+function BriefingCard({ briefing, checkIn, elderNickname, caregiverName, elderEmoji }: {
+  briefing: any; checkIn: DailyCheckIn;
   elderNickname: string; caregiverName: string; elderEmoji: string;
 }) {
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
@@ -311,7 +279,7 @@ function BriefingCard({ briefing, checkIn, careScore, elderNickname, caregiverNa
         </View>
       </LinearGradient>
 
-      {/* ── Elder Info + Score ── */}
+      {/* ── Elder Info ── */}
       <View style={cardStyles.elderSection}>
         <View style={cardStyles.elderInfo}>
           <View style={cardStyles.elderAvatarWrap}>
@@ -322,7 +290,6 @@ function BriefingCard({ briefing, checkIn, careScore, elderNickname, caregiverNa
             <Text style={cardStyles.elderSub}>今日护理简报</Text>
           </View>
         </View>
-        <ScoreRing score={careScore} size={82} />
       </View>
 
       {/* ── Data Grid (4 badges with staggered entrance) ── */}
@@ -344,9 +311,7 @@ function BriefingCard({ briefing, checkIn, careScore, elderNickname, caregiverNa
         <Text style={cardStyles.summaryText}>
           {briefing.summary && briefing.summary.trim().length > 0
             ? briefing.summary
-            : careScore != null
-              ? `${elderNickname}今日整体状态${careScore >= 80 ? '稳定' : careScore >= 60 ? '良好' : careScore >= 40 ? '一般，需多关注' : '欠佳，需重点照护'}。睡眠${checkIn.sleepHours}小时，心情评分${checkIn.moodScore}/10，用药${checkIn.medicationTaken ? '按时完成' : '有漏服情况'}。`
-              : `${elderNickname}的部分记录已完成。缺少昨晚打卡数据，暂无法生成完整评分。`}
+            : `${elderNickname}今日记录：睡眠${checkIn.sleepHours}小时，心情${checkIn.moodScore}/10，用药${checkIn.medicationTaken ? '按时完成' : '有漏服情况'}。`}
         </Text>
       </View>
 
@@ -601,7 +566,6 @@ const sleepStyles = StyleSheet.create({
 export default function ShareScreen() {
   const [briefing, setBriefing] = useState<any>(null);
   const [checkIn, setCheckIn] = useState<DailyCheckIn | null>(null);
-  const [careScore, setCareScore] = useState<number | null>(null);
   const [backfillNotice, setBackfillNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(!getCachedBriefing());
   const [generating, setGenerating] = useState(false);
@@ -650,27 +614,6 @@ export default function ShareScreen() {
       const yesterday = await getYesterdayCheckIn();
       setTodayCi(today);
       setYesterdayCi(yesterday);
-      const ci = today || yesterday;
-      const storedScore = ci?.careScore ?? null;
-      if (storedScore == null && yesterday?.eveningDone) {
-        if (ci) {
-          setCheckIn(ci);
-          const { calculateCareScore } = await import('@/lib/ai-advice');
-          const newScore = calculateCareScore(yesterday, null);
-          setCareScore(newScore);
-          if (newScore != null) {
-            await upsertCheckIn({ date: ci.date, careScore: newScore });
-          }
-          setBackfillNotice('昨晚记录已补充，今日简报已更新');
-          setTimeout(() => setBackfillNotice(null), 4000);
-          const profile = await getProfile();
-          const nickname = profile?.nickname || profile?.name || '家人';
-          const caregiver = profile?.caregiverName || '照顾者';
-          if (newScore != null) {
-            await doGenerate(nickname, caregiver, ci, newScore);
-          }
-        }
-      }
     } catch {}
   }
 
@@ -684,7 +627,6 @@ export default function ShareScreen() {
         setShareText(memCached.shareText);
         if (memCached.checkIn) {
           setCheckIn(memCached.checkIn);
-          setCareScore(memCached.checkIn.careScore ?? null);
         }
         setLoading(false);
         loadSupplementaryData();
@@ -700,7 +642,6 @@ export default function ShareScreen() {
         setShareText(persisted.shareText);
         if (persisted.checkIn) {
           setCheckIn(persisted.checkIn);
-          setCareScore(persisted.checkIn.careScore ?? null);
         }
         setLoading(false);
         loadSupplementaryData();
@@ -733,29 +674,8 @@ export default function ShareScreen() {
       }
 
       setCheckIn(ci);
-      const yesterdayEveningDone = yesterday?.eveningDone ?? false;
-      let score = yesterdayEveningDone ? (ci.careScore ?? null) : null;
-      if (score == null && yesterdayEveningDone && yesterday) {
-        const { calculateCareScore } = await import('@/lib/ai-advice');
-        score = calculateCareScore(yesterday, null);
-        if (score != null) {
-          await upsertCheckIn({ date: ci.date, careScore: score });
-        }
-      }
-      setCareScore(score);
-
       loadSupplementaryData();
-      if (score != null) {
-        await doGenerate(nickname, caregiver, ci, score);
-      } else {
-        const incompleteBriefing = {
-          summary: `${nickname}的部分记录已完成。缺少昨晚（${yesterday ? yesterday.date : '昨日'}）打卡数据，暂无法生成完整评分。`,
-          attention: '',
-          shareText: '',
-        };
-        setBriefing(incompleteBriefing);
-        setCachedBriefing(incompleteBriefing, '', ci);
-      }
+      await doGenerate(nickname, caregiver, ci, null);
     } catch (e) {
       setError(e instanceof Error ? e.message : '加载失败');
     } finally {
@@ -782,7 +702,7 @@ export default function ShareScreen() {
     } catch {}
   }
 
-  async function doGenerate(nickname: string, caregiver: string, ci: DailyCheckIn, score: number | null) {
+  async function doGenerate(nickname: string, caregiver: string, ci: DailyCheckIn, _score: number | null) {
     setGenerating(true);
     setBriefing(null);
     try {
@@ -799,38 +719,35 @@ export default function ShareScreen() {
           napMinutes: ci.napMinutes ?? (ci.daytimeNap ? 30 : 0),
           notes: ci.eveningNotes || ci.morningNotes || undefined,
         },
-        careScore: score ?? 50,
+        careScore: 0,
       });
       const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('AI timeout')), 15000));
       const result = await Promise.race([aiPromise, timeout]) as any;
-      const ciWithScore = { ...ci, careScore: score };
       if (result.success && result.briefing) {
         setBriefing(result.briefing);
         setShareText(result.briefing.shareText ?? '');
-        setCachedBriefing(result.briefing, result.briefing.shareText ?? '', ciWithScore);
+        setCachedBriefing(result.briefing, result.briefing.shareText ?? '', ci);
       } else {
-        const fallback = buildLocalBriefing(nickname, caregiver, ci, score ?? 50);
+        const fallback = buildLocalBriefing(nickname, caregiver, ci);
         setBriefing(fallback);
-        setCachedBriefing(fallback, fallback.shareText, ciWithScore);
+        setCachedBriefing(fallback, fallback.shareText, ci);
       }
     } catch (e) {
-      const ciWithScore = { ...ci, careScore: score };
-      const fallback = buildLocalBriefing(nickname, caregiver, ci, score ?? 50);
+      const fallback = buildLocalBriefing(nickname, caregiver, ci);
       setBriefing(fallback);
-      setCachedBriefing(fallback, fallback.shareText, ciWithScore);
+      setCachedBriefing(fallback, fallback.shareText, ci);
     } finally {
       setGenerating(false);
     }
   }
 
-  function buildLocalBriefing(nickname: string, caregiver: string, ci: DailyCheckIn, score: number) {
+  function buildLocalBriefing(nickname: string, caregiver: string, ci: DailyCheckIn) {
     const sleepLabel = ci.sleepQuality === 'good' ? '良好' : ci.sleepQuality === 'fair' ? '一般' : '较差';
-    const scoreLabel = score >= 80 ? '很好' : score >= 60 ? '良好' : score >= 40 ? '一般，需多关注' : '欠佳，需重点照护';
     const dateStr = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
     const napMins = ci.napMinutes ?? (ci.daytimeNap ? 30 : 0);
     const napStr = napMins > 0 ? (napMins >= 60 ? `${(napMins / 60).toFixed(1).replace('.0', '')}小时` : `${napMins}分钟`) : '';
     return {
-      summary: `${dateStr}，${nickname}今日整体状态${scoreLabel}。睡眠${ci.sleepHours ?? '--'}小时（${sleepLabel}），心情${ci.moodScore ?? '--'}/10，用药${ci.medicationTaken ? '按时完成' : '有漏服'}。${napStr ? `白天小睡了${napStr}。` : ''}`,
+      summary: `${dateStr}，${nickname}今日记录：睡眠${ci.sleepHours ?? '--'}小时（${sleepLabel}），心情${ci.moodScore ?? '--'}/10，用药${ci.medicationTaken ? '按时完成' : '有漏服'}。${napStr ? `白天小睡了${napStr}。` : ''}`,
       highlights: [
         ci.medicationTaken ? '今日按时服药 💊' : '注意：今日未按时服药 ⚠️',
         `睡眠${ci.sleepHours ?? '--'}小时，质量${sleepLabel}`,
@@ -838,7 +755,7 @@ export default function ShareScreen() {
         ci.eveningNotes || ci.morningNotes ? `备注：${(ci.eveningNotes || ci.morningNotes || '').slice(0, 30)}` : null,
       ].filter(Boolean) as string[],
       attention: !ci.medicationTaken ? '今日用药未完成，请确认是否已服用' : (ci.sleepHours != null && ci.sleepHours < 5 ? '睡眠不足5小时，建议安排补觉' : ''),
-      shareText: `【${nickname}今日照护简报】\n${dateStr}\n\n睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）${napStr ? `\n午休：${napStr}` : ''}\n心情：${ci.moodScore ?? '--'}/10\n用药：${ci.medicationTaken ? '已完成' : '未完成'}\n整体状态：${scoreLabel}\n\n记录人：${caregiver}`,
+      shareText: `【${nickname}今日照护简报】\n${dateStr}\n\n睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）${napStr ? `\n午休：${napStr}` : ''}\n心情：${ci.moodScore ?? '--'}/10\n用药：${ci.medicationTaken ? '已完成' : '未完成'}\n\n记录人：${caregiver}`,
     };
   }
 
@@ -882,7 +799,7 @@ export default function ShareScreen() {
   }
 
   function buildFallbackShareText(): string {
-    if (!checkIn) return `【小马虎护理日报】${elderNickname}今日状态：${careScore != null ? `${careScore}/100` : '待评分'}`;
+    if (!checkIn) return `【小马虎护理日报】${elderNickname}今日照护记录`;
     const sleepLabel = checkIn.sleepQuality === 'good' ? '良好' : checkIn.sleepQuality === 'fair' ? '一般' : '较差';
     return `【${elderNickname}今日照护简报】
 
@@ -892,7 +809,6 @@ ${new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekda
 心情：${checkIn.moodScore}/10
 用药：${checkIn.medicationTaken ? '已完成' : '未完成'}
 饮食：${checkIn.mealNotes || '已记录'}
-${careScore != null ? `整体状态指数：${careScore}/100` : '整体状态：待评分（缺少昨晚记录）'}
 
 记录人：${caregiverName}`;
   }
@@ -927,7 +843,7 @@ ${careScore != null ? `整体状态指数：${careScore}/100` : '整体状态：
             <TouchableOpacity
               style={[styles.dateSwitchBtn, viewMode === 'today' && styles.dateSwitchBtnActive]}
               onPress={() => {
-                if (todayCi) { setViewMode('today'); setCheckIn(todayCi); setCareScore((yesterdayCi?.eveningDone) ? (todayCi.careScore ?? null) : null); }
+                if (todayCi) { setViewMode('today'); setCheckIn(todayCi); }
               }}
               disabled={!todayCi}
             >
@@ -936,7 +852,7 @@ ${careScore != null ? `整体状态指数：${careScore}/100` : '整体状态：
             <TouchableOpacity
               style={[styles.dateSwitchBtn, viewMode === 'yesterday' && styles.dateSwitchBtnActive]}
               onPress={() => {
-                if (yesterdayCi) { setViewMode('yesterday'); setCheckIn(yesterdayCi); setCareScore((yesterdayCi?.eveningDone) ? (yesterdayCi.careScore ?? null) : null); }
+                if (yesterdayCi) { setViewMode('yesterday'); setCheckIn(yesterdayCi); }
               }}
               disabled={!yesterdayCi}
             >
@@ -966,14 +882,13 @@ ${careScore != null ? `整体状态指数：${careScore}/100` : '整体状态：
               <BriefingCard
                 briefing={briefing}
                 checkIn={checkIn}
-                careScore={careScore}
                 elderNickname={elderNickname}
                 caregiverName={caregiverName}
                 elderEmoji={elderEmoji}
               />
             </View>
 
-            {careScore == null && !(yesterdayCi?.eveningDone) && (
+            {!(yesterdayCi?.eveningDone) && (
               <View style={styles.backfillNotice}>
                 <Text style={styles.backfillText}>缺少昨晚记录</Text>
                 <TouchableOpacity onPress={() => {

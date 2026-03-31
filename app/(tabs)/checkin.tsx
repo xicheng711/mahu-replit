@@ -387,15 +387,6 @@ function MonthCalendar({ checkIns, caregiverName = '照顾者' }: { checkIns: Da
                 <View style={calStyles.popupDateRow}>
                   <Text style={calStyles.popupDateEmoji}>📅</Text>
                   <Text style={calStyles.popupDate}>{selectedDay?.date}</Text>
-                  {selectedBriefing && (
-                    <View style={[calStyles.scoreBadge, {
-                      backgroundColor: selectedBriefing.careScore >= 80 ? '#F0FDF4' : selectedBriefing.careScore >= 60 ? '#EFF6FF' : '#FFFBEB',
-                    }]}>
-                      <Text style={[calStyles.scoreBadgeText, {
-                        color: selectedBriefing.careScore >= 80 ? '#16A34A' : selectedBriefing.careScore >= 60 ? '#3B82F6' : '#F59E0B',
-                      }]}>{selectedBriefing.careScore}分</Text>
-                    </View>
-                  )}
                 </View>
                 <View style={calStyles.popupDivider} />
 

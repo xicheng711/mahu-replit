@@ -37,9 +37,6 @@ function LongImageCard({
   const zodiacEmoji = profile.zodiacEmoji || '🐯';
   const sleepLabel = checkIn.sleepQuality === 'good' ? '良好 😴' : checkIn.sleepQuality === 'fair' ? '一般 😐' : '较差 😟';
   const medLabel = checkIn.medicationTaken ? '已按时服药 ✅' : '未按时服药 ❌';
-  const careScore = checkIn.careScore || 70;
-  const scoreColor = careScore >= 80 ? '#16A34A' : careScore >= 60 ? '#3B82F6' : careScore >= 40 ? '#F59E0B' : '#EF4444';
-  const scoreLabel = careScore >= 80 ? '状态极佳' : careScore >= 60 ? '状态良好' : careScore >= 40 ? '需要关注' : '需要照顾';
 
   const todayDiaries = diaryEntries.filter(d => d.date === checkIn.date).slice(0, 3);
   const activeMeds = medications.filter(m => m.active).slice(0, 5);
@@ -64,14 +61,6 @@ function LongImageCard({
             <Text style={imgStyles.elderSub}>记录人：{caregiverName}</Text>
           </View>
         </View>
-      </View>
-
-      <View style={imgStyles.scoreSection}>
-        <View style={[imgStyles.scoreBadge, { backgroundColor: scoreColor + '15', borderColor: scoreColor + '30' }]}>
-          <Text style={[imgStyles.scoreNum, { color: scoreColor }]}>{careScore}</Text>
-          <Text style={[imgStyles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
-        </View>
-        <Text style={imgStyles.scoreSuffix}>/ 100 护理指数</Text>
       </View>
 
       <View style={imgStyles.divider} />
@@ -328,7 +317,7 @@ export default function ExportImageScreen() {
             medicationTaken: ci.medicationTaken ?? true,
             notes: ci.eveningNotes || ci.morningNotes || undefined,
           },
-          careScore: ci.careScore || 70,
+          careScore: 0,
         });
         if (result.success && result.briefing) {
           setBriefing(result.briefing);

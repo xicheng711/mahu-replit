@@ -372,7 +372,6 @@ export default function FamilyScreen() {
           text += `💤 睡眠：${selectedItem.checkIn.sleepHours}小时\n`;
           text += `${selectedItem.checkIn.moodEmoji} 心情：${selectedItem.checkIn.moodScore}/10分\n`;
           text += `💊 用药：${selectedItem.checkIn.medicationTaken ? '✅ 按时服药' : '⚠️ 未服药'}\n`;
-          text += `⭐ 护理指数：${selectedItem.checkIn.eveningDone && selectedItem.checkIn.careScore != null ? `${selectedItem.checkIn.careScore}分` : '待评分'}\n\n`;
         }
         if (selectedItem.diary) text += `📔 日记：${selectedItem.diary.content}\n\n`;
         if (selectedItem.announcements.length > 0) {
@@ -618,11 +617,6 @@ export default function FamilyScreen() {
             {/* Selected date briefing card */}
             {briefingHistory.filter(item => item.date === selectedBriefingDate).map(item => {
               const isToday = item.date === todayStr();
-              const hasScore = item.checkIn?.eveningDone && item.checkIn?.careScore != null;
-              const score = hasScore ? item.checkIn!.careScore : 0;
-              const scoreColor = !hasScore ? '#D5CFC9' : score >= 80 ? '#16A34A' : score >= 60 ? '#3B82F6' : score >= 40 ? '#F59E0B' : '#EF4444';
-              const scoreBg = !hasScore ? '#F5F0ED' : score >= 80 ? '#F0FDF4' : score >= 60 ? '#EFF6FF' : score >= 40 ? '#FFFBEB' : '#FEF2F2';
-              const scoreLabel = !hasScore ? '暂未评分' : score >= 80 ? '状态极佳' : score >= 60 ? '状态良好' : score >= 40 ? '需要关注' : '需要照顾';
               return (
               <View key={item.date} style={styles.briefingCard}>
                 {/* ── Card Header ── */}
@@ -652,11 +646,6 @@ export default function FamilyScreen() {
                       <View>
                         <Text style={styles.briefingElderName}>{elderNickname}</Text>
                         <Text style={styles.briefingElderSub}>{item.label}护理记录</Text>
-                      </View>
-                      <View style={[styles.scoreCircle, { borderColor: scoreColor, backgroundColor: scoreBg }]}>
-                        <Text style={[styles.scoreNum, { color: scoreColor }]}>{hasScore ? score : '--'}</Text>
-                        {hasScore && <Text style={[styles.scoreUnit, { color: scoreColor }]}>分</Text>}
-                        <Text style={[styles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
                       </View>
                     </View>
 
@@ -871,10 +860,6 @@ export default function FamilyScreen() {
                     <Text style={{ fontSize: 14, fontWeight: '700', color: selectedItem.checkIn.medicationTaken ? '#16A34A' : '#DC2626' }}>
                       {selectedItem.checkIn.medicationTaken ? '✅ 按时' : '⚠️ 未服'}
                     </Text>
-                  </View>
-                  <View style={{ flex: 1, minWidth: 140, backgroundColor: AppColors.coral.soft, borderRadius: 12, padding: 12 }}>
-                    <Text style={{ fontSize: 12, color: AppColors.text.tertiary, marginBottom: 2 }}>⭐ 护理指数</Text>
-                    <Text style={{ fontSize: 16, fontWeight: '700', color: selectedItem.checkIn.eveningDone && selectedItem.checkIn.careScore != null ? AppColors.coral.primary : AppColors.text.secondary }}>{selectedItem.checkIn.eveningDone && selectedItem.checkIn.careScore != null ? `${selectedItem.checkIn.careScore} 分` : '--'}</Text>
                   </View>
                 </View>
               </View>

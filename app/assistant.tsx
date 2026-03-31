@@ -184,16 +184,13 @@ export default function AssistantScreen() {
         const dateStr = todayStr();
         const briefing: CareBriefing = {
           date: dateStr,
-          careScore: result.advice.careScore ?? 50,
+          careScore: 0,
           summary: result.advice.summary ?? '',
           encouragement: result.advice.suggestion ?? '',
           generatedAt: new Date().toISOString(),
           checkInDate: yesterday?.date ?? today?.date ?? dateStr,
         };
         saveBriefing(briefing).catch(() => {});
-        if (result.advice.careScore != null) {
-          upsertCheckIn({ date: dateStr, careScore: result.advice.careScore }).catch(() => {});
-        }
       } else {
         setError(result.error ?? '小马虎暂时无法生成分析');
       }
@@ -263,8 +260,6 @@ export default function AssistantScreen() {
 
   const ci = yesterdayCheckIn ?? todayCheckIn;
   const hasYesterdayEvening = yesterdayCheckIn?.eveningDone ?? false;
-  const score = hasYesterdayEvening ? (advice.careScore ?? null) : null;
-  const sd = getScoreDisplay(score ?? 50);
   const todayLabel = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
   const moodLabel = ci?.moodScore ? (ci.moodScore >= 7 ? '状态不错' : ci.moodScore >= 5 ? '状态一般' : '状态欠佳') : null;
@@ -294,24 +289,19 @@ export default function AssistantScreen() {
           <Text style={s.dateLabel}>{todayLabel}</Text>
 
           <LinearGradient
-            colors={[sd.bgColor, AppColors.surface.whiteStrong]}
+            colors={[AppColors.green.soft, AppColors.surface.whiteStrong]}
             style={s.scoreCard}
           >
             <View style={s.scoreRow}>
-              <View style={[s.scoreCircle, { borderColor: (score != null ? sd.color : '#D5CFC9') + '40' }]}>
-                <Text style={{ fontSize: 28 }}>{score != null ? sd.emoji : '📋'}</Text>
-                <Text style={[s.scoreNum, { color: score != null ? sd.color : AppColors.text.secondary }]}>{score != null ? score : '--'}</Text>
-                {score != null && <Text style={s.scoreMax}>/100</Text>}
+              <View style={[s.scoreCircle, { borderColor: AppColors.green.primary + '40' }]}>
+                <Text style={{ fontSize: 28 }}>📋</Text>
               </View>
               <View style={s.scoreRight}>
-                <View style={[s.scoreBadge, { backgroundColor: score != null ? sd.color : '#D5CFC9' }]}>
-                  <Text style={s.scoreBadgeText}>{score != null ? sd.label : '暂未评分'}</Text>
-                </View>
                 <Text style={s.scoreSummary}>{advice.summary || `${elderNickname}今天整体状态不错`}</Text>
               </View>
             </View>
             <View style={s.encourageRow}>
-              <Text style={{ fontSize: 18 }}>📋</Text>
+              <Text style={{ fontSize: 18 }}>💡</Text>
               <Text style={s.encourageText}>{advice.suggestion || '查看详细照护分析'}</Text>
             </View>
           </LinearGradient>

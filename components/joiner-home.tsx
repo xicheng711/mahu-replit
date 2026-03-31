@@ -65,7 +65,7 @@ function buildFeed(
         id: `ci-e-${latest.id}`, type: 'checkin',
         time: latest.completedAt ? timeStr(latest.completedAt) : '晚间',
         icon: '🌙', color: AppColors.purple.strong, bg: AppColors.purple.soft, tag: '晚间打卡',
-        title: `今日护理完成${latest.careScore ? ` ⭐ ${latest.careScore}分` : ''}`,
+        title: '今日护理完成',
         detail: `心情 ${latest.moodEmoji || '😴'} · ${latest.medicationTaken ? '用药已按时服用' : '用药记录未完成'} · 饮食：${latest.mealOption || latest.mealNotes || '未记录'}`,
         author: null,
         sortKey: latest.completedAt ? new Date(latest.completedAt).getTime() : Date.now() - 1800000,
@@ -344,24 +344,6 @@ export function JoinerHomeScreen() {
     const checkIns = await getAllCheckIns();
     const latest = checkIns[0] ?? null;
 
-    // 补算 careScore：与主照顾者首页保持一致，避免 joiner 视图分数为空
-    if (latest) {
-      const d = new Date();
-      d.setDate(d.getDate() - 1);
-      const yesterdayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const yCheckIn = checkIns.find(c => c.date === yesterdayStr) ?? null;
-      if (yCheckIn?.eveningDone && latest.careScore == null) {
-        try {
-          const { calculateCareScore } = await import('@/lib/ai-advice');
-          const score = calculateCareScore(yCheckIn, null);
-          if (score != null) {
-            latest.careScore = score;
-            await upsertCheckIn({ date: latest.date, careScore: score });
-          }
-        } catch {}
-      }
-    }
-
     setLatestCheckIn(latest);
 
     const diaries = await getDiaryEntries();
@@ -517,12 +499,6 @@ export function JoinerHomeScreen() {
                     : '暂无今日记录'}
                 </Text>
               </View>
-              {latestCheckIn?.careScore != null && (
-                <View style={styles.scoreBadgeNew}>
-                  <Text style={styles.scoreNumberNew}>{latestCheckIn.careScore}</Text>
-                  <Text style={styles.scoreLabelNew}>分</Text>
-                </View>
-              )}
             </View>
             <View style={styles.metricsRowNew}>
               {[

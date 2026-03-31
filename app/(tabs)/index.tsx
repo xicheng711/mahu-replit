@@ -519,16 +519,6 @@ function CreatorHomeScreen() {
     setTodayCheckIn(today);
     const yesterday = await getYesterdayCheckIn();
     const latest = today ?? yesterday;
-    if (latest && yesterday?.eveningDone && latest.careScore == null) {
-      try {
-        const { calculateCareScore } = await import('@/lib/ai-advice');
-        const score = calculateCareScore(yesterday, null);
-        if (score != null) {
-          latest.careScore = score;
-          await upsertCheckIn({ date: latest.date, careScore: score });
-        }
-      } catch {}
-    }
     setLatestCheckIn(latest);
     const all = await getAllCheckIns();
     setAllCheckIns(all);
