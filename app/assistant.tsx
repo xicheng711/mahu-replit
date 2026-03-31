@@ -61,8 +61,8 @@ function LoadingScreen() {
           </View>
         </Animated.View>
         <Animated.View style={{ alignItems: 'center', marginTop: 32, opacity: titleOpacity, transform: [{ translateY: titleY }] }}>
-          <Text style={{ fontSize: 20, fontWeight: '800', color: AppColors.purple.strong, marginBottom: 8 }}>小马虎正在整理数据...</Text>
-          <Text style={{ fontSize: 14, color: AppColors.text.tertiary }}>正在生成护理总结</Text>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: AppColors.purple.strong, marginBottom: 8 }}>小马虎正在整理记录...</Text>
+          <Text style={{ fontSize: 14, color: AppColors.text.tertiary }}>帮您把今天的用心整理好 💕</Text>
         </Animated.View>
       </View>
     </LinearGradient>
@@ -192,7 +192,7 @@ export default function AssistantScreen() {
         };
         saveBriefing(briefing).catch(() => {});
       } else {
-        setError(result.error ?? '小马虎暂时无法生成分析');
+        setError(result.error ?? '小马虎暂时无法整理记录，请稍后重试');
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : '网络错误，请检查连接');
@@ -245,7 +245,7 @@ export default function AssistantScreen() {
         </View>
         <View style={s.errorWrap}>
           <Text style={{ fontSize: 56, marginBottom: 16 }}>😅</Text>
-          <Text style={s.errorTitle}>暂时无法生成分析</Text>
+          <Text style={s.errorTitle}>暂时无法加载记录</Text>
           <Text style={s.errorText}>{error ?? '请先完成今日打卡'}</Text>
           <TouchableOpacity style={s.retryBtn} onPress={loadData}>
             <Text style={s.retryBtnText}>重新生成</Text>
@@ -302,7 +302,7 @@ export default function AssistantScreen() {
             </View>
             <View style={s.encourageRow}>
               <Text style={{ fontSize: 18 }}>💡</Text>
-              <Text style={s.encourageText}>{advice.suggestion || '查看详细照护分析'}</Text>
+              <Text style={s.encourageText}>{advice.suggestion || '谢谢您今天的用心 💕'}</Text>
             </View>
           </LinearGradient>
 
@@ -384,7 +384,7 @@ export default function AssistantScreen() {
               <View style={s.emptyChart}>
                 <Text style={{ fontSize: 36, marginBottom: 8 }}>📊</Text>
                 <Text style={s.emptyText}>还没有足够的睡眠数据</Text>
-                <Text style={s.emptySubtext}>完成打卡后，这里会显示数据分析</Text>
+                <Text style={s.emptySubtext}>完成今天的打卡，小马虎会帮您把记录整理好 💕</Text>
               </View>
             )}
             {totalWakings > 0 && (

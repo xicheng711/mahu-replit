@@ -151,10 +151,10 @@ function AINameRow() {
         <View style={styles.aiOnlineDot} />
       </View>
       <View>
-        <Text style={styles.aiName}>小马虎护理顾问</Text>
+        <Text style={styles.aiName}>小马虎</Text>
         <View style={styles.aiBadgeRow}>
           <LinearGradient colors={['#3B82F6', '#8B5CF6']} style={styles.aiBadge}>
-            <Text style={styles.aiBadgeText}>✨ 数据分析</Text>
+            <Text style={styles.aiBadgeText}>✨ 用心陪伴</Text>
           </LinearGradient>
         </View>
       </View>

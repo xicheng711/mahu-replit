@@ -434,7 +434,7 @@ function MonthCalendar({ checkIns, caregiverName = '照顾者' }: { checkIns: Da
                 {/* ── Fallback: no briefing, show raw check-in data ── */}
                 {!briefingLoading && !selectedBriefing && (
                   <View>
-                    <Text style={calStyles.noBriefingHint}>当天未生成 AI 简报</Text>
+                    <Text style={calStyles.noBriefingHint}>当天打卡记录</Text>
                     {selectedDay?.morningDone && (
                       <View style={calStyles.popupSection}>
                         <Text style={calStyles.popupSectionTitle}>🌅 早间打卡</Text>
@@ -1000,7 +1000,7 @@ function CheckinScreenContent() {
                   style={styles.nightDiaryBtnInner}
                 >
                   <Text style={styles.nightDiaryIcon}>{backfillDate ? '📊' : '📖'}</Text>
-                  <Text style={styles.nightDiaryBtnText}>{backfillDate ? '回到分析报告 →' : '写今天的护理日记 →'}</Text>
+                  <Text style={styles.nightDiaryBtnText}>{backfillDate ? '回到今日记录 →' : '写今天的护理日记 →'}</Text>
                 </LinearGradient>
               </TouchableOpacity>
 
@@ -1025,10 +1025,11 @@ function CheckinScreenContent() {
           </View>
           <Text style={styles.doneTitle}>早间记录已保存</Text>
           <Text style={styles.doneSub}>
-            {`${elderNickname}今日照护数据已整理完毕\n可查看详细分析报告`}
+            {`${elderNickname}今天的照护记录已全部保存好了
+谢谢您今天的用心 💕`}
           </Text>
           <TouchableOpacity style={styles.doneBtn} onPress={() => router.replace('/share' as any)}>
-            <Text style={styles.doneBtnText}>查看今日分析报告 →</Text>
+            <Text style={styles.doneBtnText}>查看今日完整记录 →</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.doneBtnSecondary} onPress={() => {
             setDone(false);

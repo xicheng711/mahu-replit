@@ -106,7 +106,7 @@ export default function DiaryDetailScreen() {
       lines.push('', `📝 ${entry.content}`);
     }
     if (entry.aiReply) {
-      lines.push('', `🩺 AI 护理顾问回复：`, entry.aiReply);
+      lines.push('', `🐴 小马虎回复：`, entry.aiReply);
     }
     if (entry.aiTip) {
       lines.push('', `💡 小贴士：${entry.aiTip}`);
@@ -253,8 +253,8 @@ export default function DiaryDetailScreen() {
             <View style={styles.section}>
               <View style={styles.noAiCard}>
                 <Text style={styles.noAiEmoji}>🩺</Text>
-                <Text style={styles.noAiText}>这条日记还没有 AI 回复</Text>
-                <Text style={styles.noAiHint}>新写的日记会自动获得 AI 回复</Text>
+                <Text style={styles.noAiText}>这条日记还没有小马虎的回复</Text>
+                <Text style={styles.noAiHint}>新写的日记会收到小马虎的温暖回复 💕</Text>
               </View>
             </View>
           )}
@@ -262,7 +262,7 @@ export default function DiaryDetailScreen() {
           {/* Follow-up AI Chat */}
           {entry.aiReply && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>💬 继续追问 AI</Text>
+              <Text style={styles.sectionTitle}>💬 继续跟小马虎聊聊</Text>
               <View style={styles.chatBox}>
                 {followUpHistory.map((msg, i) => (
                   msg.role === 'user' ? (
@@ -302,7 +302,7 @@ export default function DiaryDetailScreen() {
                   style={styles.followUpInput}
                   value={followUpInput}
                   onChangeText={setFollowUpInput}
-                  placeholder="追问 AI，如：这种情况怎么处理？"
+                  placeholder="跟小马虎说说吧… 💕"
                   placeholderTextColor={AppColors.text.tertiary}
                   returnKeyType="send"
                   onSubmitEditing={handleFollowUp}

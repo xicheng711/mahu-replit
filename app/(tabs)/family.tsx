@@ -751,10 +751,16 @@ export default function FamilyScreen() {
       {/* Compose Modal */}
       <Modal visible={showCompose} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowCompose(false)}>
         <View style={styles.modal}>
-          {/* Cancel button top-left */}
-          <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowCompose(false)}>
-            <Text style={styles.modalCancel}>取消</Text>
-          </TouchableOpacity>
+          {/* 顶部导航栏：左取消 + 中间标题 + 右关闭✕ */}
+          <View style={styles.modalHeaderRow}>
+            <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowCompose(false)}>
+              <Text style={styles.modalCancel}>取消</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>📢 发布公告</Text>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setShowCompose(false)}>
+              <Text style={styles.modalCloseText}>✕</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Author info — centered */}
           <View style={styles.composeAuthorCenter}>
@@ -1200,10 +1206,13 @@ const styles = StyleSheet.create({
   },
   fabIcon: { fontSize: 26 },
   modal: { flex: 1, backgroundColor: AppColors.bg.warmCream, paddingHorizontal: 20, paddingTop: 16 },
-  modalCancelBtn: { alignSelf: 'flex-start', paddingVertical: 4, paddingRight: 12, marginBottom: 8 },
+  modalHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  modalCancelBtn: { paddingVertical: 4, paddingRight: 8, minWidth: 44 },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: AppColors.bg.secondary, alignItems: 'center', justifyContent: 'center' },
+  modalCloseText: { fontSize: 14, color: AppColors.text.secondary, fontWeight: '700' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalCancel: { fontSize: 16, color: AppColors.text.secondary },
-  modalTitle: { fontSize: 17, fontWeight: '700', color: AppColors.text.primary },
+  modalTitle: { fontSize: 17, fontWeight: '700', color: AppColors.text.primary, textAlign: 'center' },
   modalPost: { fontSize: 16, fontWeight: '700', color: AppColors.coral.primary },
   composeAuthorCenter: { alignItems: 'center', gap: 4, marginBottom: 20 },
   composeAvatarLarge: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, marginBottom: 4 },

@@ -125,7 +125,7 @@ function ShareLoadingScreen() {
 
   const STATUS = [
     { emoji: '📋', label: '整理数据', bg: AppColors.green.soft, pulse: pulse1 },
-    { emoji: '📊', label: '分析趋势', bg: AppColors.purple.soft, pulse: pulse2 },
+    { emoji: '📊', label: '整理记录', bg: AppColors.purple.soft, pulse: pulse2 },
     { emoji: '📝', label: '生成简报', bg: AppColors.coral.soft, pulse: pulse3 },
   ];
 
@@ -155,8 +155,8 @@ function ShareLoadingScreen() {
         </View>
 
         <Animated.View style={[slStyles.textBlock, { opacity: titleOpacity, transform: [{ translateY: titleY }] }]}>
-          <Text style={slStyles.title}>正在整理今日数据</Text>
-          <Text style={slStyles.subtitle}>汇总照护记录，生成状态报告</Text>
+          <Text style={slStyles.title}>正在整理今日记录</Text>
+          <Text style={slStyles.subtitle}>小马虎帮您把今天的用心整理好 💕</Text>
         </Animated.View>
 
         <Animated.View style={[slStyles.progressWrap, { opacity: titleOpacity }]}>
@@ -758,7 +758,7 @@ export default function ShareScreen() {
         napStr ? `白天小睡${napStr} 😴` : null,
         ci.eveningNotes || ci.morningNotes ? `备注：${(ci.eveningNotes || ci.morningNotes || '').slice(0, 30)}` : null,
       ].filter(Boolean) as string[],
-      attention: !ci.medicationTaken ? '今日用药未完成，请确认是否已服用' : (ci.sleepHours != null && ci.sleepHours < 5 ? '睡眠不足5小时，建议安排补觉' : ''),
+      attention: !ci.medicationTaken ? '今日用药记录未完成，记得确认一下 ⚠️' : (ci.sleepHours != null && ci.sleepHours < 5 ? '昨晚睡眠较少，今天多休息一下 🌙' : ''),
       shareText: `【${nickname}今日照护简报】\n${dateStr}${weatherLine ? ` ${weatherLine}` : ''}\n\n睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）${napStr ? `\n午休：${napStr}` : ''}\n心情：${ci.moodScore ?? '--'}/10\n用药：${ci.medicationTaken ? '已完成' : '未完成'}\n\n记录人：${caregiver}`,
     };
   }
@@ -837,7 +837,7 @@ ${new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekda
         {/* ── Header ── */}
         <View style={styles.header}>
           <BackButton />
-          <Text style={styles.title}>📋 {viewMode === 'today' ? '今日' : '昨日'}记录分析</Text>
+          <Text style={styles.title}>📋 {viewMode === 'today' ? '今日' : '昨日'}照护记录</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -947,13 +947,13 @@ ${new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekda
             <Text style={styles.familySyncNotice}>今日记录已自动同步到家庭空间</Text>
 
             <View style={styles.disclaimer}>
-              <Text style={styles.disclaimerText}>由小马虎整理 · 仅供参考</Text>
+              <Text style={styles.disclaimerText}>由小马虎整理 · 记录仅供家人参考</Text>
             </View>
           </>
         ) : (
           <View style={styles.errorBox}>
             <Text style={styles.errorEmoji}>📋</Text>
-            <Text style={styles.errorText}>暂无分析数据</Text>
+            <Text style={styles.errorText}>暂无记录数据</Text>
             <TouchableOpacity style={styles.checkinBtn} onPress={() => loadAndGenerate(true)}>
               <Text style={styles.checkinBtnText}>重新加载</Text>
             </TouchableOpacity>

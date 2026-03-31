@@ -21,25 +21,22 @@ import { useFamilyContext } from '@/lib/family-context';
 const { width } = Dimensions.get('window');
 
 function getDailyStatusHint(checkIn: DailyCheckIn | null): string {
-  if (!checkIn) return '完成今日打卡后，自动生成昨晚睡眠与今日状态摘要';
+  if (!checkIn) return '完成今天的打卡，小马虎会帮您把记录整理好 💕';
   const parts: string[] = [];
   if (checkIn.sleepHours != null) {
-    if (checkIn.sleepHours >= 8) parts.push(`昨晚睡眠 ${checkIn.sleepHours} 小时，休息充足`);
-    else if (checkIn.sleepHours >= 6) parts.push(`昨晚睡眠 ${checkIn.sleepHours} 小时，基本达标`);
-    else if (checkIn.sleepHours >= 4) parts.push(`昨晚睡眠仅 ${checkIn.sleepHours} 小时，建议今日安排适当午休`);
-    else parts.push(`昨晚睡眠 ${checkIn.sleepHours} 小时，严重不足，请密切关注精神状态`);
-  }
-  if (checkIn.nightWakings != null && checkIn.nightWakings >= 2) {
-    parts.push(`夜间觉醒 ${checkIn.nightWakings} 次，建议排查夜间不适原因`);
+    if (checkIn.sleepHours >= 8) parts.push(`昨晚睡了 ${checkIn.sleepHours} 小时，休息得很好 🌙`);
+    else if (checkIn.sleepHours >= 6) parts.push(`昨晚睡了 ${checkIn.sleepHours} 小时，还不错 🌙`);
+    else if (checkIn.sleepHours >= 4) parts.push(`昨晚睡了 ${checkIn.sleepHours} 小时，今天多休息一下吧 🌙`);
+    else if (checkIn.sleepHours > 0) parts.push(`昨晚睡了 ${checkIn.sleepHours} 小时，辛苦了，记得小憩 🌙`);
   }
   if (checkIn.moodScore != null) {
-    if (checkIn.moodScore >= 8) parts.push('情绪状态良好，无明显异常');
-    else if (checkIn.moodScore >= 6) parts.push('情绪平稳，可继续维持现有照护节奏');
-    else if (checkIn.moodScore >= 4) parts.push('情绪评分偏低，请关注是否有行为或环境诱因');
-    else parts.push('情绪评分较低，建议增加陪伴时间并观察行为变化');
+    if (checkIn.moodScore >= 8) parts.push('心情很好，今天是美好的一天 ☀️');
+    else if (checkIn.moodScore >= 6) parts.push('心情还不错，继续加油 💪');
+    else if (checkIn.moodScore >= 4) parts.push('心情有点低落，多陪伴是最好的药 🤗');
+    else if (checkIn.moodScore > 0) parts.push('心情不太好，记得多抱抱，你们都辛苦了 🤗');
   }
-  if (checkIn.medicationTaken === false) parts.push('今日用药记录未完成，请核实服药情况');
-  if (parts.length === 0) return '今日打卡数据已记录完整';
+  if (checkIn.medicationTaken === true) parts.push('药已按时吃，做得很好 👍');
+  if (parts.length === 0) return '今天的记录已保存，谢谢您的用心 💕';
   return parts.join('；');
 }
 
@@ -284,7 +281,7 @@ function EnhancedAICard({
             style={[StyleSheet.absoluteFill, { borderRadius: 22 }]}
           />
         </View>
-        <View style={styles.aiRow}>
+          <View style={styles.aiRow}>
           <Animated.View style={{ transform: [{ scale: iconScale }] }}>
             <LinearGradient
               colors={[...Gradients.purple, AppColors.purple.strong]}
@@ -294,22 +291,19 @@ function EnhancedAICard({
               <Text style={{ fontSize: 16, lineHeight: 20 }}>📊</Text>
             </LinearGradient>
           </Animated.View>
-
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-              <Text style={styles.aiLabel}>今日状态分析</Text>
-              <Text style={styles.aiSubLabel}>· 基于打卡数据</Text>
+              <Text style={styles.aiLabel}>今日照护记录</Text>
+              <Text style={styles.aiSubLabel}>· 每天的用心都在这里</Text>
             </View>
-
             {!morningDone ? (
-              <Text style={styles.aiMessage}>完成今日打卡后，自动整理状态摘要</Text>
+              <Text style={styles.aiMessage}>完成今天的打卡，小马虎会帮您把记录整理好 💕</Text>
             ) : (
               <Text style={styles.aiMessage} numberOfLines={2}>{encouragement}</Text>
             )}
-
             {morningDone ? (
               <TouchableOpacity onPress={onPress} style={styles.aiDetailLink}>
-                <Text style={styles.aiDetailLinkText}>查看完整分析 ›</Text>
+                <Text style={styles.aiDetailLinkText}>查看今日记录 ›</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity onPress={onCheckinPress} style={[styles.aiDetailLink, { backgroundColor: AppColors.coral.primary }]}>
@@ -415,37 +409,33 @@ function getMoodLabel(score: number): string {
 
 function getPersonalizedAISuggestion(checkIn: DailyCheckIn): string {
   const { moodScore, sleepHours, medicationTaken, nightWakings } = checkIn;
-  const observations: string[] = [];
-
+  const parts: string[] = [];
+  // 睡眠记录
   if (sleepHours >= 8) {
-    observations.push(`昨晚睡眠 ${sleepHours} 小时，夜间休息充足`);
+    parts.push(`昨晚睡了 ${sleepHours} 小时，休息得很好 🌙`);
   } else if (sleepHours >= 6) {
-    observations.push(`昨晚睡眠 ${sleepHours} 小时，基本达标`);
+    parts.push(`昨晚睡了 ${sleepHours} 小时，还不错 🌙`);
   } else if (sleepHours >= 4) {
-    observations.push(`昨晚睡眠 ${sleepHours} 小时，时间偏短，建议今日安排午休`);
-  } else {
-    observations.push(`昨晚睡眠仅 ${sleepHours} 小时，严重不足，请密切关注精神与行为状态`);
+    parts.push(`昨晚睡了 ${sleepHours} 小时，今天多休息一下吧 🌙`);
+  } else if (sleepHours > 0) {
+    parts.push(`昨晚睡了 ${sleepHours} 小时，辛苦了，记得小憩 🌙`);
   }
-
-  if (nightWakings && nightWakings >= 2) {
-    observations.push(`夜间觉醒 ${nightWakings} 次，建议排查夜间不适或如厕需求`);
-  }
-
+  // 心情记录
   if (moodScore >= 8) {
-    observations.push('情绪状态良好，无明显异常表现');
+    parts.push(`心情很好，今天是美好的一天 ☀️`);
   } else if (moodScore >= 6) {
-    observations.push('情绪平稳，可维持现有照护节奏');
+    parts.push(`心情还不错，继续加油 💪`);
   } else if (moodScore >= 4) {
-    observations.push('情绪评分偏低，建议观察是否有触发因素');
-  } else {
-    observations.push('情绪评分较低，建议增加陪伴时间，必要时记录行为变化');
+    parts.push(`心情有点低落，多陪伴是最好的药 🤗`);
+  } else if (moodScore > 0) {
+    parts.push(`心情不太好，记得多抱抱，你们都辛苦了 🤗`);
   }
-
-  if (!medicationTaken) {
-    observations.push('用药记录未完成，请核实当日服药情况');
+  // 用药记录
+  if (medicationTaken) {
+    parts.push('药已按时吃，做得很好 👍');
   }
-
-  return observations.join('；') + '。';
+  if (parts.length === 0) return '今天的记录已保存，谢谢您的用心 💕';
+  return parts.join('；') + '。';
 }
 
 // ─── 主页面 ─────────────────────────────────────────────────────────────
@@ -609,7 +599,7 @@ function CreatorHomeScreen() {
 
             {/* 标题 + 问候 */}
             <View style={styles.appNameRow}>
-              <Text style={styles.appName}>今日照护总览</Text>
+              <Text style={styles.appName}>小马虎 🐯</Text>
             </View>
             {memberships.length > 0 && (
               <TouchableOpacity
@@ -869,11 +859,11 @@ const styles = StyleSheet.create({
   weatherTemp: { fontSize: 13, fontWeight: '700', color: AppColors.text.primary, lineHeight: 16 },
   weatherDesc: { fontSize: 10, color: AppColors.text.tertiary, lineHeight: 13 },
   appNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  appName: { fontSize: 24, fontWeight: '900', color: AppColors.text.primary, letterSpacing: -0.5 },
+  appName: { fontSize: 26, fontWeight: '900', color: '#E8897B', letterSpacing: -0.5 },
   greeting: { fontSize: 13, color: AppColors.text.tertiary, fontWeight: '500', lineHeight: 20 },
-  profileBtn: { width: 50, height: 50, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.10, shadowRadius: 8, elevation: 3 },
-  profileGradient: { width: 50, height: 50, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  profilePhoto: { width: 50, height: 50, borderRadius: 18 },
+  profileBtn: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', shadowColor: '#E8897B', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 3 },
+  profileGradient: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  profilePhoto: { width: 52, height: 52, borderRadius: 14 },
 
   // 打卡横幅
   checkinBanner: { flexDirection: 'row', alignItems: 'center', borderRadius: 24, padding: 18, overflow: 'hidden', shadowColor: AppColors.shadow.default, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 14, elevation: 4 },

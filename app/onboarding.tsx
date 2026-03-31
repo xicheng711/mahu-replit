@@ -451,9 +451,9 @@ export default function OnboardingScreen() {
             <Text style={styles.welcomeCta}>让我们先认识一下吧 😊</Text>
             <View style={styles.featureGrid}>
               {[
-                { icon: '🌅', label: '每日护理', desc: '贴心建议', gradient: ['rgba(255,237,213,0.7)', 'rgba(255,228,196,0.4)'] as const },
+                { icon: '🌅', label: '每日护理', desc: '用心记录', gradient: ['rgba(255,237,213,0.7)', 'rgba(255,228,196,0.4)'] as const },
                 { icon: '💊', label: '用药管理', desc: '按时提醒', gradient: ['rgba(219,234,254,0.7)', 'rgba(191,219,254,0.4)'] as const },
-                { icon: '📔', label: '护理日记', desc: '智能陪伴', gradient: ['rgba(243,232,255,0.7)', 'rgba(233,213,255,0.4)'] as const },
+                { icon: '📔', label: '护理日记', desc: '温暖陪伴', gradient: ['rgba(243,232,255,0.7)', 'rgba(233,213,255,0.4)'] as const },
                 { icon: '🤝', label: '家庭共享', desc: '全家守护', gradient: ['rgba(209,250,229,0.7)', 'rgba(187,247,208,0.4)'] as const },
               ].map(f => (
                 <View key={f.icon} style={styles.featureCard}>
@@ -734,7 +734,7 @@ export default function OnboardingScreen() {
           <View style={styles.stepContainer}>
             <Text style={styles.mascot}>🌤️</Text>
             <Text style={styles.title}>所在城市</Text>
-            <Text style={styles.subtitle}>用于获取天气，提供更准确的护理建议</Text>
+            <Text style={styles.subtitle}>用于获取当地天气，让记录更完整</Text>
 
             <TextInput
               style={[styles.input, { marginBottom: 12, width: '100%' }]}
@@ -885,7 +885,8 @@ export default function OnboardingScreen() {
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
             <View style={styles.stepContainer}>
               <Text style={styles.title}>🌿 主要护理需求</Text>
-              <Text style={styles.subtitle}>{`选择与${elderNickname || elderName || '宝贝'}相关的护理需求\n可多选，AI 将根据这些给出更准确的建议`}</Text>
+              <Text style={styles.subtitle}>{`选择与${elderNickname || elderName || '宝贝'}相关的护理需求
+可多选，小马虎会帮您把记录整理得更全面`}</Text>
               <View style={styles.careNeedsGrid}>
                 {CARE_NEED_OPTIONS.map(opt => {
                   const selected = selectedCareNeeds.includes(opt.id);
@@ -1081,7 +1082,7 @@ export default function OnboardingScreen() {
               小马虎已经了解了{'\n'}
               {elderNickname || elderName || '宝贝'} {elderZodiac.emoji} 和 {caregiverName} {caregiverZodiac.emoji}{'\n\n'}
               每天只需几分钟打卡{'\n'}
-              小马虎为您提供专业护理建议 💕
+              小马虎陪伴您一起，照护好每一天 💕
             </Text>
 
             {/* Invite Code Banner */}
