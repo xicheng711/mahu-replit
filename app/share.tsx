@@ -14,6 +14,7 @@ import { trpc } from '@/lib/trpc';
 import * as Haptics from 'expo-haptics';
 import { BarChart, PieChart } from 'react-native-gifted-charts';
 import { AppColors, Gradients, Shadows } from '@/lib/design-tokens';
+import { useWeather } from '@/lib/weather-context';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -580,6 +581,7 @@ export default function ShareScreen() {
   const [todayCi, setTodayCi] = useState<DailyCheckIn | null>(null);
   const [yesterdayCi, setYesterdayCi] = useState<DailyCheckIn | null>(null);
   const [viewMode, setViewMode] = useState<'today' | 'yesterday'>('today');
+  const { weatherData } = useWeather();
   const cardRef = useRef<View>(null);
   const sharePulse = useRef(new Animated.Value(1)).current;
 
@@ -746,16 +748,18 @@ export default function ShareScreen() {
     const dateStr = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
     const napMins = ci.napMinutes ?? (ci.daytimeNap ? 30 : 0);
     const napStr = napMins > 0 ? (napMins >= 60 ? `${(napMins / 60).toFixed(1).replace('.0', '')}小时` : `${napMins}分钟`) : '';
+    const weatherLine = weatherData ? `${weatherData.icon} ${weatherData.city} ${weatherData.description} ${weatherData.temp}°C` : '';
     return {
-      summary: `${dateStr}，${nickname}今日记录：睡眠${ci.sleepHours ?? '--'}小时（${sleepLabel}），心情${ci.moodScore ?? '--'}/10，用药${ci.medicationTaken ? '按时完成' : '有漏服'}。${napStr ? `白天小睡了${napStr}。` : ''}`,
+      summary: `${dateStr}${weatherLine ? `（${weatherLine}）` : ''}，${nickname}今日记录：睡眠${ci.sleepHours ?? '--'}小时（${sleepLabel}），心情${ci.moodScore ?? '--'}/10，用药${ci.medicationTaken ? '按时完成' : '有漏服'}。${napStr ? `白天小睡了${napStr}。` : ''}`,
       highlights: [
+        weatherLine ? `今日天气：${weatherLine}` : null,
         ci.medicationTaken ? '今日按时服药 💊' : '注意：今日未按时服药 ⚠️',
         `睡眠${ci.sleepHours ?? '--'}小时，质量${sleepLabel}`,
         napStr ? `白天小睡${napStr} 😴` : null,
         ci.eveningNotes || ci.morningNotes ? `备注：${(ci.eveningNotes || ci.morningNotes || '').slice(0, 30)}` : null,
       ].filter(Boolean) as string[],
       attention: !ci.medicationTaken ? '今日用药未完成，请确认是否已服用' : (ci.sleepHours != null && ci.sleepHours < 5 ? '睡眠不足5小时，建议安排补觉' : ''),
-      shareText: `【${nickname}今日照护简报】\n${dateStr}\n\n睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）${napStr ? `\n午休：${napStr}` : ''}\n心情：${ci.moodScore ?? '--'}/10\n用药：${ci.medicationTaken ? '已完成' : '未完成'}\n\n记录人：${caregiver}`,
+      shareText: `【${nickname}今日照护简报】\n${dateStr}${weatherLine ? ` ${weatherLine}` : ''}\n\n睡眠：${ci.sleepHours ?? '--'}小时（${sleepLabel}）${napStr ? `\n午休：${napStr}` : ''}\n心情：${ci.moodScore ?? '--'}/10\n用药：${ci.medicationTaken ? '已完成' : '未完成'}\n\n记录人：${caregiver}`,
     };
   }
 

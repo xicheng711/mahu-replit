@@ -6,7 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getWeatherByGPS, buildGreetingWithWeather, fetchWeather, GpsWeatherInfo, WeatherData } from '@/lib/weather';
+import { useWeather } from '@/lib/weather-context';
 import { getLunarDate, getFormattedDate } from '@/lib/lunar';
 import { getTodayCheckIn, getYesterdayCheckIn, getProfile, getAllCheckIns, DailyCheckIn, joinFamilyRoom, getDiaryEntries, DiaryEntry, upsertCheckIn, getCurrentMember } from '@/lib/storage';
 import { getZodiacFromDate } from '@/lib/zodiac';
@@ -480,8 +480,7 @@ function CreatorHomeScreen() {
   const [memberPhotoUri, setMemberPhotoUri] = useState<string | null>(null);
   const [zodiacColor, setZodiacColor] = useState(AppColors.coral.primary);
   const [zodiacEmoji, setZodiacEmoji] = useState('🐎');
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [cityName, setCityName] = useState('');
+  const { weatherData, cityName, buildGreeting, refresh: refreshWeather } = useWeather();
   const [latestCheckIn, setLatestCheckIn] = useState<DailyCheckIn | null>(null);
   const lunarDate = getLunarDate();
   const todayLabel = getFormattedDate();
@@ -503,13 +502,8 @@ function CreatorHomeScreen() {
       if (member?.photoUri) setMemberPhotoUri(member.photoUri);
     }
     setCaregiverName(cgName);
-    const profileCity = profile?.city || '';
-    setCityName(profileCity);
-    getWeatherByGPS().then(weather => setGreeting(buildGreetingWithWeather(cgName || undefined, weather)));
-    setGreeting(buildGreetingWithWeather(cgName || undefined, null));
-    if (profileCity) {
-      fetchWeather(profileCity).then(w => { if (w) setWeatherData(w); });
-    }
+    refreshWeather();
+    setGreeting(buildGreeting(cgName || undefined));
     if (profile?.birthDate) {
       const zodiac = getZodiacFromDate(profile.birthDate);
       setZodiacColor(zodiac.color);
@@ -531,6 +525,12 @@ function CreatorHomeScreen() {
   useEffect(() => {
     if (activeMembership?.familyId) loadData();
   }, [activeMembership?.familyId]);
+
+  useEffect(() => {
+    if (caregiverName || buildGreeting) {
+      setGreeting(buildGreeting(caregiverName || undefined));
+    }
+  }, [buildGreeting, caregiverName]);
 
   useEffect(() => {
     Animated.parallel([

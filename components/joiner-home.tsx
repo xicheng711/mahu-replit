@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { useWeather } from '@/lib/weather-context';
 import {
   getProfile, getAllCheckIns, getDiaryEntries, getFamilyAnnouncements,
   getCurrentMember,
@@ -317,6 +318,7 @@ export function JoinerHomeScreen() {
   const [currentMember, setCurrentMember] = useState<FamilyMember | null>(null);
   const [postModal, setPostModal] = useState(false);
   const [showSwitcher, setShowSwitcher] = useState(false);
+  const { weatherData, buildGreeting } = useWeather();
 
   const headerFade = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-12)).current;
@@ -380,7 +382,7 @@ export function JoinerHomeScreen() {
     router.push('/(modals)/create-family' as any);
   }
 
-  const greetingText = (() => {
+  const greetingText = buildGreeting(caregiverName || undefined) || (() => {
     const h = new Date().getHours();
     if (h < 6) return '夜深了，注意休息';
     if (h < 11) return '早上好';

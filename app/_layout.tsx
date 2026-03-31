@@ -19,6 +19,7 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { FamilyProvider } from "@/lib/family-context";
+import { WeatherProvider } from "@/lib/weather-context";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -87,16 +88,18 @@ export default function RootLayout() {
           {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
           <FamilyProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="oauth/callback" />
-              <Stack.Screen name="onboarding" />
-              <Stack.Screen name="checkin" />
-              <Stack.Screen name="assistant" />
-              <Stack.Screen name="profile" />
-              <Stack.Screen name="share" />
-            </Stack>
+            <WeatherProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="oauth/callback" />
+                <Stack.Screen name="onboarding" />
+                <Stack.Screen name="checkin" />
+                <Stack.Screen name="assistant" />
+                <Stack.Screen name="profile" />
+                <Stack.Screen name="share" />
+              </Stack>
+            </WeatherProvider>
           </FamilyProvider>
           <StatusBar style="auto" />
         </QueryClientProvider>
