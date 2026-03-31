@@ -392,27 +392,25 @@ export function JoinerHomeScreen() {
   })();
 
   const statusSummary = (() => {
-    if (!latestCheckIn) return '今日暂无照护打卡记录，完成打卡后自动生成状态摘要';
+    if (!latestCheckIn) return '今天还没有打卡，等照顾者完成后这里会显示详情';
     const parts: string[] = [];
     if (latestCheckIn.sleepHours != null) {
       const h = latestCheckIn.sleepHours;
-      if (h >= 8) parts.push(`昨晚睡眠 ${h} 小时，休息充足`);
-      else if (h >= 6) parts.push(`昨晚睡眠 ${h} 小时，基本达标`);
-      else if (h >= 4) parts.push(`昨晚睡眠 ${h} 小时，时间偏短`);
-      else parts.push(`昨晚睡眠仅 ${h} 小时，请密切关注精神状态`);
+      parts.push(`昨晚睡了 ${h} 小时`);
     }
     if (latestCheckIn.medicationTaken === false) {
-      parts.push('今日用药未完成，请核实服药情况');
+      parts.push('今日药还没吃');
     } else if (latestCheckIn.medicationTaken) {
-      parts.push('今日用药已按时完成');
+      parts.push('今日药已吃');
     }
     if (latestCheckIn.moodScore != null) {
-      if (latestCheckIn.moodScore >= 8) parts.push('情绪状态良好');
-      else if (latestCheckIn.moodScore >= 6) parts.push('情绪平稳');
-      else if (latestCheckIn.moodScore >= 4) parts.push('情绪评分偏低，建议留意诱因');
-      else parts.push('情绪评分较低，建议增加陪伴');
+      parts.push(`心情 ${latestCheckIn.moodScore}/10`);
     }
-    return parts.length > 0 ? parts.join('；') : '今日打卡数据已记录完整';
+    if (latestCheckIn.eveningNotes || latestCheckIn.morningNotes) {
+      const note = (latestCheckIn.eveningNotes || latestCheckIn.morningNotes || '').slice(0, 20);
+      parts.push(`备注：${note}`);
+    }
+    return parts.length > 0 ? parts.join('，') : '打卡已记录';
   })();
 
   return (
@@ -493,19 +491,23 @@ export function JoinerHomeScreen() {
                 <View style={[styles.statusIndicator, { backgroundColor: latestCheckIn ? AppColors.green.primary : AppColors.border.soft }]} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.elderLabelNew}>被照顾者</Text>
                 <Text style={styles.elderNameNew}>{elderNickname}</Text>
                 <Text style={styles.elderStatusNew}>
                   {latestCheckIn
-                    ? (latestCheckIn.moodScore >= 7 ? '当前状态稳定' : latestCheckIn.moodScore >= 5 ? '状态一般' : '需要重点关注')
-                    : '暂无今日记录'}
+                    ? (() => {
+                        const time = latestCheckIn.eveningDone ? '晚间' : '早间';
+                        const dateObj = latestCheckIn.date ? new Date(latestCheckIn.date + 'T00:00:00') : new Date();
+                        const dateLabel = dateObj.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+                        return `${dateLabel} ${time}打卡已记录`;
+                      })()
+                    : '今天还没有打卡记录'}
                 </Text>
               </View>
             </View>
             <View style={styles.metricsRowNew}>
               {[
-                { emoji: latestCheckIn?.moodEmoji || '😊', label: '心情', val: latestCheckIn ? (latestCheckIn.moodScore >= 7 ? '稳定' : latestCheckIn.moodScore >= 5 ? '一般' : '需关注') : '—', color: AppColors.peach.primary, bg: AppColors.peach.soft },
-                { emoji: '💤', label: '睡眠', val: latestCheckIn ? `${latestCheckIn.sleepHours}h` : '—', color: AppColors.purple.strong, bg: AppColors.purple.soft },
+                { emoji: latestCheckIn?.moodEmoji || '😊', label: '心情', val: latestCheckIn?.moodScore != null ? `${latestCheckIn.moodScore}/10` : '—', color: AppColors.peach.primary, bg: AppColors.peach.soft },
+                { emoji: '💤', label: '睡眠', val: latestCheckIn?.sleepHours != null ? `${latestCheckIn.sleepHours}h` : '—', color: AppColors.purple.strong, bg: AppColors.purple.soft },
                 { emoji: latestCheckIn?.medicationTaken ? '✅' : (latestCheckIn ? '⚠️' : '💊'), label: '用药', val: latestCheckIn ? (latestCheckIn.medicationTaken ? '已服' : '未服') : '—', color: latestCheckIn?.medicationTaken ? AppColors.green.strong : AppColors.status.error, bg: latestCheckIn?.medicationTaken ? AppColors.green.soft : AppColors.coral.soft },
               ].map((m) => (
                 <View key={m.label} style={[styles.metricItemNew, { backgroundColor: m.bg }]}>
