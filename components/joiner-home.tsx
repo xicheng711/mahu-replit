@@ -101,21 +101,18 @@ function buildFeed(
   return items.sort((a, b) => a.sortKey - b.sortKey);
 }
 
-function AnnouncementCard({ latest, onPost, onViewAll }: {
+function AnnouncementCard({ latest, onViewAll }: {
   latest: FamilyAnnouncement | null;
-  onPost: () => void;
   onViewAll: () => void;
 }) {
   return (
-    <View style={styles.announceCard}>
+    <TouchableOpacity style={styles.announceCard} onPress={onViewAll} activeOpacity={0.85}>
       <View style={styles.announceHeader}>
         <View style={styles.announceHeaderLeft}>
           <Text style={styles.announceHeaderIcon}>📢</Text>
-          <Text style={styles.announceHeaderTitle}>家庭公告</Text>
+          <Text style={styles.announceHeaderTitle}>家庭公告栏</Text>
         </View>
-        <TouchableOpacity style={styles.postBtn} onPress={onPost} activeOpacity={0.8}>
-          <Text style={styles.postBtnText}>＋ 发布公告</Text>
-        </TouchableOpacity>
+        <Text style={styles.announceArrow}>›</Text>
       </View>
       {latest ? (
         <View style={styles.announceContent}>
@@ -128,13 +125,12 @@ function AnnouncementCard({ latest, onPost, onViewAll }: {
         </View>
       ) : (
         <View style={styles.announceEmpty}>
-          <Text style={styles.announceEmptyText}>暂无公告，发布第一条家庭公告吧</Text>
+          <Text style={{ fontSize: 28, marginBottom: 6 }}>💌</Text>
+          <Text style={styles.announceEmptyText}>还没有公告哦</Text>
+          <Text style={styles.announceEmptyHint}>点击这里去发布，让家人们都看到 ✨</Text>
         </View>
       )}
-      <TouchableOpacity style={styles.viewAllBtn} onPress={onViewAll} activeOpacity={0.8}>
-        <Text style={styles.viewAllBtnText}>查看全部公告 →</Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -316,7 +312,6 @@ export function JoinerHomeScreen() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [latestAnnounce, setLatestAnnounce] = useState<FamilyAnnouncement | null>(null);
   const [currentMember, setCurrentMember] = useState<FamilyMember | null>(null);
-  const [postModal, setPostModal] = useState(false);
   const [showSwitcher, setShowSwitcher] = useState(false);
   const { weatherData, buildGreeting } = useWeather();
 
@@ -522,7 +517,6 @@ export function JoinerHomeScreen() {
 
         <AnnouncementCard
           latest={latestAnnounce}
-          onPost={() => setPostModal(true)}
           onViewAll={() => router.push('/family' as any)}
         />
 
@@ -550,13 +544,6 @@ export function JoinerHomeScreen() {
 
         <View style={{ height: 24 }} />
       </ScrollView>
-
-      <PostAnnouncementModal
-        visible={postModal}
-        onClose={() => setPostModal(false)}
-        onPosted={() => { setPostModal(false); loadData(); }}
-        member={currentMember}
-      />
 
       <Modal visible={showSwitcher} transparent animationType="fade" onRequestClose={() => setShowSwitcher(false)}>
         <TouchableOpacity style={styles.switcherOverlay} activeOpacity={1} onPress={() => setShowSwitcher(false)}>
@@ -667,18 +654,16 @@ const styles = StyleSheet.create({
   announceHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   announceHeaderIcon: { fontSize: 14 },
   announceHeaderTitle: { fontSize: 12, fontWeight: '700', color: AppColors.purple.strong, letterSpacing: 0.3 },
-  postBtn: { backgroundColor: AppColors.purple.soft, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: AppColors.purple.primary },
-  postBtnText: { fontSize: 12, fontWeight: '700', color: AppColors.purple.strong },
-  announceContent: { backgroundColor: AppColors.purple.soft, marginHorizontal: 12, borderRadius: 12, padding: 12, marginBottom: 4, borderWidth: 1, borderColor: AppColors.purple.primary + '40' },
+  announceArrow: { fontSize: 22, color: AppColors.purple.primary, fontWeight: '300', opacity: 0.7 },
+  announceContent: { backgroundColor: AppColors.purple.soft, marginHorizontal: 12, borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: AppColors.purple.primary + '40' },
   announceText: { fontSize: 14, fontWeight: '600', color: AppColors.text.primary, lineHeight: 20 },
   announceFooter: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   announceAuthorEmoji: { fontSize: 13, marginRight: 4 },
   announceAuthorName: { fontSize: 12, color: AppColors.purple.strong, fontWeight: '600' },
   announceTime: { fontSize: 12, color: AppColors.text.tertiary },
-  announceEmpty: { paddingHorizontal: 16, paddingBottom: 10 },
-  announceEmptyText: { fontSize: 13, color: AppColors.text.tertiary, fontStyle: 'italic' },
-  viewAllBtn: { borderTopWidth: 1, borderTopColor: AppColors.purple.primary + '30', paddingVertical: 10, backgroundColor: AppColors.purple.soft, alignItems: 'center' },
-  viewAllBtnText: { fontSize: 12, fontWeight: '700', color: AppColors.purple.strong },
+  announceEmpty: { paddingHorizontal: 16, paddingBottom: 14, alignItems: 'center' },
+  announceEmptyText: { fontSize: 14, color: AppColors.text.secondary, fontWeight: '600' },
+  announceEmptyHint: { fontSize: 12, color: AppColors.purple.primary, marginTop: 2 },
 
   feedSection: { marginBottom: 16 },
   feedLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
