@@ -3,10 +3,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HapticTab } from "@/components/haptic-tab";
 import { Platform, View, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { AppColors, Gradients, Shadows } from "@/lib/design-tokens";
+import { AppColors, Gradients } from "@/lib/design-tokens";
 import { useFamilyContext } from "@/lib/family-context";
-
-const INACTIVE_LABEL = AppColors.nav.inactive;
 
 const TAB_CONFIG: Record<string, {
   emoji: string;
@@ -36,7 +34,6 @@ function TabIcon({
   };
 
   const accessible = !isJoiner || JOINER_TABS.has(route);
-  // joiner 可访问的标签始终显示渐变高亮
   const showActive = focused || (isJoiner && JOINER_TABS.has(route));
 
   return (
@@ -57,7 +54,7 @@ function TabIcon({
       )}
       <Text style={[
         styles.tabLabel,
-        showActive && { color: cfg.gradient[0], fontWeight: "700" as const },
+        showActive && { color: cfg.gradient[0], fontWeight: "600" as const },
         !accessible && styles.tabLabelFaded,
       ]}>
         {cfg.label}
@@ -69,7 +66,7 @@ function TabIcon({
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const safeBottom = Platform.OS === "web" ? 0 : insets.bottom;
-  const tabBarHeight = 76 + safeBottom;
+  const tabBarHeight = 80 + safeBottom;
 
   const { activeMembership } = useFamilyContext();
   const isJoiner = activeMembership?.role === "joiner";
@@ -83,21 +80,23 @@ export default function TabLayout() {
         tabBarStyle: {
           height: tabBarHeight,
           paddingBottom: safeBottom,
-          paddingTop: 8,
+          paddingTop: 10,
+          paddingHorizontal: 4,
           backgroundColor: AppColors.surface.whiteStrong,
           borderTopWidth: 0,
-          borderTopLeftRadius: 22,
-          borderTopRightRadius: 22,
-          shadowColor: AppColors.shadow.default,
-          shadowOffset: { width: 0, height: -3 },
-          shadowOpacity: 0.08,
-          shadowRadius: 16,
-          elevation: 12,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          shadowColor: '#8B7E74',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.06,
+          shadowRadius: 20,
+          elevation: 16,
           overflow: Platform.OS === "android" ? "hidden" : undefined,
         },
         tabBarItemStyle: {
           paddingVertical: 0,
           height: "100%",
+          justifyContent: "center",
         },
       }}
     >
@@ -110,17 +109,18 @@ export default function TabLayout() {
   );
 }
 
-const CIRCLE = 48;
+const CIRCLE = 44;
 
 const styles = StyleSheet.create({
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    gap: 5,
     flex: 1,
+    minWidth: 64,
   },
   tabItemFaded: {
-    opacity: 0.22,
+    opacity: 0.2,
   },
   iconCircle: {
     width: CIRCLE,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   inactiveCircle: {
-    backgroundColor: AppColors.bg.secondary,
+    backgroundColor: '#F5F0ED',
   },
   activeEmoji: {
     fontSize: 22,
@@ -139,15 +139,15 @@ const styles = StyleSheet.create({
   inactiveEmoji: {
     fontSize: 20,
     lineHeight: 24,
-    opacity: 0.65,
+    opacity: 0.55,
   },
   tabLabel: {
     fontSize: 10,
-    fontWeight: "500",
-    color: INACTIVE_LABEL,
-    letterSpacing: 0.2,
+    fontWeight: "400",
+    color: AppColors.text.tertiary,
+    letterSpacing: 0.3,
   },
   tabLabelFaded: {
-    color: INACTIVE_LABEL,
+    color: AppColors.text.tertiary,
   },
 });
