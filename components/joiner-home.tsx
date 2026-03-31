@@ -588,12 +588,12 @@ export function JoinerHomeScreen() {
 const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 16, paddingBottom: 12 },
-  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 20, paddingBottom: 18 },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   dateText: { fontSize: 12, fontWeight: '600', color: AppColors.text.tertiary, letterSpacing: 0.3 },
   lunarDot: { fontSize: 12, color: AppColors.border.soft },
   lunarText: { fontSize: 11, color: AppColors.peach.primary, fontWeight: '500' },
-  pageTitle: { fontSize: 20, fontWeight: '700', color: AppColors.purple.strong, letterSpacing: -0.2 },
+  pageTitle: { fontSize: 18, fontWeight: '700', color: AppColors.purple.strong, letterSpacing: -0.2, lineHeight: 26, marginBottom: 10 },
   familyPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6,
     backgroundColor: AppColors.green.soft,
