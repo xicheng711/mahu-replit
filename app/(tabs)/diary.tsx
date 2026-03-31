@@ -749,16 +749,113 @@ const calStyles = StyleSheet.create({
   miniCaregiverMood: { fontSize: 11, color: AppColors.text.tertiary, marginTop: 3 },
 });
 
+function JoinerDiaryReadOnly() {
+  const router = useRouter();
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [showAll, setShowAll] = useState(false);
+  const headerFade = useRef(new Animated.Value(0)).current;
+  const headerSlide = useRef(new Animated.Value(-20)).current;
+
+  useEffect(() => { fadeInUp(headerFade, headerSlide, { duration: 500 }); }, []);
+  useFocusEffect(useCallback(() => {
+    getDiaryEntries().then(e => setEntries(e));
+  }, []));
+
+  function openDetail(entryId: string) {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push({ pathname: '/diary-edit', params: { id: entryId, readOnly: '1' } } as any);
+  }
+
+  const displayEntries = showAll ? entries : entries.slice(0, 5);
+
+  return (
+    <ScreenContainer containerClassName="bg-[#F7F1F3]">
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: headerFade, transform: [{ translateY: headerSlide }] }}>
+          <PageHeader
+            theme={PAGE_THEMES.diary}
+            subtitle={new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}
+            style={{ marginBottom: 12 }}
+          />
+          <View style={jStyles.roleHint}>
+            <Text style={jStyles.roleHintIcon}>👀</Text>
+            <Text style={jStyles.roleHintText}>查看主照顾者写的护理日记</Text>
+          </View>
+        </Animated.View>
+
+        {entries.length === 0 ? (
+          <View style={jStyles.emptyWrap}>
+            <Text style={{ fontSize: 42, marginBottom: 12 }}>📔</Text>
+            <Text style={jStyles.emptyTitle}>暂时还没有日记</Text>
+            <Text style={jStyles.emptyDesc}>主照顾者写日记之后，你就可以在这里看到了</Text>
+          </View>
+        ) : (
+          <>
+            <View style={jStyles.countRow}>
+              <Text style={jStyles.countText}>共 {entries.length} 篇日记</Text>
+            </View>
+            <View style={styles.entriesList}>
+              {displayEntries.map((entry, i) => (
+                <DiaryCard
+                  key={entry.id}
+                  entry={entry}
+                  onPress={() => openDetail(entry.id)}
+                  onDelete={() => {}}
+                  index={i}
+                  editMode={false}
+                />
+              ))}
+            </View>
+            {entries.length > 5 && (
+              <TouchableOpacity
+                style={styles.moreBtn}
+                onPress={() => setShowAll(v => !v)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.moreBtnText}>
+                  {showAll ? '收起 ↑' : `查看更多日记（共 ${entries.length} 篇）↓`}
+                </Text>
+              </TouchableOpacity>
+            )}
+            <View style={{ marginTop: 24 }}>
+              <View style={styles.listTitleRow}>
+                <Text style={styles.listTitle}>🗓️ 日历回顾</Text>
+                <Text style={styles.listCount}>点击有记录的日期</Text>
+              </View>
+              <CalendarView entries={entries} onOpenEntry={openDetail} />
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </ScreenContainer>
+  );
+}
+
+const jStyles = StyleSheet.create({
+  roleHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: AppColors.purple.soft,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: AppColors.purple.primary + '25',
+  },
+  roleHintIcon: { fontSize: 16, marginRight: 8 },
+  roleHintText: { fontSize: 13, color: AppColors.purple.strong, fontWeight: '500' },
+  emptyWrap: { alignItems: 'center', paddingTop: 60, paddingBottom: 40 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: AppColors.text.primary, marginBottom: 8 },
+  emptyDesc: { fontSize: 13, color: AppColors.text.tertiary, textAlign: 'center', lineHeight: 20 },
+  countRow: { marginBottom: 8 },
+  countText: { fontSize: 12, color: AppColors.text.tertiary, fontWeight: '500' },
+});
+
 export default function DiaryScreen() {
   const [isCreator, setIsCreator] = useState<boolean | null>(null);
   useFocusEffect(useCallback(() => { getCurrentUserIsCreator().then(v => setIsCreator(v)); }, []));
   if (isCreator === null) return null;
-  if (!isCreator) return (
-    <JoinerLockedScreen
-      icon="📔"
-      title="护理日记"
-      description="记录家人护理日记是主要照顾者的专属功能。"
-    />
-  );
+  if (!isCreator) return <JoinerDiaryReadOnly />;
   return <DiaryScreenContent />;
 }

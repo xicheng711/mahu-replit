@@ -18,7 +18,7 @@ const TAB_CONFIG: Record<string, {
   family:     { emoji: "👥", gradient: Gradients.navActive,   label: "家人共享" },
 };
 
-const JOINER_TABS = new Set(["index", "family"]);
+const JOINER_TABS = new Set(["index", "family", "diary"]);
 
 function TabIcon({
   route,

@@ -15,7 +15,7 @@ import { ScreenContainer } from '@/components/screen-container';
 import {
   saveDiaryEntry, updateDiaryEntry, getDiaryEntryById, getDiaryEntries,
   deleteDiaryEntry, todayStr, getProfile, generateId, DiaryEntry, ConversationMessage,
-  getTodayCheckIn, DailyCheckIn,
+  getTodayCheckIn, DailyCheckIn, getCurrentUserIsCreator,
 } from '@/lib/storage';
 import { VoiceInput } from '@/components/voice-input';
 import { COLORS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
@@ -207,8 +207,10 @@ function TagOption({ tag, selected, onPress }: { tag: string; selected: boolean;
 
 export default function DiaryEditScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; readOnly?: string }>();
   const existingId = params.id;
+  const [roleReadOnly, setRoleReadOnly] = useState(params.readOnly === '1');
+  const isReadOnly = roleReadOnly;
   const scrollRef = useRef<ScrollView>(null);
 
   const [selectedMood, setSelectedMood] = useState(0);
@@ -248,7 +250,16 @@ export default function DiaryEditScreen() {
   }, []);
 
   async function loadProfile() {
-    const [profile, entries, checkIn] = await Promise.all([getProfile(), getDiaryEntries(), getTodayCheckIn()]);
+    const [profile, entries, checkIn, creatorFlag] = await Promise.all([
+      getProfile(), getDiaryEntries(), getTodayCheckIn(), getCurrentUserIsCreator(),
+    ]);
+    if (!creatorFlag) {
+      setRoleReadOnly(true);
+      if (!existingId) {
+        router.replace('/(tabs)/diary' as any);
+        return;
+      }
+    }
     if (profile) {
       setElderNickname(profile.nickname || profile.name || '家人');
       setCaregiverName(profile.caregiverName || '照顾者');
@@ -444,9 +455,11 @@ export default function DiaryEditScreen() {
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <View style={styles.headerDot} />
-            <Text style={styles.headerTitle}>{submitted ? '护理日记 📔' : '写日记 ✏️'}</Text>
+            <Text style={styles.headerTitle}>{isReadOnly ? '护理日记 📔' : submitted ? '护理日记 📔' : '写日记 ✏️'}</Text>
           </View>
-          {submitted && !finished ? (
+          {isReadOnly ? (
+            <View style={{ width: 60 }} />
+          ) : submitted && !finished ? (
             <TouchableOpacity onPress={handleEndAndSave} activeOpacity={0.85}>
               <LinearGradient colors={['#B07858', '#8B5E3C']} style={styles.headerSaveBtn}>
                 <Text style={styles.headerSaveBtnText}>❤️ 保存</Text>
@@ -651,8 +664,14 @@ export default function DiaryEditScreen() {
 
           {/* ── Bottom Bar ── */}
           <View style={styles.bottomBar}>
-            {!submitted ? (
-              /* Submit button */
+            {isReadOnly ? (
+              <View style={styles.finishedBottomBanner}>
+                <Text style={styles.finishedBottomText}>👀 只读模式</Text>
+                <TouchableOpacity onPress={() => router.replace('/(tabs)/diary' as any)}>
+                  <Text style={styles.goBackText}>返回日记本 →</Text>
+                </TouchableOpacity>
+              </View>
+            ) : !submitted ? (
               <TouchableOpacity
                 style={[styles.submitBtnWrap, submitting && { opacity: 0.6 }]}
                 onPress={handleSubmit}
@@ -669,7 +688,6 @@ export default function DiaryEditScreen() {
               </TouchableOpacity>
             ) : !finished ? (
               <>
-                {/* Input row */}
                 <View style={styles.inputRow}>
                   <View style={styles.inputWrap}>
                     <TextInput
@@ -698,8 +716,6 @@ export default function DiaryEditScreen() {
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
-
-                {/* End & Save button */}
                 <TouchableOpacity onPress={handleEndAndSave} activeOpacity={0.9} style={styles.endBtnWrap}>
                   <LinearGradient colors={['#1E293B', '#0F172A', '#1E293B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.endBtn}>
                     <Animated.View style={[styles.endBtnShimmer, { transform: [{ translateX: shimmerTranslate }] }]} />
