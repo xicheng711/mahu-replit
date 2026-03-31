@@ -976,7 +976,12 @@ ${careScore != null ? `整体状态指数：${careScore}/100` : '整体状态：
             {careScore == null && !(yesterdayCi?.eveningDone) && (
               <View style={styles.backfillNotice}>
                 <Text style={styles.backfillText}>缺少昨晚记录</Text>
-                <TouchableOpacity onPress={() => router.push('/(tabs)/checkin' as any)}>
+                <TouchableOpacity onPress={() => {
+                  const y = new Date();
+                  y.setDate(y.getDate() - 1);
+                  const yDate = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
+                  router.push({ pathname: '/(tabs)/checkin', params: { backfillDate: yDate } } as any);
+                }}>
                   <Text style={styles.backfillCta}>去补昨晚打卡 &gt;</Text>
                 </TouchableOpacity>
               </View>

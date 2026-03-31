@@ -303,6 +303,11 @@ export async function getTodayCheckIn(): Promise<DailyCheckIn | null> {
   return all.find(c => c.date === todayStr()) ?? null;
 }
 
+export async function getCheckInByDate(dateStr: string): Promise<DailyCheckIn | null> {
+  const all = await getAllCheckIns();
+  return all.find(c => c.date === dateStr) ?? null;
+}
+
 export async function getYesterdayCheckIn(): Promise<DailyCheckIn | null> {
   const all = await getAllCheckIns();
   const yesterday = new Date();

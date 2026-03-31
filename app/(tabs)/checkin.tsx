@@ -4,12 +4,12 @@ import {
   StyleSheet, Animated, Platform, Easing, Dimensions, Modal,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { JoinerLockedScreen } from '@/components/joiner-locked-screen';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenContainer } from '@/components/screen-container';
 import { PageHeader, PAGE_THEMES } from '@/components/page-header';
-import { upsertCheckIn, getTodayCheckIn, getAllCheckIns, getProfile, DailyCheckIn, SleepInput, CareBriefing, todayStr, getCurrentUserIsCreator, getBriefingByDate } from '@/lib/storage';
+import { upsertCheckIn, getTodayCheckIn, getCheckInByDate, getAllCheckIns, getProfile, DailyCheckIn, SleepInput, CareBriefing, todayStr, getCurrentUserIsCreator, getBriefingByDate } from '@/lib/storage';
 import { scoreSleepInput } from '@/lib/sleep-scoring';
 import { COLORS, SHADOWS, RADIUS, fadeInUp, pressAnimation } from '@/lib/animations';
 import { AppColors, Gradients } from '@/lib/design-tokens';
@@ -669,6 +669,8 @@ const MEAL_ICONS = ['🍽️', '🥢', '🚫'];
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 function CheckinScreenContent() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ backfillDate?: string }>();
+  const backfillDate = params.backfillDate || null;
   const [checkIn, setCheckIn] = useState<DailyCheckIn | null>(null);
   const [mode, setMode] = useState<'landing' | 'morning' | 'evening'>('landing');
   const [step, setStep] = useState(0);
@@ -758,31 +760,32 @@ function CheckinScreenContent() {
       }
     });
 
-    // 加载今日打卡，或从最近历史预填
     (async () => {
-      const today = await getTodayCheckIn();
-      setCheckIn(today);
+      const targetDate = backfillDate || null;
+      const existing = targetDate
+        ? await getCheckInByDate(targetDate)
+        : await getTodayCheckIn();
+      setCheckIn(existing);
 
-      if (today) {
-        // 今日已有数据 → 完整恢复
-        restoreSleepFields(today);
-        setMorningNotes(today.morningNotes ?? '');
-        if (today.sleepType) setSleepType(today.sleepType);
-        if (today.sleepSegments) setSleepSegments(today.sleepSegments);
-        if (today.nightWakings != null) setNightWakings(today.nightWakings);
-        if (today.napMinutes != null) setNapMinutes(today.napMinutes);
-        else if (today.daytimeNap) setNapMinutes(30);
-        const mIdx = MOODS.findIndex(m => m.score === today.moodScore);
+      if (existing) {
+        restoreSleepFields(existing);
+        setMorningNotes(existing.morningNotes ?? '');
+        if (existing.sleepType) setSleepType(existing.sleepType);
+        if (existing.sleepSegments) setSleepSegments(existing.sleepSegments);
+        if (existing.nightWakings != null) setNightWakings(existing.nightWakings);
+        if (existing.napMinutes != null) setNapMinutes(existing.napMinutes);
+        else if (existing.daytimeNap) setNapMinutes(30);
+        const mIdx = MOODS.findIndex(m => m.score === existing.moodScore);
         if (mIdx >= 0) setMoodIdx(mIdx);
-        setMedicationTaken(today.medicationTaken ?? true);
-        if (today.mealOption) {
-          const parts = today.mealOption.split('、');
+        setMedicationTaken(existing.medicationTaken ?? true);
+        if (existing.mealOption) {
+          const parts = existing.mealOption.split('、');
           const idx = MEAL_OPTIONS.indexOf(parts[0]?.trim());
           if (idx >= 0) setMealOptionIdx(idx);
           const customParts = parts.filter(p => !MEAL_OPTIONS.includes(p.trim())).map(p => p.trim()).filter(Boolean);
           setMealCustom(customParts.join('、') || '');
         }
-        setEveningNotes(today.eveningNotes ?? '');
+        setEveningNotes(existing.eveningNotes ?? '');
       } else {
         // 今日没有数据 → 尝试用最近一次历史打卡预填睡眠字段
         // 策略：取过去7天中最近一条有 morningDone 的记录
@@ -811,11 +814,16 @@ function CheckinScreenContent() {
         setStreak(Math.max(count, 1));
       });
 
-      setMode('landing');
+      if (backfillDate) {
+        setMode('evening');
+        setStep(0);
+      } else {
+        setMode('landing');
+      }
       setStep(0);
       setDone(false);
     })();
-  }, []));
+  }, [backfillDate]));
 
   const selectedMood = MOODS[moodIdx];
 
@@ -856,7 +864,7 @@ function CheckinScreenContent() {
   async function handleSave() {
     setSaving(true);
     if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const data: Partial<DailyCheckIn> & { date: string } = { date: todayStr() };
+    const data: Partial<DailyCheckIn> & { date: string } = { date: backfillDate || todayStr() };
     if (mode === 'morning') {
       // ── 构建结构化 SleepInput（v4.1 评分引擎输入）────────────────────────
       const sleepInput: SleepInput = {
@@ -969,7 +977,7 @@ function CheckinScreenContent() {
 
             {/* White card */}
             <View style={styles.nightCard}>
-              <Text style={styles.nightTitle}>晚间记录已保存</Text>
+              <Text style={styles.nightTitle}>{backfillDate ? '昨晚记录已补录' : '晚间记录已保存'}</Text>
 
               <View style={styles.nightSparkleRow}>
                 <Text style={styles.nightSparkle}>今日照护记录完整</Text>
@@ -992,7 +1000,7 @@ function CheckinScreenContent() {
               {/* Main diary button — pink/rose gradient */}
               <TouchableOpacity
                 style={styles.nightDiaryBtn}
-                onPress={() => router.push('/diary-edit' as any)}
+                onPress={() => backfillDate ? router.replace('/share' as any) : router.push('/diary-edit' as any)}
                 activeOpacity={0.85}
               >
                 <LinearGradient
@@ -1000,8 +1008,8 @@ function CheckinScreenContent() {
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={styles.nightDiaryBtnInner}
                 >
-                  <Text style={styles.nightDiaryIcon}>📖</Text>
-                  <Text style={styles.nightDiaryBtnText}>写今天的护理日记 →</Text>
+                  <Text style={styles.nightDiaryIcon}>{backfillDate ? '📊' : '📖'}</Text>
+                  <Text style={styles.nightDiaryBtnText}>{backfillDate ? '回到分析报告 →' : '写今天的护理日记 →'}</Text>
                 </LinearGradient>
               </TouchableOpacity>
 
@@ -1506,10 +1514,10 @@ function CheckinScreenContent() {
         {/* Header */}
         <Animated.View style={[styles.header, { opacity: headerFade, transform: [{ translateY: headerSlide }] }]}>
           <View>
-            <Text style={styles.appName}>{mode === 'morning' ? '早间打卡' : '晚间记录'}</Text>
-            <Text style={styles.date}>{new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}</Text>
+            <Text style={styles.appName}>{mode === 'morning' ? '早间打卡' : backfillDate ? '补昨晚记录' : '晚间记录'}</Text>
+            <Text style={styles.date}>{backfillDate ? new Date(backfillDate + 'T12:00:00').toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' }) : new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })}</Text>
           </View>
-          <TouchableOpacity style={styles.backToLanding} onPress={() => setMode('landing')}>
+          <TouchableOpacity style={styles.backToLanding} onPress={() => backfillDate ? router.back() : setMode('landing')}>
             <Text style={styles.backToLandingText}>← 返回</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -1551,7 +1559,7 @@ function CheckinScreenContent() {
             >
               <Text style={styles.nextBtnText}>
                 {saving ? '保存中...' : isLast
-                  ? (mode === 'morning' ? '完成早间打卡 🌅' : '完成晚间记录 🌙')
+                  ? (mode === 'morning' ? '完成早间打卡 🌅' : backfillDate ? '完成补录 🌙' : '完成晚间记录 🌙')
                   : '下一题 →'}
               </Text>
             </TouchableOpacity>
