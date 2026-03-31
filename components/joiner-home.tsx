@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
   dateText: { fontSize: 12, fontWeight: '600', color: AppColors.text.tertiary, letterSpacing: 0.3 },
   lunarDot: { fontSize: 12, color: AppColors.border.soft },
   lunarText: { fontSize: 11, color: AppColors.peach.primary, fontWeight: '500' },
-  pageTitle: { fontSize: 22, fontWeight: '900', color: AppColors.text.primary, letterSpacing: -0.3 },
+  pageTitle: { fontSize: 20, fontWeight: '700', color: AppColors.purple.strong, letterSpacing: -0.2 },
   familyPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6,
     backgroundColor: AppColors.green.soft,
