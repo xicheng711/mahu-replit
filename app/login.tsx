@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
+  View, Text, ScrollView, TouchableOpacity, Image,
   StyleSheet, Animated, Easing, Platform, Modal, Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -141,12 +141,10 @@ export default function LoginScreen() {
       >
         <Animated.View style={[styles.logoSection, { opacity: logoFade, transform: [{ scale: logoScale }] }]}>
           <Animated.View style={[styles.logoCircle, { transform: [{ scale: breathe }] }]}>
-            <LinearGradient
-              colors={['#F3EEFF', '#E8D5F5', '#F0E6FF']}
-              style={styles.logoGradient}
-            >
-              <Text style={styles.logoEmoji}>👵</Text>
-            </LinearGradient>
+            <Image
+              source={require('@/assets/images/app-icon.png')}
+              style={styles.logoImage}
+            />
           </Animated.View>
           <Text style={styles.appName}>小马虎</Text>
           <Text style={styles.appSlogan}>您的专业护理记录小助手</Text>
@@ -246,17 +244,15 @@ const styles = StyleSheet.create({
 
   logoSection: { alignItems: 'center', marginBottom: 36 },
   logoCircle: {
-    width: 96, height: 96, borderRadius: 48,
+    width: 96, height: 96, borderRadius: 24,
     marginBottom: 16,
     shadowColor: '#C4A0B8', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2, shadowRadius: 20, elevation: 8,
+    shadowOpacity: 0.25, shadowRadius: 20, elevation: 8,
+    overflow: 'hidden',
   },
-  logoGradient: {
-    width: 96, height: 96, borderRadius: 48,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 3, borderColor: 'rgba(255,255,255,0.7)',
+  logoImage: {
+    width: 96, height: 96, borderRadius: 24,
   },
-  logoEmoji: { fontSize: 44 },
   appName: { fontSize: 28, fontWeight: '900', color: AppColors.text.primary, letterSpacing: 2, marginBottom: 6 },
   appSlogan: { fontSize: 15, color: AppColors.text.secondary, fontWeight: '500' },
   appDesc: { fontSize: 13, color: AppColors.text.tertiary, marginTop: 4 },
