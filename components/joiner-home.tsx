@@ -101,36 +101,38 @@ function buildFeed(
   return items.sort((a, b) => a.sortKey - b.sortKey);
 }
 
-function AnnouncementCard({ latest, onViewAll }: {
+function AnnouncementCard({ latest, onViewAll, onCompose }: {
   latest: FamilyAnnouncement | null;
   onViewAll: () => void;
+  onCompose: () => void;
 }) {
   return (
-    <TouchableOpacity style={styles.announceCard} onPress={onViewAll} activeOpacity={0.85}>
-      <View style={styles.announceHeader}>
-        <View style={styles.announceHeaderLeft}>
-          <Text style={styles.announceHeaderIcon}>📢</Text>
-          <Text style={styles.announceHeaderTitle}>家庭公告栏</Text>
-        </View>
-        <Text style={styles.announceArrow}>›</Text>
-      </View>
-      {latest ? (
-        <View style={styles.announceContent}>
-          <Text style={styles.announceText} numberOfLines={2}>{latest.content}</Text>
-          <View style={styles.announceFooter}>
-            <Text style={styles.announceAuthorEmoji}>{latest.authorEmoji}</Text>
-            <Text style={styles.announceAuthorName}>{latest.authorName}</Text>
-            <Text style={styles.announceTime}> · {timeStr(latest.createdAt)}</Text>
+    <View style={styles.announceCard}>
+      <TouchableOpacity onPress={onViewAll} activeOpacity={0.85}>
+        <View style={styles.announceHeader}>
+          <View style={styles.announceHeaderLeft}>
+            <Text style={styles.announceHeaderIcon}>📢</Text>
+            <Text style={styles.announceHeaderTitle}>家庭公告栏</Text>
           </View>
+          <Text style={styles.announceArrow}>›</Text>
         </View>
-      ) : (
-        <View style={styles.announceEmpty}>
-          <Text style={{ fontSize: 28, marginBottom: 6 }}>💌</Text>
-          <Text style={styles.announceEmptyText}>还没有公告哦</Text>
-          <Text style={styles.announceEmptyHint}>点击这里去发布，让家人们都看到 ✨</Text>
-        </View>
-      )}
-    </TouchableOpacity>
+        {latest ? (
+          <View style={styles.announceContent}>
+            <Text style={styles.announceText} numberOfLines={2}>{latest.content}</Text>
+            <View style={styles.announceFooter}>
+              <Text style={styles.announceAuthorEmoji}>{latest.authorEmoji}</Text>
+              <Text style={styles.announceAuthorName}>{latest.authorName}</Text>
+              <Text style={styles.announceTime}> · {timeStr(latest.createdAt)}</Text>
+            </View>
+          </View>
+        ) : null}
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.composeHint} onPress={onCompose} activeOpacity={0.8}>
+        <Text style={styles.composeHintIcon}>✏️</Text>
+        <Text style={styles.composeHintText}>写一条公告给家人们看看</Text>
+        <Text style={styles.composeHintArrow}>›</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -518,6 +520,7 @@ export function JoinerHomeScreen() {
         <AnnouncementCard
           latest={latestAnnounce}
           onViewAll={() => router.push('/family' as any)}
+          onCompose={() => router.push({ pathname: '/(tabs)/family', params: { openCompose: '1' } } as any)}
         />
 
         {feed.length > 0 && (
@@ -661,9 +664,21 @@ const styles = StyleSheet.create({
   announceAuthorEmoji: { fontSize: 13, marginRight: 4 },
   announceAuthorName: { fontSize: 12, color: AppColors.purple.strong, fontWeight: '600' },
   announceTime: { fontSize: 12, color: AppColors.text.tertiary },
-  announceEmpty: { paddingHorizontal: 16, paddingBottom: 14, alignItems: 'center' },
-  announceEmptyText: { fontSize: 14, color: AppColors.text.secondary, fontWeight: '600' },
-  announceEmptyHint: { fontSize: 12, color: AppColors.purple.primary, marginTop: 2 },
+  composeHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 12,
+    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: AppColors.peach.soft,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: AppColors.peach.primary + '30',
+  },
+  composeHintIcon: { fontSize: 16, marginRight: 8 },
+  composeHintText: { flex: 1, fontSize: 13, color: AppColors.text.secondary, fontWeight: '500' },
+  composeHintArrow: { fontSize: 18, color: AppColors.peach.primary, fontWeight: '300', opacity: 0.7 },
 
   feedSection: { marginBottom: 16 },
   feedLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },

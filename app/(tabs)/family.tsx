@@ -4,7 +4,7 @@ import {
   StyleSheet, Animated, Platform, Alert, Share, Modal, Easing,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect, router } from 'expo-router';
+import { useFocusEffect, router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
   getFamilyRoom, getFamilyAnnouncements, saveFamilyAnnouncement,
@@ -221,6 +221,7 @@ function FamilySetupScreen({ onSetupComplete }: { onSetupComplete: () => void })
 
 export default function FamilyScreen() {
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ openCompose?: string }>();
   const [room, setRoom] = useState<FamilyRoom | null>(null);
   const [currentMember, setCurrentMemberState] = useState<FamilyMember | null>(null);
   const [announcements, setAnnouncements] = useState<FamilyAnnouncement[]>([]);
@@ -252,7 +253,13 @@ export default function FamilyScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [])
+      if (params.openCompose === '1') {
+        setTimeout(() => {
+          setShowCompose(true);
+          setActiveSection('broadcast');
+        }, 300);
+      }
+    }, [params.openCompose])
   );
 
   useEffect(() => {
